@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="it"><head><meta charset="UTF-8"><title>Acchiappa il quadrato - Spiegazione del codice</title>
+<style>
+  @page { size: A4; margin: 16mm 15mm 16mm; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, "Helvetica Neue", "Segoe UI", Roboto, sans-serif; color: #23262f; font-size: 10.2pt; line-height: 1.45; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  h1 { font-size: 24pt; margin: 0; letter-spacing: -0.5px; }
+  h1 span { color: #f9ca24; }
+  h2 { font-size: 15pt; margin: 0 0 4mm; padding-bottom: 2mm; border-bottom: 2.5px solid #f9ca24; break-after: avoid; }
+  h3 { font-size: 11.5pt; margin: 0 0 2mm; break-after: avoid; }
+  .sez { display: inline-block; background: #1e2233; color: #f9ca24; border-radius: 1.5mm; padding: 0.3mm 2mm; font-size: 9pt; margin-right: 1.5mm; }
+  p { margin: 0 0 2mm; }
+  ul { margin: 0 0 2mm; padding-left: 5mm; } li { margin-bottom: 1.2mm; }
+  code { font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 8.6pt; background: #f2f3f7; border: 1px solid #e3e5ec; border-radius: 1mm; padding: 0 1mm; }
+  pre { margin: 0 0 3mm; background: #1e2233; color: #e8eaf6; border-radius: 2.5mm; padding: 3mm 4mm; white-space: pre-wrap; word-break: break-word; }
+  pre code { background: none; border: none; padding: 0; color: inherit; font-size: 7.9pt; line-height: 1.5; }
+  .copertina { background: #1e2233; color: #fff; border-radius: 4mm; padding: 10mm 10mm 8mm; margin-bottom: 7mm; }
+  .copertina .sotto { color: #c8cbe0; margin-top: 2mm; font-size: 11pt; }
+  .copertina .chi { margin-top: 5mm; font-size: 9.5pt; color: #c8cbe0; }
+  .box { background: #f6f7fb; border: 1px solid #e3e5ec; border-radius: 3mm; padding: 4mm 5mm; margin-bottom: 5mm; }
+  .box.giallo { background: #fff8db; border-color: #f3dd85; }
+  .capitolo { break-before: page; }
+  .blocco { margin-bottom: 6mm; }
+  .spiega { padding-left: 1mm; }
+  .rif { color: #5d6475; font-size: 9pt; font-style: italic; }
+  table { width: 100%; border-collapse: collapse; font-size: 9pt; margin-bottom: 5mm; }
+  th, td { text-align: left; padding: 1.7mm 2.4mm; border-bottom: 1px solid #e3e5ec; vertical-align: top; }
+  th { background: #f6f7fb; font-size: 8.4pt; text-transform: uppercase; color: #5d6475; letter-spacing: 0.3px; }
+  tr { break-inside: avoid; }
+  .dir { white-space: nowrap; font-weight: 600; }
+  .albero { font-family: "SF Mono", Menlo, monospace; font-size: 8.8pt; line-height: 1.6; white-space: pre; }
+  .domanda { break-inside: avoid; margin-bottom: 3.5mm; padding: 3mm 4mm; border: 1px solid #e3e5ec; border-left: 4px solid #f9ca24; border-radius: 2mm; }
+  .domanda b.q { display: block; margin-bottom: 1mm; }
+  svg text { font-family: -apple-system, "Helvetica Neue", sans-serif; }
+</style></head><body>
+
+<div class="copertina">
+  <h1>🎯 Acchiappa il <span>quadrato</span></h1>
+  <div class="sotto">Spiegazione del codice · guida allo studio per la presentazione</div>
+  <div class="chi">Gentile · Guttadauro · Pavoni — 5A Informatica — TPSIT 2026/27</div>
+</div>
+
+<div class="box giallo">
+  <b>Come usare questa guida.</b> Nel codice (VS Code) ogni riga ha già il suo commento. Qui invece il codice è spiegato <b>a blocchi</b>:
+  per ogni blocco c'è il codice (senza commenti, per leggerlo più facilmente), la spiegazione e l'esempio del prof da cui deriva.
+  In fondo trovate la <b>mappa dei concetti</b> e le <b>domande probabili all'interrogazione</b> con le risposte.
+  I numeri <b>§</b> corrispondono alle sezioni segnate nei file (<code>// * 1.</code>, <code>// * --- 1.</code>).
+</div>
+
+<h2>1. Struttura del progetto</h2>
+<div class="box"><div class="albero">acchiappa-il-quadrato/
+├── package.json        dati del progetto, dipendenze (express, ws) e script "npm start"
+├── server.js           SERVER: Express (HTTP) + WebSocket (ws) + logica del gioco
+├── public/
+│   └── index.html      CLIENT: pagina del gioco (HTML + CSS + JavaScript)
+├── musica/
+│   └── sottofondo.wav  musica inviata in streaming dalla rotta GET /musica
+└── node_modules/       moduli installati da "npm install" (non si consegna)</div></div>
+
+<h2>2. Architettura</h2>
+<svg viewBox="0 0 700 268" width="100%" style="margin-bottom:4mm">
+  <defs><marker id="f" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#5d6475"/></marker></defs>
+  <g transform="translate(10,20)"><rect width="170" height="56" rx="10" fill="#f6f7fb" stroke="#c9ccd8"/>
+    <text x="85" y="24" text-anchor="middle" font-size="13" font-weight="700" fill="#23262f">Browser 1</text>
+    <text x="85" y="42" text-anchor="middle" font-size="11" fill="#5d6475">index.html + new WebSocket</text></g><g transform="translate(10,95)"><rect width="170" height="56" rx="10" fill="#f6f7fb" stroke="#c9ccd8"/>
+    <text x="85" y="24" text-anchor="middle" font-size="13" font-weight="700" fill="#23262f">Browser 2</text>
+    <text x="85" y="42" text-anchor="middle" font-size="11" fill="#5d6475">index.html + new WebSocket</text></g><g transform="translate(10,170)"><rect width="170" height="56" rx="10" fill="#f6f7fb" stroke="#c9ccd8"/>
+    <text x="85" y="24" text-anchor="middle" font-size="13" font-weight="700" fill="#23262f">Browser 3</text>
+    <text x="85" y="42" text-anchor="middle" font-size="11" fill="#5d6475">index.html + new WebSocket</text></g>
+  <rect x="440" y="15" width="250" height="220" rx="14" fill="#1e2233"/>
+  <text x="565" y="42" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">server.js · Node.js · porta 3000</text>
+  <rect x="460" y="58" width="210" height="62" rx="9" fill="#2d3250"/>
+  <text x="565" y="83" text-anchor="middle" font-size="13" font-weight="700" fill="#f9ca24">Express (HTTP)</text>
+  <text x="565" y="102" text-anchor="middle" font-size="11" fill="#c8cbe0">pagina, /musica, /api/classifica</text>
+  <rect x="460" y="132" width="210" height="88" rx="9" fill="#2d3250"/>
+  <text x="565" y="157" text-anchor="middle" font-size="13" font-weight="700" fill="#f9ca24">WebSocket (ws)</text>
+  <text x="565" y="176" text-anchor="middle" font-size="11" fill="#c8cbe0">stato del gioco, setInterval,</text>
+  <text x="565" y="192" text-anchor="middle" font-size="11" fill="#c8cbe0">broadcast a tutti i client</text>
+  <line x1="185" y1="40" x2="455" y2="88" stroke="#5d6475" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#f)"/>
+  <text x="200" y="22" font-size="11" fill="#5d6475">1) HTTP GET /  →  index.html</text>
+  <line x1="185" y1="55" x2="455" y2="151" stroke="#e1a800" stroke-width="2.2" marker-start="url(#f)" marker-end="url(#f)"/><line x1="185" y1="130" x2="455" y2="165" stroke="#e1a800" stroke-width="2.2" marker-start="url(#f)" marker-end="url(#f)"/><line x1="185" y1="205" x2="455" y2="179" stroke="#e1a800" stroke-width="2.2" marker-start="url(#f)" marker-end="url(#f)"/>
+  <text x="190" y="258" font-size="11" fill="#b38600" font-weight="700">2) WebSocket: messaggi JSON nei due sensi (connessione sempre aperta)</text>
+</svg>
+<p>Il browser chiede la pagina con una normale richiesta <b>HTTP</b> (Express la serve dalla cartella <code>public</code>). Poi lo script della pagina apre un
+<b>WebSocket</b> verso lo stesso server e la stessa porta. Da quel momento client e server si scambiano <b>messaggi JSON</b> in tempo reale.</p>
+
+<h2 style="margin-top:6mm">3. I messaggi scambiati (protocollo)</h2>
+<p>Ogni messaggio è un oggetto JSON con un campo <code>tipo</code>, che dice a chi lo riceve cosa fare.</p>
+<table>
+  <tr><th>Direzione</th><th>tipo</th><th>Contenuto</th><th>Quando</th></tr>
+  <tr><td class="dir">Server → un client</td><td><code>benvenuto</code></td><td><code>{ tipo, id, colore, puntiPerVincere }</code></td><td>appena il client si collega</td></tr><tr><td class="dir">Client → server</td><td><code>nome</code></td><td><code>{ tipo, nome }</code></td><td>il giocatore preme Gioca</td></tr><tr><td class="dir">Server → tutti</td><td><code>quadrato</code></td><td><code>{ tipo, numero, x, y }</code></td><td>ogni 1,2 s (setInterval)</td></tr><tr><td class="dir">Client → server</td><td><code>click</code></td><td><code>{ tipo, numero }</code></td><td>il giocatore preme sul quadrato</td></tr><tr><td class="dir">Server → tutti</td><td><code>preso</code></td><td><code>{ tipo, numero, id, nome, colore }</code></td><td>primo click valido</td></tr><tr><td class="dir">Server → tutti</td><td><code>classifica</code></td><td><code>{ tipo, connessi, giocatori[] }</code></td><td>entra/esce qualcuno, cambia un punteggio</td></tr><tr><td class="dir">Server → tutti</td><td><code>vittoria</code></td><td><code>{ tipo, id, nome, colore, secondi }</code></td><td>qualcuno arriva a 10 punti</td></tr><tr><td class="dir">Server → tutti</td><td><code>nuova_partita</code></td><td><code>{ tipo }</code></td><td>5 s dopo la vittoria (setTimeout)</td></tr>
+</table>
+
+<div class="box"><b>Una partita, passo per passo.</b>
+<ol style="margin:2mm 0 0; padding-left:5mm">
+  <li>Il browser apre la pagina e il WebSocket → il server crea l'id e manda <code>benvenuto</code>.</li>
+  <li>Il giocatore scrive il nome → <code>nome</code> → il server manda a tutti la <code>classifica</code>.</li>
+  <li>Ogni 1,2 s il server sceglie una posizione e la manda a tutti → <code>quadrato</code>.</li>
+  <li>Un giocatore preme il quadrato → <code>click</code> → il server controlla che sia il primo → +1 punto → <code>preso</code> + <code>classifica</code> a tutti.</li>
+  <li>Qualcuno arriva a 10 → <code>vittoria</code> → pausa di 5 s → <code>nuova_partita</code>.</li>
+</ol></div>
+
+<div class="capitolo">
+<h2>4. Il server — server.js</h2>
+
+  <div class="blocco">
+    <h3><span class="sez">§ 1</span> Importazione dei moduli</h3>
+    <pre><code>const express = require('express');
+const { Server } = require('ws');
+const fs = require('fs');
+const path = require('path');
+const os = require('os');</code></pre>
+    <div class="spiega">
+    <p>Con <code>require()</code> carichiamo i moduli. Ci sono due tipi di moduli:</p>
+    <ul>
+      <li><b>esterni</b> (<code>express</code>, <code>ws</code>): li installa <code>npm install</code> nella cartella <code>node_modules</code>, e sono elencati nelle <code>dependencies</code> del <code>package.json</code>;</li>
+      <li><b>interni</b> (<code>fs</code>, <code>path</code>, <code>os</code>): fanno già parte di Node.js, non vanno installati.</li>
+    </ul>
+    <p><code>const { Server } = require('ws')</code> è una <b>destrutturazione</b>: dal modulo prendiamo solo la classe <code>Server</code>. È la stessa riga degli esempi del prof.</p><p class="rif">📎 Negli esempi del prof: ws_socket_00 → 08 (require di express e ws), ws_socket_09 (fs)</p></div>
+  </div>
+  <div class="blocco">
+    <h3><span class="sez">§ 2</span> Costanti di configurazione</h3>
+    <pre><code>const PORTA = process.env.PORT || 3000;
+const PUNTI_PER_VINCERE = 10;
+const INTERVALLO_MS = 1200;
+const PAUSA_VITTORIA_MS = 5000;
+const COLORI = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c', '#e84393', '#34495e'];</code></pre>
+    <div class="spiega">
+    <p>Valori fissi del gioco raccolti in un punto solo: per cambiare le regole (es. 15 punti invece di 10) basta modificare una riga.
+    <code>const</code> impedisce di riassegnare la variabile per errore.</p>
+    <p><code>process.env.PORT || 3000</code>: <code>process.env</code> contiene le <b>variabili d'ambiente</b> del sistema. Se qualcuno avvia il server con
+    <code>PORT=4000 npm start</code> usa la 4000, altrimenti l'operatore <code>||</code> sceglie 3000.</p>
+    <p>L'array <code>COLORI</code> funziona come l'array <code>colori</code> dell'esempio 04: il colore si sceglie con l'id del giocatore.</p><p class="rif">📎 Negli esempi del prof: ws_socket_04 (array colori)</p></div>
+  </div>
+  <div class="blocco">
+    <h3><span class="sez">§ 3</span> Stato del gioco</h3>
+    <pre><code>let contatoreId = 0;
+let quadrato = { numero: 0, x: 0, y: 0, preso: true };
+let inPausa = false;</code></pre>
+    <div class="spiega">
+    <p>Il server è l'<b>unico arbitro</b>: conserva lui lo stato della partita (quale quadrato è in campo, se è già stato preso, se siamo in pausa).
+    I client non decidono niente: mostrano solo quello che arriva dal server. Così nessuno può "barare" modificando la pagina nel browser.</p>
+    <p><code>quadrato.numero</code> cresce a ogni nuova posizione: serve a scartare i click arrivati in ritardo su un quadrato che ormai si è già spostato.</p><p class="rif">📎 Negli esempi del prof: ws_socket_04 (variabile quale), ws_socket_03 (contatore tc)</p></div>
+  </div>
+  <div class="blocco">
+    <h3><span class="sez">§ 4</span> Express: middleware, rotte e avvio del server HTTP</h3>
+    <pre><code>const app = express();
+
+app.use((req, res, next) =&gt; {
+    console.log(`[HTTP] ${req.method} ${req.url}`);
+    next();
+});
+
+app.use(express.static(path.join(__dirname, 'public')));
+
+app.get('/musica', (req, res) =&gt; {
+    const fileMusica = path.join(__dirname, 'musica', 'sottofondo.wav');
+    if (fs.existsSync(fileMusica)) {
+        const info = fs.statSync(fileMusica);
+        res.writeHead(200, { 'Content-Type': 'audio/wav', 'Content-Length': info.size });
+        fs.createReadStream(fileMusica).pipe(res);
+    } else {
+        res.status(404).send('Musica non trovata');
+    }
+});
+
+app.get('/api/classifica', (req, res) =&gt; {
+    res.json({ connessi: ws_server.clients.size, puntiPerVincere: PUNTI_PER_VINCERE, giocatori: listaClassifica() });
+});
+
+app.use((req, res) =&gt; {
+    res.status(404).send('Pagina non trovata');
+});
+
+const server = app.listen(PORTA, () =&gt; {
+    console.log(`Server avviato! Apri nel browser: http://localhost:${PORTA}`);
+    indirizziRete().forEach((ip) =&gt; {
+        console.log(`Dagli altri PC della rete:   http://${ip}:${PORTA}`);
+    });
+});</code></pre>
+    <div class="spiega">
+    <p><b>Middleware</b>: funzione <code>(req, res, next)</code> eseguita per ogni richiesta, <b>nell'ordine in cui è scritta</b>.
+    Il nostro logger stampa la richiesta e chiama <code>next()</code> per passare al successivo.
+    Se non chiamasse <code>next()</code> né rispondesse, il browser resterebbe in attesa per sempre.</p>
+    <p><code>express.static('public')</code> serve in automatico i file della cartella <code>public</code>: quando il browser chiede <code>/</code> riceve <code>index.html</code>.
+    Il prof usava <code>res.sendFile('/index.html', { root: __dirname })</code>: il risultato è lo stesso.</p>
+    <p><b>Rotta <code>GET /musica</code></b>: invia il file audio in <b>streaming</b>. <code>fs.createReadStream()</code> legge il file a pezzi (chunk) e
+    <code>.pipe(res)</code> li manda subito al browser, senza caricare tutto il file in memoria. <code>writeHead</code> imposta codice 200 e intestazioni
+    (<code>Content-Type</code>, <code>Content-Length</code>).</p>
+    <p><b>Rotta <code>GET /api/classifica</code></b>: con <code>res.json()</code> restituisce lo stato della partita in JSON (provare ad aprire <code>localhost:3000/api/classifica</code>).</p>
+    <p>L'<b>ultimo middleware</b> risponde 404: viene raggiunto solo se nessuna rotta prima ha risposto.
+    <code>app.listen()</code> avvia il server e <b>restituisce l'oggetto server HTTP</b>, che passiamo al WebSocket.</p><p class="rif">📎 Negli esempi del prof: ws_socket_00 → 08 (express + sendFile + listen), ws_socket_09 (createReadStream, pipe, writeHead)</p></div>
+  </div>
+  <div class="blocco">
+    <h3><span class="sez">§ 5</span> Server WebSocket ed eventi</h3>
+    <pre><code>const ws_server = new Server({ server });
+
+ws_server.on('connection', (ws) =&gt; {
+    contatoreId++;
+    ws.id = contatoreId;
+    ws.colore = COLORI[(ws.id - 1) % COLORI.length];
+    ws.nome = null;
+    ws.punti = 0;
+    console.log(`[WS] nuovo client connesso, id: ${ws.id}`);
+
+    ws.send(JSON.stringify({ tipo: 'benvenuto', id: ws.id, colore: ws.colore, puntiPerVincere: PUNTI_PER_VINCERE }));
+    inviaClassifica();
+
+    ws.on('message', (dati) =&gt; {
+        let msg;
+        try {
+            msg = JSON.parse(dati);
+        } catch (errore) {
+            console.log(`[WS] messaggio non valido da ${ws.id}`);
+            return;
+        }
+
+        if (msg.tipo === 'nome') {
+            const nomePulito = String(msg.nome).trim().substring(0, 15);
+            ws.nome = nomePulito || `Giocatore ${ws.id}`;
+            console.log(`[WS] il client ${ws.id} si chiama "${ws.nome}"`);
+            inviaClassifica();
+        }
+
+        if (msg.tipo === 'click') {
+            if (!ws.nome || inPausa || quadrato.preso || msg.numero !== quadrato.numero) return;
+            quadrato.preso = true;
+            ws.punti++;
+            console.log(`[GIOCO] ${ws.nome} prende il quadrato n.${quadrato.numero} (${ws.punti} punti)`);
+            inviaATutti({ tipo: 'preso', numero: quadrato.numero, id: ws.id, nome: ws.nome, colore: ws.colore });
+            inviaClassifica();
+
+            if (ws.punti &gt;= PUNTI_PER_VINCERE) {
+                inPausa = true;
+                console.log(`[GIOCO] *** ${ws.nome} ha vinto la partita! ***`);
+                inviaATutti({ tipo: 'vittoria', id: ws.id, nome: ws.nome, colore: ws.colore, secondi: PAUSA_VITTORIA_MS / 1000 });
+                setTimeout(nuovaPartita, PAUSA_VITTORIA_MS);
+            }
+        }
+    });
+
+    ws.on('close', () =&gt; {
+        console.log(`[WS] client disconnesso, id: ${ws.id}`);
+        inviaClassifica();
+    });
+
+    ws.on('error', (errore) =&gt; {
+        console.log(`[WS] errore sul client ${ws.id}: ${errore.message}`);
+    });
+});</code></pre>
+    <div class="spiega">
+    <p><code>new Server({ server })</code> aggancia il WebSocket al server HTTP: <b>stessa porta 3000</b>. Il browser apre il WebSocket con una richiesta HTTP speciale
+    (intestazione <code>Upgrade: websocket</code>); il server risponde <code>101 Switching Protocols</code> e da lì la connessione resta <b>aperta in entrambe le direzioni</b> (full-duplex).</p>
+    <ul>
+      <li><b>connection</b>: un nuovo client. Gli diamo id, colore, nome e punti salvandoli <b>dentro l'oggetto <code>ws</code></b> (come <code>ws.id = quale</code> dell'esempio 04),
+      gli mandiamo il <code>benvenuto</code> con <code>ws.send()</code> (solo a lui) e a tutti la classifica.</li>
+      <li><b>message</b>: un messaggio di quel client. Lo convertiamo con <code>JSON.parse</code> dentro un <code>try/catch</code> (un testo non valido non deve far crashare il server)
+      e in base al campo <code>tipo</code> gestiamo <code>nome</code> o <code>click</code>.</li>
+      <li><b>close</b>: il client se n'è andato; ws lo ha già tolto da <code>ws_server.clients</code>, quindi rimandiamo la classifica aggiornata.</li>
+      <li><b>error</b>: gestire l'errore evita che il programma si fermi.</li>
+    </ul>
+    <p><b>Chi vince il click?</b> Node.js esegue il nostro codice su un <b>solo thread</b> (event loop): i messaggi vengono gestiti <b>uno alla volta, in ordine di arrivo</b>.
+    Il primo click valido mette <code>quadrato.preso = true</code>, quindi i click successivi vengono scartati dall'<code>if</code>.</p><p class="rif">📎 Negli esempi del prof: ws_socket_03 (on message), ws_socket_04/05 (ws.id), ws_socket_06/07 (JSON in arrivo), ws_socket_08 (close + numero connessi)</p></div>
+  </div>
+  <div class="blocco">
+    <h3><span class="sez">§ 6</span> Ciclo di gioco</h3>
+    <pre><code>setInterval(() =&gt; {
+    if (inPausa) return;
+    if (ws_server.clients.size === 0) return;
+    nuovaPosizione();
+}, INTERVALLO_MS);</code></pre>
+    <div class="spiega">
+    <p><code>setInterval</code> richiama la funzione ogni 1200 ms. È il server che "spinge" (push) i dati ai client senza che li chiedano: è proprio quello che con HTTP
+    normale non si può fare. Se siamo in pausa o non c'è nessuno collegato, la funzione esce subito con <code>return</code>.</p><p class="rif">📎 Negli esempi del prof: ws_socket_00 → 04 (setInterval + invio a tutti)</p></div>
+  </div>
+  <div class="blocco">
+    <h3><span class="sez">§ 7</span> Funzioni di supporto</h3>
+    <pre><code>function inviaATutti(messaggio) {
+    const testo = JSON.stringify(messaggio);
+    ws_server.clients.forEach((client) =&gt; {
+        if (client.readyState === client.OPEN) client.send(testo);
+    });
+}
+
+function listaClassifica() {
+    const lista = [];
+    ws_server.clients.forEach((client) =&gt; {
+        if (client.nome) lista.push({ id: client.id, nome: client.nome, colore: client.colore, punti: client.punti });
+    });
+    lista.sort((a, b) =&gt; b.punti - a.punti);
+    return lista;
+}
+
+function inviaClassifica() {
+    inviaATutti({ tipo: 'classifica', connessi: ws_server.clients.size, giocatori: listaClassifica() });
+}
+
+function nuovaPosizione() {
+    quadrato.numero++;
+    quadrato.x = Math.floor(Math.random() * 101);
+    quadrato.y = Math.floor(Math.random() * 101);
+    quadrato.preso = false;
+    inviaATutti({ tipo: 'quadrato', numero: quadrato.numero, x: quadrato.x, y: quadrato.y });
+}
+
+function nuovaPartita() {
+    ws_server.clients.forEach((client) =&gt; {
+        client.punti = 0;
+    });
+    inPausa = false;
+    console.log('[GIOCO] nuova partita!');
+    inviaATutti({ tipo: 'nuova_partita' });
+    inviaClassifica();
+}
+
+function indirizziRete() {
+    const indirizzi = [];
+    const interfacce = os.networkInterfaces();
+    for (const nome in interfacce) {
+        for (const info of interfacce[nome]) {
+            if (info.family === 'IPv4' &amp;&amp; !info.internal) indirizzi.push(info.address);
+        }
+    }
+    return indirizzi;
+}</code></pre>
+    <div class="spiega">
+    <ul>
+      <li><b>inviaATutti</b>: è il <b>broadcast</b>. Scorre <code>ws_server.clients</code> con <code>forEach</code> e manda il messaggio a ogni client con la connessione <code>OPEN</code>.
+      L'oggetto viene convertito in testo con <code>JSON.stringify</code> una sola volta.</li>
+      <li><b>listaClassifica</b>: costruisce un array con i giocatori che hanno un nome e lo ordina con <code>sort((a, b) =&gt; b.punti - a.punti)</code> (decrescente).</li>
+      <li><b>nuovaPosizione</b>: coordinate casuali da 0 a 100 = <b>percentuale</b> dello spazio. Ogni client le trasforma in pixel secondo la grandezza del suo schermo.</li>
+      <li><b>nuovaPartita</b>: azzera i punti; viene chiamata da <code>setTimeout</code> (una volta sola, dopo 5 secondi).</li>
+      <li><b>indirizziRete</b>: con <code>os.networkInterfaces()</code> trova l'IP del PC per farlo vedere nel terminale (serve per giocare da altri PC).
+      Usa <code>for...in</code> (chiavi di un oggetto) e <code>for...of</code> (elementi di un array).</li>
+    </ul><p class="rif">📎 Negli esempi del prof: ws_socket_00 → 08 (clients.forEach + send), ws_socket_08 (array dei client)</p></div>
+  </div>
+</div>
+
+<div class="capitolo">
+<h2>5. Il client — public/index.html</h2>
+<div class="blocco">
+  <h3><span class="sez">HTML</span> Struttura della pagina</h3>
+  <pre><code>&lt;body&gt;
+
+    &lt;header&gt;
+        &lt;h1&gt;🎯 Acchiappa il quadrato&lt;/h1&gt;
+        &lt;div id="info"&gt;
+            &lt;span class="pillola"&gt;&lt;span id="pallino-mio"&gt;&lt;/span&gt;&lt;span id="mio-nome"&gt;...&lt;/span&gt;&lt;/span&gt;
+            &lt;span class="pillola" id="connessi"&gt;Connessi: 0&lt;/span&gt;
+            &lt;span class="pillola" id="stato"&gt;🟡 Connessione...&lt;/span&gt;
+            &lt;button id="pulsante-musica"&gt;🔈 Musica&lt;/button&gt;
+        &lt;/div&gt;
+    &lt;/header&gt;
+
+    &lt;main&gt;
+        &lt;div id="campo"&gt;
+            &lt;div id="quadrato"&gt;&lt;/div&gt;
+            &lt;div id="messaggio"&gt;&lt;/div&gt;
+        &lt;/div&gt;
+
+        &lt;aside&gt;
+            &lt;h2&gt;🏆 Classifica&lt;/h2&gt;
+            &lt;p&gt;Il primo che arriva a &lt;b id="obiettivo"&gt;10&lt;/b&gt; punti vince!&lt;/p&gt;
+            &lt;ol id="classifica"&gt;&lt;/ol&gt;
+        &lt;/aside&gt;
+    &lt;/main&gt;
+
+    &lt;div id="schermata-nome" class="overlay"&gt;
+        &lt;div class="box"&gt;
+            &lt;h2&gt;Benvenuto! 👋&lt;/h2&gt;
+            &lt;p&gt;Clicca il quadrato giallo prima degli altri giocatori. Ogni quadrato preso vale 1 punto.&lt;/p&gt;
+            &lt;input id="input-nome" type="text" maxlength="15" placeholder="Scrivi il tuo nome" autocomplete="off"&gt;
+            &lt;button id="entra" disabled&gt;Gioca&lt;/button&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;div id="schermata-vittoria" class="overlay nascosto"&gt;
+        &lt;div class="box"&gt;
+            &lt;h2 id="testo-vittoria"&gt;&lt;/h2&gt;
+            &lt;p&gt;Nuova partita tra &lt;b id="conto"&gt;5&lt;/b&gt; secondi...&lt;/p&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;audio id="audio" src="/musica" loop preload="none"&gt;&lt;/audio&gt;
+
+    </code></pre>
+  <div class="spiega"><p>La pagina ha: un'<b>intestazione</b> (nome, connessi, stato, musica), il <b>campo</b> con il quadrato, la <b>classifica</b> (lista <code>&lt;ol&gt;</code> riempita da JavaScript),
+  due <b>schermate sovrapposte</b> (nome iniziale e vittoria, mostrate/nascoste aggiungendo o togliendo la classe CSS <code>nascosto</code>) e l'elemento
+  <code>&lt;audio&gt;</code> che prende la musica dalla rotta <code>/musica</code> del server. Il CSS (dentro <code>&lt;style&gt;</code>) serve solo alla grafica.</p></div>
+</div>
+
+  <div class="blocco">
+    <h3><span class="sez">§ 1</span> Connessione WebSocket</h3>
+    <pre><code>const webSocket = new WebSocket(location.origin.replace(/^http/, 'ws'));</code></pre>
+    <div class="spiega">
+    <p><code>location.origin</code> è l'indirizzo da cui è arrivata la pagina (es. <code>http://192.168.1.20:3000</code>). Con <code>replace(/^http/, 'ws')</code> diventa
+    <code>ws://192.168.1.20:3000</code>: il client si collega sempre allo stesso server che gli ha dato la pagina, qualunque sia l'IP. Stessa riga degli esempi del prof.
+    L'oggetto <code>WebSocket</code> è già incluso nel browser: lato client il modulo <code>ws</code> non serve.</p><p class="rif">📎 Negli esempi del prof: tutti gli esempi (stessa riga)</p></div>
+  </div>
+  <div class="blocco">
+    <h3><span class="sez">§ 2</span> Riferimenti agli elementi della pagina</h3>
+    <pre><code>const campo = document.getElementById('campo');
+const quadrato = document.getElementById('quadrato');
+const messaggio = document.getElementById('messaggio');
+const pallinoMio = document.getElementById('pallino-mio');
+const mioNome = document.getElementById('mio-nome');
+const connessi = document.getElementById('connessi');
+const stato = document.getElementById('stato');
+const obiettivo = document.getElementById('obiettivo');
+const classifica = document.getElementById('classifica');
+const schermataNome = document.getElementById('schermata-nome');
+const inputNome = document.getElementById('input-nome');
+const pulsanteEntra = document.getElementById('entra');
+const schermataVittoria = document.getElementById('schermata-vittoria');
+const testoVittoria = document.getElementById('testo-vittoria');
+const conto = document.getElementById('conto');
+const audio = document.getElementById('audio');
+const pulsanteMusica = document.getElementById('pulsante-musica');</code></pre>
+    <div class="spiega">
+    <p>Con <code>document.getElementById</code> salviamo una sola volta i riferimenti agli elementi HTML che useremo spesso (DOM = la pagina vista da JavaScript).</p><p class="rif">📎 Negli esempi del prof: ws_socket_01 → 08</p></div>
+  </div>
+  <div class="blocco">
+    <h3><span class="sez">§ 3</span> Variabili del client</h3>
+    <pre><code>let mioId = null;
+let numeroQuadrato = 0;
+let puntiPerVincere = 10;
+let timerMessaggio = null;
+let timerConto = null;</code></pre>
+    <div class="spiega">
+    <p>Il client ricorda solo poche cose: il proprio <b>id</b> (per capire "sono io?"), il <b>numero del quadrato</b> in campo (da rimandare con il click) e i timer, per poterli fermare.</p></div>
+  </div>
+  <div class="blocco">
+    <h3><span class="sez">§ 4</span> Eventi del WebSocket</h3>
+    <pre><code>webSocket.onopen = () =&gt; {
+    stato.textContent = '🟢 Connesso';
+    pulsanteEntra.disabled = false;
+    inputNome.focus();
+};
+
+webSocket.onclose = () =&gt; {
+    stato.textContent = '🔴 Disconnesso';
+    quadrato.style.display = 'none';
+    mostraMessaggio('Connessione persa: ricarica la pagina');
+};
+
+webSocket.onmessage = (event) =&gt; {
+    const msg = JSON.parse(event.data);
+
+    if (msg.tipo === 'benvenuto') {
+        mioId = msg.id;
+        pallinoMio.style.background = msg.colore;
+        mioNome.textContent = 'Giocatore ' + msg.id;
+        puntiPerVincere = msg.puntiPerVincere;
+        obiettivo.textContent = msg.puntiPerVincere;
+    } else if (msg.tipo === 'quadrato') {
+        numeroQuadrato = msg.numero;
+        const spazioX = campo.clientWidth - quadrato.offsetWidth;
+        const spazioY = campo.clientHeight - quadrato.offsetHeight;
+        quadrato.style.left = (spazioX * msg.x / 100) + 'px';
+        quadrato.style.top = (spazioY * msg.y / 100) + 'px';
+        quadrato.style.backgroundColor = '';
+        quadrato.classList.remove('preso');
+        quadrato.style.display = 'block';
+    } else if (msg.tipo === 'preso') {
+        if (msg.numero !== numeroQuadrato) return;
+        quadrato.classList.add('preso');
+        quadrato.style.backgroundColor = msg.colore;
+        mostraMessaggio(msg.id === mioId ? '+1 per te! 🎉' : msg.nome + ' è stato più veloce');
+    } else if (msg.tipo === 'classifica') {
+        connessi.textContent = 'Connessi: ' + msg.connessi;
+        aggiornaClassifica(msg.giocatori);
+    } else if (msg.tipo === 'vittoria') {
+        quadrato.style.display = 'none';
+        testoVittoria.textContent = msg.id === mioId ? '🏆 Hai vinto!' : '🏆 Ha vinto ' + msg.nome;
+        testoVittoria.style.color = msg.colore;
+        schermataVittoria.classList.remove('nascosto');
+        avviaContoAllaRovescia(msg.secondi);
+    } else if (msg.tipo === 'nuova_partita') {
+        schermataVittoria.classList.add('nascosto');
+        clearInterval(timerConto);
+        mostraMessaggio('Nuova partita! Via! 🚀');
+    }
+};</code></pre>
+    <div class="spiega">
+    <ul>
+      <li><code>onopen</code>: connessione pronta, abilitiamo il pulsante <b>Gioca</b>.</li>
+      <li><code>onclose</code>: server spento o rete persa, avvisiamo il giocatore.</li>
+      <li><code>onmessage</code>: il testo ricevuto diventa oggetto con <code>JSON.parse</code>; il campo <b>tipo</b> decide cosa fare
+      (<code>benvenuto</code>, <code>quadrato</code>, <code>preso</code>, <code>classifica</code>, <code>vittoria</code>, <code>nuova_partita</code>).</li>
+    </ul>
+    <p>Posizione del quadrato: spazio disponibile = dimensione del campo − dimensione del quadrato; pixel = spazio × percentuale / 100.
+    Così il quadrato resta sempre dentro il campo, anche sul telefono.</p><p class="rif">📎 Negli esempi del prof: ws_socket_01/02 (onmessage + style.left/top), ws_socket_08 (tipi di messaggio diversi)</p></div>
+  </div>
+  <div class="blocco">
+    <h3><span class="sez">§ 5</span> Eventi dell'utente</h3>
+    <pre><code>quadrato.addEventListener('pointerdown', () =&gt; {
+    if (quadrato.classList.contains('preso')) return;
+    webSocket.send(JSON.stringify({ tipo: 'click', numero: numeroQuadrato }));
+});
+
+pulsanteEntra.addEventListener('click', entraInPartita);
+
+inputNome.addEventListener('keydown', (evento) =&gt; {
+    if (evento.key === 'Enter') entraInPartita();
+});
+
+pulsanteMusica.addEventListener('click', () =&gt; {
+    if (audio.paused) {
+        audio.play().catch(() =&gt; mostraMessaggio('Impossibile riprodurre la musica'));
+        pulsanteMusica.textContent = '🔊 Musica';
+    } else {
+        audio.pause();
+        pulsanteMusica.textContent = '🔈 Musica';
+    }
+});</code></pre>
+    <div class="spiega">
+    <p><code>addEventListener</code> collega una funzione a un evento. Sul quadrato usiamo <code>pointerdown</code>, che scatta appena si preme (mouse o dito): più rapido di <code>click</code>.
+    Il client <b>non</b> assegna punti: manda solo <code>{ tipo: 'click', numero }</code> e decide il server.
+    <code>audio.play()</code> restituisce una <b>Promise</b>; con <code>.catch()</code> gestiamo il caso in cui il browser blocchi l'audio.</p><p class="rif">📎 Negli esempi del prof: ws_socket_03 → 08 (addEventListener + webSocket.send)</p></div>
+  </div>
+  <div class="blocco">
+    <h3><span class="sez">§ 6</span> Funzioni</h3>
+    <pre><code>function entraInPartita() {
+    if (webSocket.readyState !== WebSocket.OPEN) return;
+    const nome = inputNome.value.trim();
+    webSocket.send(JSON.stringify({ tipo: 'nome', nome: nome }));
+    if (nome) mioNome.textContent = nome;
+    schermataNome.classList.add('nascosto');
+}
+
+function aggiornaClassifica(giocatori) {
+    classifica.innerHTML = '';
+    giocatori.forEach((giocatore, indice) =&gt; {
+        const riga = document.createElement('li');
+        if (giocatore.id === mioId) riga.classList.add('io');
+        const posizione = creaElemento('span', 'posizione', indice + 1 + '.');
+        const colore = creaElemento('span', 'colore', '');
+        colore.style.background = giocatore.colore;
+        const nome = creaElemento('span', 'nome', giocatore.nome);
+        const barra = creaElemento('span', 'barra', '');
+        const riempimento = document.createElement('div');
+        riempimento.style.width = (giocatore.punti / puntiPerVincere * 100) + '%';
+        riempimento.style.background = giocatore.colore;
+        barra.appendChild(riempimento);
+        const punti = creaElemento('span', 'punti', giocatore.punti);
+        riga.append(posizione, colore, nome, barra, punti);
+        classifica.appendChild(riga);
+    });
+}
+
+function creaElemento(tag, classe, testo) {
+    const elemento = document.createElement(tag);
+    elemento.className = classe;
+    elemento.textContent = testo;
+    return elemento;
+}
+
+function mostraMessaggio(testo) {
+    messaggio.textContent = testo;
+    messaggio.classList.add('visibile');
+    clearTimeout(timerMessaggio);
+    timerMessaggio = setTimeout(() =&gt; messaggio.classList.remove('visibile'), 1500);
+}
+
+function avviaContoAllaRovescia(secondi) {
+    conto.textContent = secondi;
+    clearInterval(timerConto);
+    timerConto = setInterval(() =&gt; {
+        secondi--;
+        conto.textContent = Math.max(secondi, 0);
+    }, 1000);
+}
+</code></pre>
+    <div class="spiega">
+    <ul>
+      <li><b>entraInPartita</b>: controlla <code>readyState === WebSocket.OPEN</code>, manda il nome e nasconde la schermata iniziale.</li>
+      <li><b>aggiornaClassifica</b>: svuota la lista e la ricrea con <code>createElement</code> / <code>appendChild</code> (come la griglia dell'esempio 07).
+      I nomi vengono scritti con <code>textContent</code> e <b>non</b> con <code>innerHTML</code>: se qualcuno si chiamasse <code>&lt;script&gt;...</code> il browser lo mostrerebbe come testo e non lo eseguirebbe (protezione XSS).</li>
+      <li><b>mostraMessaggio</b>: <code>setTimeout</code> nasconde il fumetto dopo 1,5 s; <code>clearTimeout</code> annulla il timer precedente.</li>
+      <li><b>avviaContoAllaRovescia</b>: <code>setInterval</code> ogni secondo, fermato con <code>clearInterval</code> quando parte la nuova partita.</li>
+    </ul><p class="rif">📎 Negli esempi del prof: ws_socket_07 (createElement)</p></div>
+  </div>
+</div>
+
+<div class="capitolo">
+<h2>6. Mappa dei concetti</h2>
+<p>Dove si trova nel nostro codice ogni argomento visto a lezione, e in quale esempio del prof (<code>ws_socket_NN</code>) compariva.</p>
+<table>
+  <tr><th>Concetto</th><th>Nel nostro codice</th><th>Esempi del prof</th></tr>
+  <tr><td>Moduli e require (interni / esterni)</td><td>server.js § 1</td><td>00 → 09</td></tr><tr><td>package.json, npm install, npm start</td><td>package.json</td><td>—</td></tr><tr><td>Express: app, listen con callback</td><td>server.js § 4</td><td>00 → 08</td></tr><tr><td>Middleware (req, res, next) e ordine</td><td>server.js § 4</td><td>00 (app.use)</td></tr><tr><td>File statici (express.static / sendFile)</td><td>server.js § 4</td><td>00 → 08</td></tr><tr><td>Rotte GET, res.json, codici di stato (200/404)</td><td>server.js § 4</td><td>09 (writeHead)</td></tr><tr><td>Stream: fs.createReadStream().pipe(res)</td><td>server.js § 4</td><td>09</td></tr><tr><td>Server ws agganciato al server HTTP</td><td>server.js § 5</td><td>00 → 08</td></tr><tr><td>Eventi connection / message / close / error</td><td>server.js § 5</td><td>00, 03, 08</td></tr><tr><td>Id e dati salvati sul client (ws.id)</td><td>server.js § 5</td><td>04 → 08</td></tr><tr><td>send a un client e broadcast a tutti</td><td>server.js § 5, § 7</td><td>00 → 08</td></tr><tr><td>Messaggi JSON con campo "tipo"</td><td>server.js § 5, index § 4</td><td>02, 06, 07, 08</td></tr><tr><td>Lista client connessi e numero connessi</td><td>server.js § 7</td><td>08</td></tr><tr><td>Timer: setInterval / setTimeout</td><td>server.js § 6, § 7</td><td>00 → 04</td></tr><tr><td>Gestione errori: try/catch</td><td>server.js § 5</td><td>—</td></tr><tr><td>Variabili d'ambiente e modulo os</td><td>server.js § 2, § 7</td><td>—</td></tr><tr><td>Client: new WebSocket, onopen/onmessage/onclose, send</td><td>index.html § 1, § 4</td><td>00 → 08</td></tr><tr><td>DOM: getElementById, createElement, addEventListener</td><td>index.html § 2, § 5, § 6</td><td>03 → 08</td></tr>
+</table>
+
+<h2 style="margin-top:7mm">7. Domande probabili all'interrogazione</h2>
+<div class="domanda"><b class="q">1. Che differenza c'è tra HTTP e WebSocket?</b>In HTTP è sempre il client a fare una richiesta e il server risponde, poi la comunicazione finisce. Il WebSocket è una connessione <b>persistente e bidirezionale</b> (full-duplex): resta aperta e anche il <b>server può inviare dati quando vuole</b>, come la posizione del quadrato ogni 1,2 secondi.</div><div class="domanda"><b class="q">2. Come fanno HTTP e WebSocket a usare la stessa porta?</b>Il WebSocket parte come una richiesta HTTP con l'intestazione <code>Upgrade: websocket</code>. Il server (ws, agganciato al server di Express con <code>new Server({ server })</code>) risponde <code>101 Switching Protocols</code> e da quel momento la connessione diventa WebSocket.</div><div class="domanda"><b class="q">3. Cos'è un middleware? A cosa serve next()?</b>È una funzione <code>(req, res, next)</code> che Express esegue per ogni richiesta, nell'ordine in cui è registrata. Può rispondere oppure chiamare <code>next()</code> per passare la richiesta al middleware/rotta successivo. Esempi nel nostro codice: logger, <code>express.static</code>, 404.</div><div class="domanda"><b class="q">4. Perché non consegnate la cartella node_modules?</b>Perché si ricrea con <code>npm install</code>: il <code>package.json</code> elenca le dipendenze (express e ws) con le versioni. Così lo zip è leggero.</div><div class="domanda"><b class="q">5. Come fate il broadcast?</b>Il server ws tiene l'insieme dei client in <code>ws_server.clients</code>: lo scorriamo con <code>forEach</code> e chiamiamo <code>client.send()</code> su ognuno (funzione <code>inviaATutti</code>).</div><div class="domanda"><b class="q">6. Perché usate JSON e il campo "tipo"?</b>Il WebSocket trasporta testo: con <code>JSON.stringify</code> trasformiamo un oggetto in testo, con <code>JSON.parse</code> facciamo il contrario. Il campo <code>tipo</code> dice a chi riceve che messaggio è e quindi cosa deve fare.</div><div class="domanda"><b class="q">7. Se due giocatori cliccano quasi insieme, chi prende il punto?</b>Quello il cui messaggio arriva prima al server. Node gestisce gli eventi uno alla volta (event loop su un solo thread): il primo click mette <code>quadrato.preso = true</code> e i successivi vengono ignorati. Il numero del quadrato evita che vengano contati click su un quadrato vecchio.</div><div class="domanda"><b class="q">8. Perché è il server a decidere i punti e non il client?</b>Perché il codice del client si può modificare dal browser: se decidesse il client si potrebbe barare. Il server è l'unico arbitro, i client mostrano solo lo stato.</div><div class="domanda"><b class="q">9. Come assegnate id e colore ai giocatori?</b>Alla connessione incrementiamo <code>contatoreId</code> e lo salviamo in <code>ws.id</code>. Il colore è <code>COLORI[(id - 1) % COLORI.length]</code>: l'operatore modulo fa ripartire l'array quando i colori finiscono.</div><div class="domanda"><b class="q">10. Cosa succede quando un giocatore chiude la pagina?</b>Scatta l'evento <code>close</code>: ws lo toglie da <code>ws_server.clients</code> e noi rimandiamo a tutti la classifica, così sparisce dalla lista e il numero di connessi scende.</div><div class="domanda"><b class="q">11. Cos'è uno stream e perché lo usate per la musica?</b>È un flusso di dati letto a pezzi. <code>fs.createReadStream()</code> legge il file un pezzo alla volta e <code>pipe(res)</code> lo invia mentre legge: non serve caricare tutto il file in memoria.</div><div class="domanda"><b class="q">12. Differenza tra setInterval e setTimeout?</b><code>setInterval</code> ripete la funzione ogni N millisecondi (movimento del quadrato); <code>setTimeout</code> la esegue una sola volta dopo N millisecondi (nuova partita dopo 5 s). Si fermano con <code>clearInterval</code> / <code>clearTimeout</code>.</div><div class="domanda"><b class="q">13. Perché le coordinate sono in percentuale?</b>Ogni giocatore può avere uno schermo diverso (PC, telefono). Il server manda 0-100 e ogni client la trasforma in pixel in base alla grandezza del suo campo.</div><div class="domanda"><b class="q">14. Perché textContent e non innerHTML per i nomi?</b>Con <code>innerHTML</code> un nome contenente codice HTML verrebbe interpretato (rischio XSS); <code>textContent</code> lo mostra sempre come semplice testo.</div><div class="domanda"><b class="q">15. Cosa succederebbe senza il try/catch?</b>Se arrivasse un messaggio non in formato JSON, <code>JSON.parse</code> lancerebbe un errore non gestito e il server si fermerebbe per tutti i giocatori.</div><div class="domanda"><b class="q">16. Come si gioca da un altro PC?</b>Tutti sulla stessa rete; dagli altri PC si apre <code>http://IP-del-server:3000</code>. L'IP lo stampa il server all'avvio grazie al modulo <code>os</code>. Il firewall deve permettere le connessioni a Node.js.</div>
+</div>
+
+</body></html>

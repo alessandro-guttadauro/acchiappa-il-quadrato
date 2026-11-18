@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>Acchiappa il quadrato - Manuale d'uso</title>
+<style>
+  @page { size: A4; margin: 0; }
+  :root {
+    --scuro: #1e2233;
+    --scuro2: #151826;
+    --giallo: #f9ca24;
+    --testo: #23262f;
+    --grigio: #5d6475;
+    --linea: #e3e5ec;
+    --chiaro: #f6f7fb;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "Helvetica Neue", "Segoe UI", Roboto, sans-serif;
+    color: var(--testo);
+    font-size: 10.4pt;
+    line-height: 1.42;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .pagina {
+    width: 210mm;
+    height: 297mm;
+    padding: 0 15mm 12mm;
+    position: relative;
+    overflow: hidden;
+    page-break-after: always;
+  }
+  .pagina:last-child { page-break-after: auto; }
+  .testata {
+    margin: 0 -15mm 7mm;
+    padding: 9mm 15mm 7mm;
+    background: var(--scuro);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .testata h1 { margin: 0; font-size: 25pt; letter-spacing: -0.5px; }
+  .testata h1 span { color: var(--giallo); }
+  .testata .sotto { margin-top: 2mm; color: #c8cbe0; font-size: 10.5pt; }
+  .testata .badge {
+    text-align: right;
+    font-size: 9pt;
+    color: #c8cbe0;
+    line-height: 1.5;
+  }
+  .testata .badge b { color: #fff; }
+  .mini-testata {
+    margin: 0 -15mm 6mm;
+    padding: 5mm 15mm;
+    background: var(--scuro);
+    color: #fff;
+    display: flex;
+    justify-content: space-between;
+    font-size: 9pt;
+  }
+  .mini-testata b { color: var(--giallo); }
+  h2 {
+    font-size: 13.5pt;
+    margin: 0 0 2.5mm;
+    display: flex;
+    align-items: center;
+    gap: 2.5mm;
+  }
+  h2 .num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 7mm;
+    height: 7mm;
+    border-radius: 2mm;
+    background: var(--giallo);
+    color: var(--scuro);
+    font-size: 10.5pt;
+  }
+  p { margin: 0 0 2.5mm; }
+  .intro { font-size: 11pt; margin-bottom: 5mm; }
+  .colonne { display: grid; grid-template-columns: 1fr 1fr; gap: 7mm; }
+  .sezione { margin-bottom: 5.5mm; }
+  ol.passi { margin: 0; padding: 0; list-style: none; counter-reset: p; }
+  ol.passi li {
+    counter-increment: p;
+    position: relative;
+    padding-left: 8mm;
+    margin-bottom: 2.6mm;
+  }
+  ol.passi li::before {
+    content: counter(p);
+    position: absolute;
+    left: 0;
+    top: 0.3mm;
+    width: 5.2mm;
+    height: 5.2mm;
+    border-radius: 50%;
+    background: var(--scuro);
+    color: #fff;
+    font-size: 8pt;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  code, .cmd {
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 9pt;
+  }
+  code { background: var(--chiaro); border: 1px solid var(--linea); border-radius: 1.2mm; padding: 0.2mm 1.2mm; }
+  .cmd {
+    display: block;
+    margin: 1.5mm 0 0;
+    padding: 2mm 3mm;
+    background: var(--scuro);
+    color: #e8eaf6;
+    border-radius: 2mm;
+  }
+  .cmd::before { content: "$ "; color: var(--giallo); }
+  .box {
+    background: var(--chiaro);
+    border: 1px solid var(--linea);
+    border-radius: 3mm;
+    padding: 4mm 5mm;
+  }
+  .box.giallo { background: #fff8db; border-color: #f3dd85; }
+  .box h3 { margin: 0 0 1.5mm; font-size: 10.5pt; }
+  ul { margin: 0; padding-left: 5mm; }
+  ul li { margin-bottom: 1.3mm; }
+  figure { margin: 0; }
+  figure img {
+    width: 100%;
+    display: block;
+    aspect-ratio: 2360 / 1150;
+    object-fit: cover;
+    object-position: top;
+    border-radius: 2.5mm;
+    border: 1px solid #c9ccd8;
+  }
+  figcaption { font-size: 8.6pt; color: var(--grigio); margin-top: 1.5mm; }
+  .grande img { border-radius: 3mm; }
+  .legenda {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 3mm;
+    margin-top: 3mm;
+  }
+  .legenda div {
+    font-size: 8.8pt;
+    background: var(--chiaro);
+    border: 1px solid var(--linea);
+    border-radius: 2mm;
+    padding: 2mm 2.5mm;
+  }
+  .legenda b { display: block; font-size: 9.2pt; margin-bottom: 0.5mm; }
+  .regole { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3mm; }
+  .regola {
+    border: 1px solid var(--linea);
+    border-radius: 3mm;
+    padding: 3.5mm;
+    background: #fff;
+  }
+  .regola .icona { font-size: 16pt; line-height: 1; margin-bottom: 1.5mm; }
+  .regola b { display: block; margin-bottom: 1mm; }
+  .regola p { font-size: 9.2pt; margin: 0; color: #3b3f4c; }
+  table { width: 100%; border-collapse: collapse; font-size: 9.2pt; }
+  th, td { text-align: left; padding: 1.8mm 2.5mm; border-bottom: 1px solid var(--linea); vertical-align: top; }
+  th { background: var(--chiaro); font-size: 8.8pt; text-transform: uppercase; letter-spacing: 0.3px; color: var(--grigio); }
+  .piede {
+    position: absolute;
+    left: 15mm;
+    right: 15mm;
+    bottom: 7mm;
+    display: flex;
+    justify-content: space-between;
+    font-size: 8pt;
+    color: var(--grigio);
+    border-top: 1px solid var(--linea);
+    padding-top: 2mm;
+  }
+</style>
+</head>
+<body>
+
+<!-- ============================ PAGINA 1 ============================ -->
+<section class="pagina">
+  <div class="testata">
+    <div>
+      <h1>🎯 Acchiappa il <span>quadrato</span></h1>
+      <div class="sotto">Manuale d'uso &middot; gioco multiplayer in tempo reale con WebSocket</div>
+    </div>
+    <div class="badge">
+      <b>Gentile &middot; Guttadauro &middot; Pavoni</b><br>
+      5A Informatica &middot; TPSIT 2026/27<br>
+      Node.js &middot; Express &middot; ws
+    </div>
+  </div>
+
+  <p class="intro">
+    <b>Acchiappa il quadrato</b> è un gioco di riflessi per più giocatori. Il server fa comparire un
+    quadrato giallo in un punto casuale del campo e lo invia a tutti i giocatori nello stesso istante:
+    <b>chi lo clicca per primo prende un punto</b>. Il primo che arriva a <b>10 punti</b> vince la partita.
+    Si può giocare da più finestre dello stesso PC oppure da più PC e telefoni collegati alla stessa rete.
+  </p>
+
+  <div class="colonne">
+    <div>
+      <div class="sezione">
+        <h2><span class="num">1</span> Cosa serve</h2>
+        <ul>
+          <li><b>Node.js</b> versione 18 o superiore (<code>nodejs.org</code>). Per controllare: <code>node -v</code></li>
+          <li>Un browser moderno: <b>Chrome</b>, Edge o Firefox.</li>
+          <li>La cartella del progetto <code>acchiappa-il-quadrato</code>.</li>
+          <li>Per giocare in più PC: tutti collegati alla <b>stessa rete</b> (stesso Wi-Fi).</li>
+        </ul>
+      </div>
+
+      <div class="sezione">
+        <h2><span class="num">2</span> Installazione (solo la prima volta)</h2>
+        <ol class="passi">
+          <li>Estrarre lo zip e aprire un terminale (o il terminale di VS Code) nella cartella <code>acchiappa-il-quadrato</code>.</li>
+          <li>Installare i moduli <code>express</code> e <code>ws</code> indicati nel <code>package.json</code>:
+            <span class="cmd">npm install</span>
+          </li>
+          <li>Viene creata la cartella <code>node_modules</code>: l'installazione è completa.</li>
+        </ol>
+      </div>
+
+      <div class="sezione">
+        <h2><span class="num">3</span> Avvio del server</h2>
+        <ol class="passi">
+          <li>Nella stessa cartella avviare il server:
+            <span class="cmd">npm start</span>
+          </li>
+          <li>Nel terminale compaiono gli indirizzi a cui collegarsi, ad esempio:<br>
+            <code>http://localhost:3000</code> e <code>http://192.168.1.20:3000</code></li>
+          <li>Per fermare il server premere <code>Ctrl + C</code> nel terminale.</li>
+        </ol>
+      </div>
+    </div>
+
+    <div>
+      <div class="sezione">
+        <h2><span class="num">4</span> Entrare in partita</h2>
+        <ol class="passi">
+          <li>Aprire il browser all'indirizzo <code>http://localhost:3000</code> (sul PC del server).</li>
+          <li>Dagli <b>altri PC o telefoni</b> usare l'indirizzo con l'IP mostrato nel terminale, es. <code>http://192.168.1.20:3000</code>.</li>
+          <li>Scrivere il proprio nome e premere <b>Gioca</b> (o Invio). Ogni giocatore riceve un <b>colore</b>.</li>
+        </ol>
+        <figure style="margin-top:3mm">
+          <img src="immagini/1-benvenuto.png" alt="Schermata iniziale">
+          <figcaption>La schermata iniziale: si sceglie il nome e si entra in partita.</figcaption>
+        </figure>
+      </div>
+
+      <div class="box giallo">
+        <h3>💡 Provarlo da soli</h3>
+        <p style="margin:0">Basta aprire <b>due o più finestre</b> del browser su <code>localhost:3000</code>,
+        una accanto all'altra: ogni finestra è un giocatore diverso e si vede il quadrato muoversi
+        in contemporanea su tutte.</p>
+      </div>
+
+      <figure style="margin-top:5mm">
+        <img src="immagini/3-vittoria.png" alt="Schermata di vittoria">
+        <figcaption>Fine partita: compare il vincitore e il conto alla rovescia per la partita successiva.</figcaption>
+      </figure>
+    </div>
+  </div>
+
+  <div class="piede">
+    <span>Acchiappa il quadrato &middot; Manuale d'uso</span>
+    <span>Pagina 1 di 2</span>
+  </div>
+</section>
+
+<!-- ============================ PAGINA 2 ============================ -->
+<section class="pagina">
+  <div class="mini-testata">
+    <span>🎯 <b>Acchiappa il quadrato</b> &middot; Manuale d'uso</span>
+    <span>Gentile &middot; Guttadauro &middot; Pavoni &middot; 5A Informatica</span>
+  </div>
+
+  <div class="sezione">
+    <h2><span class="num">5</span> Come si gioca</h2>
+    <figure class="grande">
+      <img src="immagini/2-partita.png" alt="Partita in corso">
+    </figure>
+    <div class="legenda">
+      <div><b>① Intestazione</b>Il tuo nome con il tuo colore, i giocatori connessi e lo stato della connessione.</div>
+      <div><b>② Campo di gioco</b>Il quadrato giallo cambia posizione ogni 1,2 secondi: cliccalo prima degli altri!</div>
+      <div><b>③ Classifica</b>Punti di tutti i giocatori in tempo reale. La tua riga è evidenziata in giallo.</div>
+      <div><b>④ Musica</b>Il pulsante accende o spegne la musica di sottofondo.</div>
+    </div>
+  </div>
+
+  <div class="sezione">
+    <h2><span class="num">6</span> Regole</h2>
+    <div class="regole">
+      <div class="regola">
+        <div class="icona">⚡</div>
+        <b>Vince il più veloce</b>
+        <p>Il quadrato vale 1 punto. Conta solo il primo click che arriva al server; il quadrato si colora con il colore di chi l'ha preso.</p>
+      </div>
+      <div class="regola">
+        <div class="icona">🏆</div>
+        <b>Primo a 10 punti</b>
+        <p>Chi arriva per primo a 10 punti vince. A tutti compare la schermata con il nome del vincitore.</p>
+      </div>
+      <div class="regola">
+        <div class="icona">🔄</div>
+        <b>Nuova partita</b>
+        <p>Dopo 5 secondi i punti si azzerano e parte subito una nuova partita. Si può entrare o uscire in qualsiasi momento.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="sezione">
+    <div>
+      <h2 style="margin-bottom:2mm"><span class="num">7</span> Problemi frequenti</h2>
+      <table>
+        <tr><th style="width:38%">Problema</th><th>Soluzione</th></tr>
+        <tr><td><code>npm start</code> dà errore <i>Cannot find module</i></td><td>Eseguire prima <code>npm install</code> nella cartella del progetto.</td></tr>
+        <tr><td>Errore <i>EADDRINUSE</i> (porta occupata)</td><td>Il server è già avviato in un altro terminale: chiuderlo con <code>Ctrl + C</code>.</td></tr>
+        <tr><td>Gli altri PC non si collegano</td><td>Controllare di essere sulla stessa rete e di usare l'IP mostrato nel terminale; consentire Node.js nel firewall.</td></tr>
+        <tr><td>Stato <b>🔴 Disconnesso</b></td><td>Il server è stato fermato: riavviarlo e ricaricare la pagina.</td></tr>
+        <tr><td>La musica non parte</td><td>Usare Chrome, Edge o Firefox e premere il pulsante 🔈 Musica.</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="piede">
+    <span>Acchiappa il quadrato &middot; Manuale d'uso</span>
+    <span>Pagina 2 di 2</span>
+  </div>
+</section>
+
+</body>
+</html>

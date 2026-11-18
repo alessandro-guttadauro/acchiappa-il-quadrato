@@ -1,0 +1,560 @@
+<!-- ================================================================================= -->
+<!--  ACCHIAPPA IL QUADRATO - index.html (CLIENT)                                       -->
+<!--  Questa pagina viene inviata al browser da Express (express.static, cartella public) -->
+<!--  e poi si collega al server con un WebSocket per ricevere/inviare i dati del gioco. -->
+<!--  Gruppo: Gentile, Guttadauro, Pavoni - 5A Informatica - TPSIT 2026/27               -->
+<!-- ================================================================================= -->
+
+<!-- dichiara al browser che il documento è scritto in HTML5 -->
+<!DOCTYPE html>
+<!-- elemento radice della pagina; lang="it" indica che il testo è in italiano -->
+<html lang="it">
+
+<!-- HEAD: informazioni sulla pagina che non vengono mostrate direttamente -->
+<head>
+    <!-- codifica dei caratteri UTF-8, così le lettere accentate e le emoji si vedono correttamente -->
+    <meta charset="UTF-8">
+    <!-- adatta la pagina alla larghezza dello schermo (utile per giocare anche dal telefono) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- titolo mostrato nella scheda del browser -->
+    <title>Acchiappa il quadrato</title>
+    <!-- STILE GRAFICO (CSS) -->
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+            background: #1e2233;
+            color: #f1f2f6;
+            min-height: 100vh;
+        }
+        header {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 14px 24px;
+            background: #151826;
+            border-bottom: 2px solid #2d3250;
+        }
+        h1 { margin: 0; font-size: 1.5rem; }
+        #info { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+        .pillola {
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: #2d3250;
+            font-size: 0.9rem;
+        }
+        #pallino-mio {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 6px;
+            vertical-align: middle;
+            background: #888;
+        }
+        button {
+            font: inherit;
+            cursor: pointer;
+            border: none;
+            border-radius: 999px;
+            padding: 6px 14px;
+            background: #f9ca24;
+            color: #1e2233;
+            font-weight: 600;
+        }
+        button:disabled { opacity: 0.5; cursor: wait; }
+        main {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            padding: 20px 24px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        #campo {
+            position: relative;
+            flex: 1 1 520px;
+            height: 480px;
+            background:
+                linear-gradient(#262b40 1px, transparent 1px) 0 0 / 40px 40px,
+                linear-gradient(90deg, #262b40 1px, transparent 1px) 0 0 / 40px 40px,
+                #1a1d2e;
+            border: 2px solid #2d3250;
+            border-radius: 14px;
+            overflow: hidden;
+        }
+        #quadrato {
+            position: absolute;
+            display: none;
+            width: 64px;
+            height: 64px;
+            border-radius: 10px;
+            background: #f9ca24;
+            box-shadow: 0 0 22px rgba(249, 202, 36, 0.55);
+            cursor: crosshair;
+            transition: transform 0.15s, background-color 0.15s, opacity 0.3s;
+        }
+        #quadrato:hover { transform: scale(1.06); }
+        #quadrato.preso { transform: scale(0.6); opacity: 0.35; cursor: default; box-shadow: none; }
+        #messaggio {
+            position: absolute;
+            left: 50%;
+            top: 16px;
+            transform: translateX(-50%);
+            padding: 8px 18px;
+            border-radius: 999px;
+            background: rgba(0, 0, 0, 0.6);
+            font-weight: 600;
+            opacity: 0;
+            transition: opacity 0.2s;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+        #messaggio.visibile { opacity: 1; }
+        aside {
+            flex: 0 1 300px;
+            background: #151826;
+            border: 2px solid #2d3250;
+            border-radius: 14px;
+            padding: 16px 20px;
+        }
+        aside h2 { margin: 0 0 4px; font-size: 1.2rem; }
+        aside p { margin: 0 0 12px; color: #a4b0be; font-size: 0.9rem; }
+        #classifica { list-style: none; margin: 0; padding: 0; }
+        #classifica li {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 10px;
+            margin-bottom: 6px;
+            border-radius: 8px;
+            background: #1e2233;
+        }
+        #classifica li.io { outline: 2px solid #f9ca24; }
+        .posizione { width: 22px; color: #a4b0be; font-weight: 600; }
+        .colore { width: 14px; height: 14px; border-radius: 4px; flex: none; }
+        .nome { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .barra { width: 70px; height: 6px; border-radius: 3px; background: #2d3250; overflow: hidden; }
+        .barra div { height: 100%; }
+        .punti { width: 26px; text-align: right; font-weight: 700; }
+        .overlay {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(10, 12, 20, 0.8);
+            padding: 16px;
+        }
+        .nascosto { display: none; }
+        .box {
+            background: #151826;
+            border: 2px solid #2d3250;
+            border-radius: 16px;
+            padding: 28px 32px;
+            max-width: 420px;
+            width: 100%;
+            text-align: center;
+        }
+        .box h2 { margin-top: 0; font-size: 1.6rem; }
+        .box p { color: #a4b0be; line-height: 1.5; }
+        #input-nome {
+            width: 100%;
+            font: inherit;
+            padding: 10px 14px;
+            margin: 8px 0 14px;
+            border-radius: 10px;
+            border: 2px solid #2d3250;
+            background: #1e2233;
+            color: inherit;
+        }
+        #entra { padding: 10px 28px; font-size: 1.05rem; }
+    </style>
+<!-- fine della sezione head -->
+</head>
+
+<!-- BODY: tutto quello che si vede nella pagina -->
+<body>
+
+    <!-- intestazione in alto con il titolo e le informazioni del giocatore -->
+    <header>
+        <!-- titolo del gioco -->
+        <h1>🎯 Acchiappa il quadrato</h1>
+        <!-- contenitore delle informazioni -->
+        <div id="info">
+            <!-- il mio nome con un pallino del mio colore (lo riempie JavaScript) -->
+            <span class="pillola"><span id="pallino-mio"></span><span id="mio-nome">...</span></span>
+            <!-- numero di client connessi al server -->
+            <span class="pillola" id="connessi">Connessi: 0</span>
+            <!-- stato della connessione WebSocket -->
+            <span class="pillola" id="stato">🟡 Connessione...</span>
+            <!-- pulsante per accendere/spegnere la musica -->
+            <button id="pulsante-musica">🔈 Musica</button>
+        <!-- fine del contenitore info -->
+        </div>
+    <!-- fine dell'intestazione -->
+    </header>
+
+    <!-- contenuto principale: campo di gioco + classifica -->
+    <main>
+        <!-- campo di gioco: il quadrato si muove al suo interno -->
+        <div id="campo">
+            <!-- il quadrato da cliccare (posizione decisa dal server) -->
+            <div id="quadrato"></div>
+            <!-- fumetto in alto per i messaggi brevi ("+1 per te!") -->
+            <div id="messaggio"></div>
+        <!-- fine del campo di gioco -->
+        </div>
+
+        <!-- pannello laterale con la classifica -->
+        <aside>
+            <!-- titolo del pannello -->
+            <h2>🏆 Classifica</h2>
+            <!-- regola del gioco; il numero di punti arriva dal server -->
+            <p>Il primo che arriva a <b id="obiettivo">10</b> punti vince!</p>
+            <!-- lista ordinata della classifica, riempita da JavaScript -->
+            <ol id="classifica"></ol>
+        <!-- fine del pannello laterale -->
+        </aside>
+    <!-- fine del contenuto principale -->
+    </main>
+
+    <!-- SCHERMATA INIZIALE: il giocatore sceglie il nome -->
+    <div id="schermata-nome" class="overlay">
+        <!-- riquadro centrale -->
+        <div class="box">
+            <!-- titolo della schermata -->
+            <h2>Benvenuto! 👋</h2>
+            <!-- spiegazione veloce del gioco -->
+            <p>Clicca il quadrato giallo prima degli altri giocatori. Ogni quadrato preso vale 1 punto.</p>
+            <!-- casella di testo per il nome (massimo 15 caratteri) -->
+            <input id="input-nome" type="text" maxlength="15" placeholder="Scrivi il tuo nome" autocomplete="off">
+            <!-- pulsante per entrare in partita: disabilitato finché il WebSocket non è connesso -->
+            <button id="entra" disabled>Gioca</button>
+        <!-- fine del riquadro -->
+        </div>
+    <!-- fine della schermata iniziale -->
+    </div>
+
+    <!-- SCHERMATA DI VITTORIA: compare quando qualcuno vince (nascosta all'inizio) -->
+    <div id="schermata-vittoria" class="overlay nascosto">
+        <!-- riquadro centrale -->
+        <div class="box">
+            <!-- testo con il nome del vincitore -->
+            <h2 id="testo-vittoria"></h2>
+            <!-- conto alla rovescia per la nuova partita -->
+            <p>Nuova partita tra <b id="conto">5</b> secondi...</p>
+        <!-- fine del riquadro -->
+        </div>
+    <!-- fine della schermata di vittoria -->
+    </div>
+
+    <!-- elemento audio: il file arriva in streaming dalla rotta GET /musica del server; loop = ricomincia da capo -->
+    <audio id="audio" src="/musica" loop preload="none"></audio>
+
+    <!-- ============================================================================ -->
+    <!-- JAVASCRIPT DEL CLIENT                                                        -->
+    <!-- ============================================================================ -->
+    <script>
+        // * --- 1. CONNESSIONE WEBSOCKET ---
+
+        // apriamo il WebSocket verso lo stesso server che ci ha dato la pagina: "http://..." diventa "ws://..." (come negli esempi del prof)
+        const webSocket = new WebSocket(location.origin.replace(/^http/, 'ws'));
+
+        // * --- 2. RIFERIMENTI AGLI ELEMENTI DELLA PAGINA (getElementById) ---
+
+        // il campo di gioco
+        const campo = document.getElementById('campo');
+        // il quadrato da cliccare
+        const quadrato = document.getElementById('quadrato');
+        // il fumetto dei messaggi
+        const messaggio = document.getElementById('messaggio');
+        // il pallino con il mio colore
+        const pallinoMio = document.getElementById('pallino-mio');
+        // il testo con il mio nome
+        const mioNome = document.getElementById('mio-nome');
+        // il contatore dei connessi
+        const connessi = document.getElementById('connessi');
+        // lo stato della connessione
+        const stato = document.getElementById('stato');
+        // il numero di punti per vincere
+        const obiettivo = document.getElementById('obiettivo');
+        // la lista della classifica
+        const classifica = document.getElementById('classifica');
+        // la schermata iniziale
+        const schermataNome = document.getElementById('schermata-nome');
+        // la casella del nome
+        const inputNome = document.getElementById('input-nome');
+        // il pulsante "Gioca"
+        const pulsanteEntra = document.getElementById('entra');
+        // la schermata di vittoria
+        const schermataVittoria = document.getElementById('schermata-vittoria');
+        // il testo della vittoria
+        const testoVittoria = document.getElementById('testo-vittoria');
+        // il numero del conto alla rovescia
+        const conto = document.getElementById('conto');
+        // l'elemento audio
+        const audio = document.getElementById('audio');
+        // il pulsante della musica
+        const pulsanteMusica = document.getElementById('pulsante-musica');
+
+        // * --- 3. VARIABILI DEL CLIENT ---
+
+        // il mio id, assegnato dal server nel messaggio di benvenuto
+        let mioId = null;
+        // il numero del quadrato attualmente in campo (lo rimandiamo al server quando clicchiamo)
+        let numeroQuadrato = 0;
+        // i punti necessari per vincere (servono per disegnare le barre della classifica)
+        let puntiPerVincere = 10;
+        // riferimento al timer del fumetto, per poterlo azzerare
+        let timerMessaggio = null;
+        // riferimento al timer del conto alla rovescia
+        let timerConto = null;
+
+        // * --- 4. EVENTI DEL WEBSOCKET ---
+
+        // onopen: la connessione con il server è stata aperta
+        webSocket.onopen = () => {
+            // aggiorniamo lo stato
+            stato.textContent = '🟢 Connesso';
+            // ora si può premere "Gioca"
+            pulsanteEntra.disabled = false;
+            // mettiamo il cursore nella casella del nome
+            inputNome.focus();
+        // fine di onopen
+        };
+
+        // onclose: la connessione si è chiusa (ad esempio il server è stato spento)
+        webSocket.onclose = () => {
+            // aggiorniamo lo stato
+            stato.textContent = '🔴 Disconnesso';
+            // nascondiamo il quadrato perché il gioco non può continuare
+            quadrato.style.display = 'none';
+            // mostriamo un messaggio esplicativo
+            mostraMessaggio('Connessione persa: ricarica la pagina');
+        // fine di onclose
+        };
+
+        // onmessage: è arrivato un messaggio dal server
+        webSocket.onmessage = (event) => {
+            // il messaggio arriva come testo: JSON.parse lo trasforma in oggetto
+            const msg = JSON.parse(event.data);
+
+            // il campo "tipo" ci dice che messaggio è: scegliamo cosa fare con if/else if
+            if (msg.tipo === 'benvenuto') {
+                // salviamo il mio id
+                mioId = msg.id;
+                // coloriamo il mio pallino con il colore assegnato dal server
+                pallinoMio.style.background = msg.colore;
+                // mostriamo un nome provvisorio
+                mioNome.textContent = 'Giocatore ' + msg.id;
+                // salviamo i punti per vincere
+                puntiPerVincere = msg.puntiPerVincere;
+                // e li scriviamo nella regola della classifica
+                obiettivo.textContent = msg.puntiPerVincere;
+            // messaggio "quadrato": il server ha deciso una nuova posizione
+            } else if (msg.tipo === 'quadrato') {
+                // ricordiamo il numero di questo quadrato
+                numeroQuadrato = msg.numero;
+                // spazio orizzontale disponibile = larghezza del campo meno la larghezza del quadrato
+                const spazioX = campo.clientWidth - quadrato.offsetWidth;
+                // spazio verticale disponibile = altezza del campo meno l'altezza del quadrato
+                const spazioY = campo.clientHeight - quadrato.offsetHeight;
+                // il server manda una percentuale (0-100): la trasformiamo in pixel, così funziona con ogni dimensione di schermo
+                quadrato.style.left = (spazioX * msg.x / 100) + 'px';
+                // stessa cosa per la coordinata verticale
+                quadrato.style.top = (spazioY * msg.y / 100) + 'px';
+                // togliamo il colore del giocatore precedente (torna giallo)
+                quadrato.style.backgroundColor = '';
+                // togliamo l'effetto "preso"
+                quadrato.classList.remove('preso');
+                // rendiamo visibile il quadrato
+                quadrato.style.display = 'block';
+            // messaggio "preso": qualcuno ha preso il quadrato
+            } else if (msg.tipo === 'preso') {
+                // controlliamo che si tratti del quadrato attuale
+                if (msg.numero !== numeroQuadrato) return;
+                // aggiungiamo la classe CSS che rimpicciolisce il quadrato
+                quadrato.classList.add('preso');
+                // lo coloriamo con il colore di chi l'ha preso
+                quadrato.style.backgroundColor = msg.colore;
+                // operatore ternario: se l'ho preso io mostro "+1 per te", altrimenti il nome dell'altro
+                mostraMessaggio(msg.id === mioId ? '+1 per te! 🎉' : msg.nome + ' è stato più veloce');
+            // messaggio "classifica": punti e connessi aggiornati
+            } else if (msg.tipo === 'classifica') {
+                // aggiorniamo il numero dei connessi
+                connessi.textContent = 'Connessi: ' + msg.connessi;
+                // ridisegniamo la classifica
+                aggiornaClassifica(msg.giocatori);
+            // messaggio "vittoria": qualcuno ha raggiunto i punti per vincere
+            } else if (msg.tipo === 'vittoria') {
+                // nascondiamo il quadrato
+                quadrato.style.display = 'none';
+                // testo diverso se ho vinto io o un altro giocatore
+                testoVittoria.textContent = msg.id === mioId ? '🏆 Hai vinto!' : '🏆 Ha vinto ' + msg.nome;
+                // coloriamo il titolo con il colore del vincitore
+                testoVittoria.style.color = msg.colore;
+                // mostriamo la schermata di vittoria togliendo la classe "nascosto"
+                schermataVittoria.classList.remove('nascosto');
+                // facciamo partire il conto alla rovescia dai secondi indicati dal server
+                avviaContoAllaRovescia(msg.secondi);
+            // messaggio "nuova_partita": i punti sono stati azzerati
+            } else if (msg.tipo === 'nuova_partita') {
+                // nascondiamo la schermata di vittoria
+                schermataVittoria.classList.add('nascosto');
+                // fermiamo il conto alla rovescia
+                clearInterval(timerConto);
+                // avvisiamo i giocatori
+                mostraMessaggio('Nuova partita! Via! 🚀');
+            // fine della catena di if
+            }
+        // fine di onmessage
+        };
+
+        // * --- 5. EVENTI DELL'UTENTE (addEventListener) ---
+
+        // pointerdown scatta appena si preme il mouse o si tocca lo schermo: è più veloce di "click"
+        quadrato.addEventListener('pointerdown', () => {
+            // se il quadrato è già stato preso non mandiamo niente
+            if (quadrato.classList.contains('preso')) return;
+            // mandiamo al server il click con il numero del quadrato (sarà il server a decidere se vale)
+            webSocket.send(JSON.stringify({ tipo: 'click', numero: numeroQuadrato }));
+        // fine dell'evento sul quadrato
+        });
+
+        // click sul pulsante "Gioca": entriamo in partita
+        pulsanteEntra.addEventListener('click', entraInPartita);
+
+        // tasto premuto nella casella del nome
+        inputNome.addEventListener('keydown', (evento) => {
+            // se è il tasto Invio entriamo in partita, come se avessimo premuto "Gioca"
+            if (evento.key === 'Enter') entraInPartita();
+        // fine dell'evento sulla casella
+        });
+
+        // click sul pulsante della musica
+        pulsanteMusica.addEventListener('click', () => {
+            // se la musica è ferma...
+            if (audio.paused) {
+                // ...la facciamo partire; play() restituisce una Promise, catch gestisce un eventuale errore
+                audio.play().catch(() => mostraMessaggio('Impossibile riprodurre la musica'));
+                // cambiamo l'icona del pulsante
+                pulsanteMusica.textContent = '🔊 Musica';
+            // altrimenti...
+            } else {
+                // ...la mettiamo in pausa
+                audio.pause();
+                // e rimettiamo l'icona spenta
+                pulsanteMusica.textContent = '🔈 Musica';
+            // fine dell'if/else
+            }
+        // fine dell'evento sulla musica
+        });
+
+        // * --- 6. FUNZIONI ---
+
+        // invia il nome al server e chiude la schermata iniziale
+        function entraInPartita() {
+            // se la connessione non è ancora aperta non facciamo nulla
+            if (webSocket.readyState !== WebSocket.OPEN) return;
+            // leggiamo il nome scritto togliendo gli spazi ai lati
+            const nome = inputNome.value.trim();
+            // inviamo il nome al server in formato JSON
+            webSocket.send(JSON.stringify({ tipo: 'nome', nome: nome }));
+            // mostriamo il nome nell'intestazione (se vuoto lasciamo quello automatico)
+            if (nome) mioNome.textContent = nome;
+            // nascondiamo la schermata iniziale
+            schermataNome.classList.add('nascosto');
+        // fine della funzione entraInPartita
+        }
+
+        // ridisegna la lista della classifica
+        function aggiornaClassifica(giocatori) {
+            // svuotiamo la lista
+            classifica.innerHTML = '';
+            // forEach scorre i giocatori (già ordinati dal server); indice parte da 0
+            giocatori.forEach((giocatore, indice) => {
+                // creiamo un nuovo elemento <li> (come createElement nell'esempio ws_socket_07)
+                const riga = document.createElement('li');
+                // se questa riga sono io, aggiungiamo la classe che la evidenzia
+                if (giocatore.id === mioId) riga.classList.add('io');
+                // posizione in classifica (indice + 1 perché l'indice parte da 0)
+                const posizione = creaElemento('span', 'posizione', indice + 1 + '.');
+                // quadratino del colore del giocatore
+                const colore = creaElemento('span', 'colore', '');
+                // gli diamo il colore del giocatore
+                colore.style.background = giocatore.colore;
+                // nome del giocatore (textContent evita che un nome con codice HTML venga eseguito)
+                const nome = creaElemento('span', 'nome', giocatore.nome);
+                // barra di avanzamento verso la vittoria
+                const barra = creaElemento('span', 'barra', '');
+                // parte riempita della barra
+                const riempimento = document.createElement('div');
+                // larghezza in percentuale = punti / punti per vincere * 100
+                riempimento.style.width = (giocatore.punti / puntiPerVincere * 100) + '%';
+                // colore della barra = colore del giocatore
+                riempimento.style.background = giocatore.colore;
+                // inseriamo il riempimento dentro la barra
+                barra.appendChild(riempimento);
+                // numero di punti
+                const punti = creaElemento('span', 'punti', giocatore.punti);
+                // inseriamo tutti i pezzi dentro la riga (append accetta più elementi)
+                riga.append(posizione, colore, nome, barra, punti);
+                // aggiungiamo la riga alla lista nella pagina
+                classifica.appendChild(riga);
+            // fine del forEach
+            });
+        // fine della funzione aggiornaClassifica
+        }
+
+        // crea un elemento HTML con una classe CSS e un testo (funzione di aiuto per non ripetere codice)
+        function creaElemento(tag, classe, testo) {
+            // creiamo l'elemento del tipo richiesto (span, div...)
+            const elemento = document.createElement(tag);
+            // assegniamo la classe CSS
+            elemento.className = classe;
+            // inseriamo il testo
+            elemento.textContent = testo;
+            // restituiamo l'elemento pronto
+            return elemento;
+        // fine della funzione creaElemento
+        }
+
+        // mostra per 1,5 secondi un messaggio nel fumetto in alto
+        function mostraMessaggio(testo) {
+            // scriviamo il testo
+            messaggio.textContent = testo;
+            // rendiamo visibile il fumetto
+            messaggio.classList.add('visibile');
+            // se c'era un timer precedente lo annulliamo (così il nuovo messaggio dura 1,5 secondi pieni)
+            clearTimeout(timerMessaggio);
+            // dopo 1500 ms nascondiamo di nuovo il fumetto
+            timerMessaggio = setTimeout(() => messaggio.classList.remove('visibile'), 1500);
+        // fine della funzione mostraMessaggio
+        }
+
+        // conto alla rovescia mostrato nella schermata di vittoria
+        function avviaContoAllaRovescia(secondi) {
+            // scriviamo il numero di partenza
+            conto.textContent = secondi;
+            // fermiamo un eventuale conto precedente
+            clearInterval(timerConto);
+            // ogni 1000 ms (1 secondo)...
+            timerConto = setInterval(() => {
+                // ...togliamo un secondo
+                secondi--;
+                // aggiorniamo il numero (Math.max evita di scendere sotto lo 0)
+                conto.textContent = Math.max(secondi, 0);
+            // fine del setInterval
+            }, 1000);
+        // fine della funzione avviaContoAllaRovescia
+        }
+    // fine dello script
+    </script>
+<!-- fine del body -->
+</body>
+<!-- fine del documento HTML -->
+</html>

@@ -1,0 +1,6 @@
+# moduli installati da "npm install" (si ricreano dal package.json)
+node_modules/
+# file di sistema del Mac
+.DS_Store
+# zip di consegna (si rigenera; va caricato su Classroom, non su GitHub)
+*.zip
