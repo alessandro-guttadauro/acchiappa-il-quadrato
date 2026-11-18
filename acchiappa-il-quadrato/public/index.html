@@ -18,9 +18,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- titolo mostrato nella scheda del browser -->
     <title>Acchiappa il quadrato</title>
+    <!-- icona della scheda del browser (favicon): un piccolo disegno SVG scritto direttamente nell'indirizzo (data URI) -->
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f9ca24' stroke-width='2.4'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Ccircle cx='12' cy='12' r='6'/%3E%3Ccircle cx='12' cy='12' r='2'/%3E%3C/svg%3E">
     <!-- STILE GRAFICO (CSS) -->
     <style>
         * { box-sizing: border-box; }
+        .icona {
+            width: 1.15em;
+            height: 1.15em;
+            flex: none;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+        .icona.grande {
+            display: block;
+            width: 52px;
+            height: 52px;
+            margin: 0 auto 10px;
+            color: #f9ca24;
+        }
+        .pallino-stato {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #f9ca24;
+            box-shadow: 0 0 8px currentColor;
+        }
+        .pallino-stato.verde { background: #2ecc71; color: #2ecc71; }
+        .pallino-stato.rosso { background: #e74c3c; color: #e74c3c; }
         body {
             margin: 0;
             font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -38,9 +67,13 @@
             background: #151826;
             border-bottom: 2px solid #2d3250;
         }
-        h1 { margin: 0; font-size: 1.5rem; }
+        h1 { margin: 0; font-size: 1.5rem; display: flex; align-items: center; gap: 10px; }
+        h1 .icona { color: #f9ca24; width: 1.3em; height: 1.3em; }
         #info { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
         .pillola {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
             padding: 6px 12px;
             border-radius: 999px;
             background: #2d3250;
@@ -51,11 +84,12 @@
             width: 12px;
             height: 12px;
             border-radius: 50%;
-            margin-right: 6px;
-            vertical-align: middle;
             background: #888;
         }
         button {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
             font: inherit;
             cursor: pointer;
             border: none;
@@ -100,6 +134,9 @@
         #quadrato:hover { transform: scale(1.06); }
         #quadrato.preso { transform: scale(0.6); opacity: 0.35; cursor: default; box-shadow: none; }
         #messaggio {
+            display: flex;
+            align-items: center;
+            gap: 8px;
             position: absolute;
             left: 50%;
             top: 16px;
@@ -121,7 +158,8 @@
             border-radius: 14px;
             padding: 16px 20px;
         }
-        aside h2 { margin: 0 0 4px; font-size: 1.2rem; }
+        aside h2 { margin: 0 0 4px; font-size: 1.2rem; display: flex; align-items: center; gap: 8px; }
+        aside h2 .icona { color: #f9ca24; }
         aside p { margin: 0 0 12px; color: #a4b0be; font-size: 0.9rem; }
         #classifica { list-style: none; margin: 0; padding: 0; }
         #classifica li {
@@ -179,20 +217,44 @@
 <!-- BODY: tutto quello che si vede nella pagina -->
 <body>
 
+    <!-- ICONE VETTORIALI (SVG): ogni <symbol> è un'icona disegnata UNA volta e riusata dove serve con <svg><use href="#nome"></svg> -->
+    <!-- le icone seguono lo stile del set open source Lucide (licenza ISC); width/height 0 = questo contenitore non occupa spazio -->
+    <svg width="0" height="0" style="position: absolute">
+        <!-- bersaglio (logo del gioco): tre cerchi concentrici -->
+        <symbol id="i-bersaglio" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
+        <!-- utenti (giocatori connessi): due teste con le spalle -->
+        <symbol id="i-utenti" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+        <!-- altoparlante acceso (musica attiva): cassa con due onde sonore -->
+        <symbol id="i-volume-on" viewBox="0 0 24 24"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></symbol>
+        <!-- altoparlante spento (musica ferma): cassa con una X -->
+        <symbol id="i-volume-off" viewBox="0 0 24 24"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="m22 9-6 6"/><path d="m16 9 6 6"/></symbol>
+        <!-- trofeo (classifica e vittoria) -->
+        <symbol id="i-trofeo" viewBox="0 0 24 24"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></symbol>
+        <!-- stella (punto preso da me) -->
+        <symbol id="i-stella" viewBox="0 0 24 24"><path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></symbol>
+        <!-- fulmine (un altro giocatore è stato più veloce) -->
+        <symbol id="i-fulmine" viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></symbol>
+        <!-- play (inizio di una nuova partita) -->
+        <symbol id="i-play" viewBox="0 0 24 24"><path d="m6 3 14 9-14 9V3z"/></symbol>
+        <!-- triangolo di avviso (errori: connessione persa, musica non disponibile) -->
+        <symbol id="i-avviso" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+    <!-- fine delle icone -->
+    </svg>
+
     <!-- intestazione in alto con il titolo e le informazioni del giocatore -->
     <header>
-        <!-- titolo del gioco -->
-        <h1>🎯 Acchiappa il quadrato</h1>
+        <!-- titolo del gioco preceduto dall'icona bersaglio (class="icona" le dà dimensione e colore dal CSS) -->
+        <h1><svg class="icona"><use href="#i-bersaglio"/></svg>Acchiappa il quadrato</h1>
         <!-- contenitore delle informazioni -->
         <div id="info">
             <!-- il mio nome con un pallino del mio colore (lo riempie JavaScript) -->
             <span class="pillola"><span id="pallino-mio"></span><span id="mio-nome">...</span></span>
-            <!-- numero di client connessi al server -->
-            <span class="pillola" id="connessi">Connessi: 0</span>
-            <!-- stato della connessione WebSocket -->
-            <span class="pillola" id="stato">🟡 Connessione...</span>
-            <!-- pulsante per accendere/spegnere la musica -->
-            <button id="pulsante-musica">🔈 Musica</button>
+            <!-- numero di client connessi al server, con l'icona degli utenti -->
+            <span class="pillola"><svg class="icona"><use href="#i-utenti"/></svg><span id="connessi">Connessi: 0</span></span>
+            <!-- stato della connessione WebSocket: pallino colorato (giallo/verde/rosso) e testo -->
+            <span class="pillola"><span id="pallino-stato" class="pallino-stato"></span><span id="stato">Connessione...</span></span>
+            <!-- pulsante della musica: l'icona (id="icona-musica") cambia tra altoparlante spento e acceso -->
+            <button id="pulsante-musica"><svg class="icona"><use id="icona-musica" href="#i-volume-off"/></svg>Musica</button>
         <!-- fine del contenitore info -->
         </div>
     <!-- fine dell'intestazione -->
@@ -204,15 +266,15 @@
         <div id="campo">
             <!-- il quadrato da cliccare (posizione decisa dal server) -->
             <div id="quadrato"></div>
-            <!-- fumetto in alto per i messaggi brevi ("+1 per te!") -->
-            <div id="messaggio"></div>
+            <!-- fumetto in alto per i messaggi brevi ("+1 per te!"): un'icona che cambia e un testo -->
+            <div id="messaggio"><svg class="icona"><use id="icona-messaggio" href="#i-stella"/></svg><span id="testo-messaggio"></span></div>
         <!-- fine del campo di gioco -->
         </div>
 
         <!-- pannello laterale con la classifica -->
         <aside>
-            <!-- titolo del pannello -->
-            <h2>🏆 Classifica</h2>
+            <!-- titolo del pannello con l'icona del trofeo -->
+            <h2><svg class="icona"><use href="#i-trofeo"/></svg>Classifica</h2>
             <!-- regola del gioco; il numero di punti arriva dal server -->
             <p>Il primo che arriva a <b id="obiettivo">10</b> punti vince!</p>
             <!-- lista ordinata della classifica, riempita da JavaScript -->
@@ -226,8 +288,10 @@
     <div id="schermata-nome" class="overlay">
         <!-- riquadro centrale -->
         <div class="box">
+            <!-- icona grande del bersaglio sopra il titolo -->
+            <svg class="icona grande"><use href="#i-bersaglio"/></svg>
             <!-- titolo della schermata -->
-            <h2>Benvenuto! 👋</h2>
+            <h2>Benvenuto!</h2>
             <!-- spiegazione veloce del gioco -->
             <p>Clicca il quadrato giallo prima degli altri giocatori. Ogni quadrato preso vale 1 punto.</p>
             <!-- casella di testo per il nome (massimo 15 caratteri) -->
@@ -243,6 +307,8 @@
     <div id="schermata-vittoria" class="overlay nascosto">
         <!-- riquadro centrale -->
         <div class="box">
+            <!-- icona grande del trofeo -->
+            <svg class="icona grande"><use href="#i-trofeo"/></svg>
             <!-- testo con il nome del vincitore -->
             <h2 id="testo-vittoria"></h2>
             <!-- conto alla rovescia per la nuova partita -->
@@ -272,14 +338,20 @@
         const quadrato = document.getElementById('quadrato');
         // il fumetto dei messaggi
         const messaggio = document.getElementById('messaggio');
+        // il testo dentro il fumetto
+        const testoMessaggio = document.getElementById('testo-messaggio');
+        // l'icona dentro il fumetto (l'elemento <use> che punta a un simbolo SVG)
+        const iconaMessaggio = document.getElementById('icona-messaggio');
         // il pallino con il mio colore
         const pallinoMio = document.getElementById('pallino-mio');
         // il testo con il mio nome
         const mioNome = document.getElementById('mio-nome');
         // il contatore dei connessi
         const connessi = document.getElementById('connessi');
-        // lo stato della connessione
+        // il testo dello stato della connessione
         const stato = document.getElementById('stato');
+        // il pallino colorato dello stato della connessione
+        const pallinoStato = document.getElementById('pallino-stato');
         // il numero di punti per vincere
         const obiettivo = document.getElementById('obiettivo');
         // la lista della classifica
@@ -300,6 +372,8 @@
         const audio = document.getElementById('audio');
         // il pulsante della musica
         const pulsanteMusica = document.getElementById('pulsante-musica');
+        // l'icona del pulsante della musica (altoparlante acceso/spento)
+        const iconaMusica = document.getElementById('icona-musica');
 
         // * --- 3. VARIABILI DEL CLIENT ---
 
@@ -318,8 +392,10 @@
 
         // onopen: la connessione con il server è stata aperta
         webSocket.onopen = () => {
-            // aggiorniamo lo stato
-            stato.textContent = '🟢 Connesso';
+            // aggiorniamo il testo dello stato
+            stato.textContent = 'Connesso';
+            // coloriamo di verde il pallino (className sostituisce tutte le classi CSS dell'elemento)
+            pallinoStato.className = 'pallino-stato verde';
             // ora si può premere "Gioca"
             pulsanteEntra.disabled = false;
             // mettiamo il cursore nella casella del nome
@@ -329,12 +405,14 @@
 
         // onclose: la connessione si è chiusa (ad esempio il server è stato spento)
         webSocket.onclose = () => {
-            // aggiorniamo lo stato
-            stato.textContent = '🔴 Disconnesso';
+            // aggiorniamo il testo dello stato
+            stato.textContent = 'Disconnesso';
+            // coloriamo di rosso il pallino
+            pallinoStato.className = 'pallino-stato rosso';
             // nascondiamo il quadrato perché il gioco non può continuare
             quadrato.style.display = 'none';
-            // mostriamo un messaggio esplicativo
-            mostraMessaggio('Connessione persa: ricarica la pagina');
+            // mostriamo un messaggio esplicativo con l'icona di avviso
+            mostraMessaggio('Connessione persa: ricarica la pagina', 'avviso');
         // fine di onclose
         };
 
@@ -381,8 +459,10 @@
                 quadrato.classList.add('preso');
                 // lo coloriamo con il colore di chi l'ha preso
                 quadrato.style.backgroundColor = msg.colore;
-                // operatore ternario: se l'ho preso io mostro "+1 per te", altrimenti il nome dell'altro
-                mostraMessaggio(msg.id === mioId ? '+1 per te! 🎉' : msg.nome + ' è stato più veloce');
+                // se l'ho preso io: "+1 per te" con la stella
+                if (msg.id === mioId) mostraMessaggio('+1 per te!', 'stella');
+                // altrimenti il nome di chi è stato più veloce, con il fulmine
+                else mostraMessaggio(msg.nome + ' è stato più veloce', 'fulmine');
             // messaggio "classifica": punti e connessi aggiornati
             } else if (msg.tipo === 'classifica') {
                 // aggiorniamo il numero dei connessi
@@ -394,7 +474,7 @@
                 // nascondiamo il quadrato
                 quadrato.style.display = 'none';
                 // testo diverso se ho vinto io o un altro giocatore
-                testoVittoria.textContent = msg.id === mioId ? '🏆 Hai vinto!' : '🏆 Ha vinto ' + msg.nome;
+                testoVittoria.textContent = msg.id === mioId ? 'Hai vinto!' : 'Ha vinto ' + msg.nome;
                 // coloriamo il titolo con il colore del vincitore
                 testoVittoria.style.color = msg.colore;
                 // mostriamo la schermata di vittoria togliendo la classe "nascosto"
@@ -407,8 +487,8 @@
                 schermataVittoria.classList.add('nascosto');
                 // fermiamo il conto alla rovescia
                 clearInterval(timerConto);
-                // avvisiamo i giocatori
-                mostraMessaggio('Nuova partita! Via! 🚀');
+                // avvisiamo i giocatori con l'icona play
+                mostraMessaggio('Nuova partita! Via!', 'play');
             // fine della catena di if
             }
         // fine di onmessage
@@ -440,15 +520,15 @@
             // se la musica è ferma...
             if (audio.paused) {
                 // ...la facciamo partire; play() restituisce una Promise, catch gestisce un eventuale errore
-                audio.play().catch(() => mostraMessaggio('Impossibile riprodurre la musica'));
-                // cambiamo l'icona del pulsante
-                pulsanteMusica.textContent = '🔊 Musica';
+                audio.play().catch(() => mostraMessaggio('Impossibile riprodurre la musica', 'avviso'));
+                // cambiamo l'icona del pulsante: l'attributo href di <use> ora punta all'altoparlante acceso
+                iconaMusica.setAttribute('href', '#i-volume-on');
             // altrimenti...
             } else {
                 // ...la mettiamo in pausa
                 audio.pause();
-                // e rimettiamo l'icona spenta
-                pulsanteMusica.textContent = '🔈 Musica';
+                // e rimettiamo l'icona dell'altoparlante spento
+                iconaMusica.setAttribute('href', '#i-volume-off');
             // fine dell'if/else
             }
         // fine dell'evento sulla musica
@@ -523,10 +603,12 @@
         // fine della funzione creaElemento
         }
 
-        // mostra per 1,5 secondi un messaggio nel fumetto in alto
-        function mostraMessaggio(testo) {
+        // mostra per 1,5 secondi un messaggio nel fumetto in alto; "icona" è il nome del simbolo SVG (stella, fulmine, play, avviso)
+        function mostraMessaggio(testo, icona) {
             // scriviamo il testo
-            messaggio.textContent = testo;
+            testoMessaggio.textContent = testo;
+            // scegliamo l'icona: es. 'stella' diventa '#i-stella', l'id del <symbol> da disegnare
+            iconaMessaggio.setAttribute('href', '#i-' + icona);
             // rendiamo visibile il fumetto
             messaggio.classList.add('visibile');
             // se c'era un timer precedente lo annulliamo (così il nuovo messaggio dura 1,5 secondi pieni)

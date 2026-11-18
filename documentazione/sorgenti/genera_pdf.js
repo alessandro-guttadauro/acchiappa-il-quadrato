@@ -41,7 +41,9 @@ function sezioni(testo, regex) {
 const S = sezioni(server, /^\/\/ \* (\d)\./);
 const script = index.slice(index.indexOf('<script>') + 8, index.indexOf('</script>'));
 const C = sezioni(script, /^\s*\/\/ \* --- (\d)\./);
-const corpo = pulisci(index.slice(index.indexOf('<body>'), index.indexOf('<!-- ===', index.indexOf('<body>'))));
+const corpo = pulisci(index.slice(index.indexOf('<body>'), index.indexOf('<!-- ===', index.indexOf('<body>'))))
+  // il blocco delle icone SVG è lungo (sono solo disegni): nel PDF lo riassumiamo in una riga
+  .replace(/<svg width="0"[\s\S]*?\n\s*<\/svg>/, '<svg width="0" height="0" style="position: absolute"> ... 9 icone <symbol id="i-..."> ... </svg>');
 // toglie il rientro comune a tutte le righe (dedent), così il codice parte dal margine sinistro
 function dedent(s) {
   const righe = s.split('\n');
@@ -143,7 +145,7 @@ const blocchiClient = [
       <li><b>entraInPartita</b>: controlla <code>readyState === WebSocket.OPEN</code>, manda il nome e nasconde la schermata iniziale.</li>
       <li><b>aggiornaClassifica</b>: svuota la lista e la ricrea con <code>createElement</code> / <code>appendChild</code> (come la griglia dell'esempio 07).
       I nomi vengono scritti con <code>textContent</code> e <b>non</b> con <code>innerHTML</code>: se qualcuno si chiamasse <code>&lt;script&gt;...</code> il browser lo mostrerebbe come testo e non lo eseguirebbe (protezione XSS).</li>
-      <li><b>mostraMessaggio</b>: <code>setTimeout</code> nasconde il fumetto dopo 1,5 s; <code>clearTimeout</code> annulla il timer precedente.</li>
+      <li><b>mostraMessaggio(testo, icona)</b>: scrive il testo, sceglie l'icona con <code>setAttribute('href', '#i-' + icona)</code>, poi <code>setTimeout</code> nasconde il fumetto dopo 1,5 s; <code>clearTimeout</code> annulla il timer precedente.</li>
       <li><b>avviaContoAllaRovescia</b>: <code>setInterval</code> ogni secondo, fermato con <code>clearInterval</code> quando parte la nuova partita.</li>
     </ul>`, 'ws_socket_07 (createElement)'],
 ];
@@ -204,7 +206,7 @@ const blocco = (n, titolo, testo, esempio, cod) => `
   <div class="blocco">
     <h3><span class="sez">§ ${n}</span> ${titolo}</h3>
     ${cod}
-    <div class="spiega">${testo}${esempio ? `<p class="rif">📎 Negli esempi del prof: ${esempio}</p>` : ''}</div>
+    <div class="spiega">${testo}${esempio ? `<p class="rif"><svg class="ico"><use href="#i-graffetta"/></svg> Negli esempi del prof: ${esempio}</p>` : ''}</div>
   </div>`;
 
 const html = `<!DOCTYPE html>
@@ -241,10 +243,16 @@ const html = `<!DOCTYPE html>
   .domanda { break-inside: avoid; margin-bottom: 3.5mm; padding: 3mm 4mm; border: 1px solid #e3e5ec; border-left: 4px solid #f9ca24; border-radius: 2mm; }
   .domanda b.q { display: block; margin-bottom: 1mm; }
   svg text { font-family: -apple-system, "Helvetica Neue", sans-serif; }
+  .ico { width: 1.1em; height: 1.1em; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; vertical-align: -0.17em; }
+  .ico.logo { color: #f9ca24; width: 0.95em; height: 0.95em; margin-right: 3mm; vertical-align: -0.12em; }
 </style></head><body>
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="i-bersaglio" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
+  <symbol id="i-graffetta" viewBox="0 0 24 24"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></symbol>
+</svg>
 
 <div class="copertina">
-  <h1>🎯 Acchiappa il <span>quadrato</span></h1>
+  <h1><svg class="ico logo"><use href="#i-bersaglio"/></svg>Acchiappa il <span>quadrato</span></h1>
   <div class="sotto">Spiegazione del codice · guida allo studio per la presentazione</div>
   <div class="chi">Gentile · Guttadauro · Pavoni — 5A Informatica — TPSIT 2026/27</div>
 </div>
@@ -317,7 +325,12 @@ ${blocchiServer.map((b) => blocco(b[0], b[1], b[2], b[3], codice(S[b[0]] || ''))
   ${codice(corpo)}
   <div class="spiega"><p>La pagina ha: un'<b>intestazione</b> (nome, connessi, stato, musica), il <b>campo</b> con il quadrato, la <b>classifica</b> (lista <code>&lt;ol&gt;</code> riempita da JavaScript),
   due <b>schermate sovrapposte</b> (nome iniziale e vittoria, mostrate/nascoste aggiungendo o togliendo la classe CSS <code>nascosto</code>) e l'elemento
-  <code>&lt;audio&gt;</code> che prende la musica dalla rotta <code>/musica</code> del server. Il CSS (dentro <code>&lt;style&gt;</code>) serve solo alla grafica.</p></div>
+  <code>&lt;audio&gt;</code> che prende la musica dalla rotta <code>/musica</code> del server. Il CSS (dentro <code>&lt;style&gt;</code>) serve solo alla grafica.</p>
+  <p><b>Icone vettoriali (SVG).</b> All'inizio del <code>body</code> c'è un contenitore <code>&lt;svg&gt;</code> invisibile con 9 <code>&lt;symbol&gt;</code>: ognuno è un'icona
+  disegnata una sola volta (bersaglio, utenti, altoparlante acceso/spento, trofeo, stella, fulmine, play, avviso). Dove serve un'icona scriviamo
+  <code>&lt;svg class="icona"&gt;&lt;use href="#i-trofeo"/&gt;&lt;/svg&gt;</code>: <code>&lt;use&gt;</code> "copia" il simbolo indicato. Essendo vettoriali restano nitide a qualsiasi
+  grandezza e prendono il colore dal CSS (<code>stroke: currentColor</code>). Per cambiare icona da JavaScript basta cambiare l'attributo <code>href</code>
+  con <code>setAttribute</code> (pulsante della musica e fumetto dei messaggi). Lo stile delle icone è quello del set open source Lucide (licenza ISC).</p></div>
 </div>
 ${blocchiClient.map((b) => blocco(b[0], b[1], b[2], b[3], codice(C[b[0]] || ''))).join('')}
 </div>

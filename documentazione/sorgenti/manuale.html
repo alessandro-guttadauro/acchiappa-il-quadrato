@@ -164,7 +164,13 @@
     padding: 3.5mm;
     background: #fff;
   }
-  .regola .icona { font-size: 16pt; line-height: 1; margin-bottom: 1.5mm; }
+  .ico { width: 1.1em; height: 1.1em; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; vertical-align: -0.17em; flex: none; }
+  .testata h1 { display: flex; align-items: center; gap: 3mm; }
+  .testata h1 .ico { color: var(--giallo); width: 1em; height: 1em; }
+  .mini-testata .ico { color: var(--giallo); margin-right: 1.5mm; }
+  .regola .ico { display: block; width: 7mm; height: 7mm; color: #d39e00; margin-bottom: 2mm; }
+  .box h3 .ico { color: #d39e00; margin-right: 1mm; }
+  .pallino { display: inline-block; width: 2.4mm; height: 2.4mm; border-radius: 50%; background: #e74c3c; margin: 0 1mm; }
   .regola b { display: block; margin-bottom: 1mm; }
   .regola p { font-size: 9.2pt; margin: 0; color: #3b3f4c; }
   table { width: 100%; border-collapse: collapse; font-size: 9.2pt; }
@@ -185,12 +191,20 @@
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="i-bersaglio" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
+  <symbol id="i-lampadina" viewBox="0 0 24 24"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></symbol>
+  <symbol id="i-fulmine" viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></symbol>
+  <symbol id="i-trofeo" viewBox="0 0 24 24"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></symbol>
+  <symbol id="i-ricarica" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></symbol>
+  <symbol id="i-volume-off" viewBox="0 0 24 24"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="m22 9-6 6"/><path d="m16 9 6 6"/></symbol>
+</svg>
 
 <!-- ============================ PAGINA 1 ============================ -->
 <section class="pagina">
   <div class="testata">
     <div>
-      <h1>🎯 Acchiappa il <span>quadrato</span></h1>
+      <h1><svg class="ico"><use href="#i-bersaglio"/></svg><span style="color:#fff">Acchiappa il <span style="color:var(--giallo)">quadrato</span></span></h1>
       <div class="sotto">Manuale d'uso &middot; gioco multiplayer in tempo reale con WebSocket</div>
     </div>
     <div class="badge">
@@ -258,7 +272,7 @@
       </div>
 
       <div class="box giallo">
-        <h3>💡 Provarlo da soli</h3>
+        <h3><svg class="ico"><use href="#i-lampadina"/></svg>Provarlo da soli</h3>
         <p style="margin:0">Basta aprire <b>due o più finestre</b> del browser su <code>localhost:3000</code>,
         una accanto all'altra: ogni finestra è un giocatore diverso e si vede il quadrato muoversi
         in contemporanea su tutte.</p>
@@ -280,7 +294,7 @@
 <!-- ============================ PAGINA 2 ============================ -->
 <section class="pagina">
   <div class="mini-testata">
-    <span>🎯 <b>Acchiappa il quadrato</b> &middot; Manuale d'uso</span>
+    <span><svg class="ico"><use href="#i-bersaglio"/></svg><b>Acchiappa il quadrato</b> &middot; Manuale d'uso</span>
     <span>Gentile &middot; Guttadauro &middot; Pavoni &middot; 5A Informatica</span>
   </div>
 
@@ -301,17 +315,17 @@
     <h2><span class="num">6</span> Regole</h2>
     <div class="regole">
       <div class="regola">
-        <div class="icona">⚡</div>
+        <svg class="ico"><use href="#i-fulmine"/></svg>
         <b>Vince il più veloce</b>
         <p>Il quadrato vale 1 punto. Conta solo il primo click che arriva al server; il quadrato si colora con il colore di chi l'ha preso.</p>
       </div>
       <div class="regola">
-        <div class="icona">🏆</div>
+        <svg class="ico"><use href="#i-trofeo"/></svg>
         <b>Primo a 10 punti</b>
         <p>Chi arriva per primo a 10 punti vince. A tutti compare la schermata con il nome del vincitore.</p>
       </div>
       <div class="regola">
-        <div class="icona">🔄</div>
+        <svg class="ico"><use href="#i-ricarica"/></svg>
         <b>Nuova partita</b>
         <p>Dopo 5 secondi i punti si azzerano e parte subito una nuova partita. Si può entrare o uscire in qualsiasi momento.</p>
       </div>
@@ -326,8 +340,8 @@
         <tr><td><code>npm start</code> dà errore <i>Cannot find module</i></td><td>Eseguire prima <code>npm install</code> nella cartella del progetto.</td></tr>
         <tr><td>Errore <i>EADDRINUSE</i> (porta occupata)</td><td>Il server è già avviato in un altro terminale: chiuderlo con <code>Ctrl + C</code>.</td></tr>
         <tr><td>Gli altri PC non si collegano</td><td>Controllare di essere sulla stessa rete e di usare l'IP mostrato nel terminale; consentire Node.js nel firewall.</td></tr>
-        <tr><td>Stato <b>🔴 Disconnesso</b></td><td>Il server è stato fermato: riavviarlo e ricaricare la pagina.</td></tr>
-        <tr><td>La musica non parte</td><td>Usare Chrome, Edge o Firefox e premere il pulsante 🔈 Musica.</td></tr>
+        <tr><td>Stato <span class="pallino"></span><b>Disconnesso</b></td><td>Il server è stato fermato: riavviarlo e ricaricare la pagina.</td></tr>
+        <tr><td>La musica non parte</td><td>Usare Chrome, Edge o Firefox e premere il pulsante <svg class="ico"><use href="#i-volume-off"/></svg> <b>Musica</b>.</td></tr>
       </table>
     </div>
   </div>

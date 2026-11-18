@@ -32,10 +32,16 @@
   .domanda { break-inside: avoid; margin-bottom: 3.5mm; padding: 3mm 4mm; border: 1px solid #e3e5ec; border-left: 4px solid #f9ca24; border-radius: 2mm; }
   .domanda b.q { display: block; margin-bottom: 1mm; }
   svg text { font-family: -apple-system, "Helvetica Neue", sans-serif; }
+  .ico { width: 1.1em; height: 1.1em; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; vertical-align: -0.17em; }
+  .ico.logo { color: #f9ca24; width: 0.95em; height: 0.95em; margin-right: 3mm; vertical-align: -0.12em; }
 </style></head><body>
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="i-bersaglio" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
+  <symbol id="i-graffetta" viewBox="0 0 24 24"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></symbol>
+</svg>
 
 <div class="copertina">
-  <h1>🎯 Acchiappa il <span>quadrato</span></h1>
+  <h1><svg class="ico logo"><use href="#i-bersaglio"/></svg>Acchiappa il <span>quadrato</span></h1>
   <div class="sotto">Spiegazione del codice · guida allo studio per la presentazione</div>
   <div class="chi">Gentile · Guttadauro · Pavoni — 5A Informatica — TPSIT 2026/27</div>
 </div>
@@ -116,7 +122,7 @@ const os = require('os');</code></pre>
       <li><b>esterni</b> (<code>express</code>, <code>ws</code>): li installa <code>npm install</code> nella cartella <code>node_modules</code>, e sono elencati nelle <code>dependencies</code> del <code>package.json</code>;</li>
       <li><b>interni</b> (<code>fs</code>, <code>path</code>, <code>os</code>): fanno già parte di Node.js, non vanno installati.</li>
     </ul>
-    <p><code>const { Server } = require('ws')</code> è una <b>destrutturazione</b>: dal modulo prendiamo solo la classe <code>Server</code>. È la stessa riga degli esempi del prof.</p><p class="rif">📎 Negli esempi del prof: ws_socket_00 → 08 (require di express e ws), ws_socket_09 (fs)</p></div>
+    <p><code>const { Server } = require('ws')</code> è una <b>destrutturazione</b>: dal modulo prendiamo solo la classe <code>Server</code>. È la stessa riga degli esempi del prof.</p><p class="rif"><svg class="ico"><use href="#i-graffetta"/></svg> Negli esempi del prof: ws_socket_00 → 08 (require di express e ws), ws_socket_09 (fs)</p></div>
   </div>
   <div class="blocco">
     <h3><span class="sez">§ 2</span> Costanti di configurazione</h3>
@@ -130,7 +136,7 @@ const COLORI = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c'
     <code>const</code> impedisce di riassegnare la variabile per errore.</p>
     <p><code>process.env.PORT || 3000</code>: <code>process.env</code> contiene le <b>variabili d'ambiente</b> del sistema. Se qualcuno avvia il server con
     <code>PORT=4000 npm start</code> usa la 4000, altrimenti l'operatore <code>||</code> sceglie 3000.</p>
-    <p>L'array <code>COLORI</code> funziona come l'array <code>colori</code> dell'esempio 04: il colore si sceglie con l'id del giocatore.</p><p class="rif">📎 Negli esempi del prof: ws_socket_04 (array colori)</p></div>
+    <p>L'array <code>COLORI</code> funziona come l'array <code>colori</code> dell'esempio 04: il colore si sceglie con l'id del giocatore.</p><p class="rif"><svg class="ico"><use href="#i-graffetta"/></svg> Negli esempi del prof: ws_socket_04 (array colori)</p></div>
   </div>
   <div class="blocco">
     <h3><span class="sez">§ 3</span> Stato del gioco</h3>
@@ -140,7 +146,7 @@ let inPausa = false;</code></pre>
     <div class="spiega">
     <p>Il server è l'<b>unico arbitro</b>: conserva lui lo stato della partita (quale quadrato è in campo, se è già stato preso, se siamo in pausa).
     I client non decidono niente: mostrano solo quello che arriva dal server. Così nessuno può "barare" modificando la pagina nel browser.</p>
-    <p><code>quadrato.numero</code> cresce a ogni nuova posizione: serve a scartare i click arrivati in ritardo su un quadrato che ormai si è già spostato.</p><p class="rif">📎 Negli esempi del prof: ws_socket_04 (variabile quale), ws_socket_03 (contatore tc)</p></div>
+    <p><code>quadrato.numero</code> cresce a ogni nuova posizione: serve a scartare i click arrivati in ritardo su un quadrato che ormai si è già spostato.</p><p class="rif"><svg class="ico"><use href="#i-graffetta"/></svg> Negli esempi del prof: ws_socket_04 (variabile quale), ws_socket_03 (contatore tc)</p></div>
   </div>
   <div class="blocco">
     <h3><span class="sez">§ 4</span> Express: middleware, rotte e avvio del server HTTP</h3>
@@ -189,7 +195,7 @@ const server = app.listen(PORTA, () =&gt; {
     (<code>Content-Type</code>, <code>Content-Length</code>).</p>
     <p><b>Rotta <code>GET /api/classifica</code></b>: con <code>res.json()</code> restituisce lo stato della partita in JSON (provare ad aprire <code>localhost:3000/api/classifica</code>).</p>
     <p>L'<b>ultimo middleware</b> risponde 404: viene raggiunto solo se nessuna rotta prima ha risposto.
-    <code>app.listen()</code> avvia il server e <b>restituisce l'oggetto server HTTP</b>, che passiamo al WebSocket.</p><p class="rif">📎 Negli esempi del prof: ws_socket_00 → 08 (express + sendFile + listen), ws_socket_09 (createReadStream, pipe, writeHead)</p></div>
+    <code>app.listen()</code> avvia il server e <b>restituisce l'oggetto server HTTP</b>, che passiamo al WebSocket.</p><p class="rif"><svg class="ico"><use href="#i-graffetta"/></svg> Negli esempi del prof: ws_socket_00 → 08 (express + sendFile + listen), ws_socket_09 (createReadStream, pipe, writeHead)</p></div>
   </div>
   <div class="blocco">
     <h3><span class="sez">§ 5</span> Server WebSocket ed eventi</h3>
@@ -260,7 +266,7 @@ ws_server.on('connection', (ws) =&gt; {
       <li><b>error</b>: gestire l'errore evita che il programma si fermi.</li>
     </ul>
     <p><b>Chi vince il click?</b> Node.js esegue il nostro codice su un <b>solo thread</b> (event loop): i messaggi vengono gestiti <b>uno alla volta, in ordine di arrivo</b>.
-    Il primo click valido mette <code>quadrato.preso = true</code>, quindi i click successivi vengono scartati dall'<code>if</code>.</p><p class="rif">📎 Negli esempi del prof: ws_socket_03 (on message), ws_socket_04/05 (ws.id), ws_socket_06/07 (JSON in arrivo), ws_socket_08 (close + numero connessi)</p></div>
+    Il primo click valido mette <code>quadrato.preso = true</code>, quindi i click successivi vengono scartati dall'<code>if</code>.</p><p class="rif"><svg class="ico"><use href="#i-graffetta"/></svg> Negli esempi del prof: ws_socket_03 (on message), ws_socket_04/05 (ws.id), ws_socket_06/07 (JSON in arrivo), ws_socket_08 (close + numero connessi)</p></div>
   </div>
   <div class="blocco">
     <h3><span class="sez">§ 6</span> Ciclo di gioco</h3>
@@ -271,7 +277,7 @@ ws_server.on('connection', (ws) =&gt; {
 }, INTERVALLO_MS);</code></pre>
     <div class="spiega">
     <p><code>setInterval</code> richiama la funzione ogni 1200 ms. È il server che "spinge" (push) i dati ai client senza che li chiedano: è proprio quello che con HTTP
-    normale non si può fare. Se siamo in pausa o non c'è nessuno collegato, la funzione esce subito con <code>return</code>.</p><p class="rif">📎 Negli esempi del prof: ws_socket_00 → 04 (setInterval + invio a tutti)</p></div>
+    normale non si può fare. Se siamo in pausa o non c'è nessuno collegato, la funzione esce subito con <code>return</code>.</p><p class="rif"><svg class="ico"><use href="#i-graffetta"/></svg> Negli esempi del prof: ws_socket_00 → 04 (setInterval + invio a tutti)</p></div>
   </div>
   <div class="blocco">
     <h3><span class="sez">§ 7</span> Funzioni di supporto</h3>
@@ -332,7 +338,7 @@ function indirizziRete() {
       <li><b>nuovaPartita</b>: azzera i punti; viene chiamata da <code>setTimeout</code> (una volta sola, dopo 5 secondi).</li>
       <li><b>indirizziRete</b>: con <code>os.networkInterfaces()</code> trova l'IP del PC per farlo vedere nel terminale (serve per giocare da altri PC).
       Usa <code>for...in</code> (chiavi di un oggetto) e <code>for...of</code> (elementi di un array).</li>
-    </ul><p class="rif">📎 Negli esempi del prof: ws_socket_00 → 08 (clients.forEach + send), ws_socket_08 (array dei client)</p></div>
+    </ul><p class="rif"><svg class="ico"><use href="#i-graffetta"/></svg> Negli esempi del prof: ws_socket_00 → 08 (clients.forEach + send), ws_socket_08 (array dei client)</p></div>
   </div>
 </div>
 
@@ -342,24 +348,26 @@ function indirizziRete() {
   <h3><span class="sez">HTML</span> Struttura della pagina</h3>
   <pre><code>&lt;body&gt;
 
+    &lt;svg width="0" height="0" style="position: absolute"&gt; ... 9 icone &lt;symbol id="i-..."&gt; ... &lt;/svg&gt;
+
     &lt;header&gt;
-        &lt;h1&gt;🎯 Acchiappa il quadrato&lt;/h1&gt;
+        &lt;h1&gt;&lt;svg class="icona"&gt;&lt;use href="#i-bersaglio"/&gt;&lt;/svg&gt;Acchiappa il quadrato&lt;/h1&gt;
         &lt;div id="info"&gt;
             &lt;span class="pillola"&gt;&lt;span id="pallino-mio"&gt;&lt;/span&gt;&lt;span id="mio-nome"&gt;...&lt;/span&gt;&lt;/span&gt;
-            &lt;span class="pillola" id="connessi"&gt;Connessi: 0&lt;/span&gt;
-            &lt;span class="pillola" id="stato"&gt;🟡 Connessione...&lt;/span&gt;
-            &lt;button id="pulsante-musica"&gt;🔈 Musica&lt;/button&gt;
+            &lt;span class="pillola"&gt;&lt;svg class="icona"&gt;&lt;use href="#i-utenti"/&gt;&lt;/svg&gt;&lt;span id="connessi"&gt;Connessi: 0&lt;/span&gt;&lt;/span&gt;
+            &lt;span class="pillola"&gt;&lt;span id="pallino-stato" class="pallino-stato"&gt;&lt;/span&gt;&lt;span id="stato"&gt;Connessione...&lt;/span&gt;&lt;/span&gt;
+            &lt;button id="pulsante-musica"&gt;&lt;svg class="icona"&gt;&lt;use id="icona-musica" href="#i-volume-off"/&gt;&lt;/svg&gt;Musica&lt;/button&gt;
         &lt;/div&gt;
     &lt;/header&gt;
 
     &lt;main&gt;
         &lt;div id="campo"&gt;
             &lt;div id="quadrato"&gt;&lt;/div&gt;
-            &lt;div id="messaggio"&gt;&lt;/div&gt;
+            &lt;div id="messaggio"&gt;&lt;svg class="icona"&gt;&lt;use id="icona-messaggio" href="#i-stella"/&gt;&lt;/svg&gt;&lt;span id="testo-messaggio"&gt;&lt;/span&gt;&lt;/div&gt;
         &lt;/div&gt;
 
         &lt;aside&gt;
-            &lt;h2&gt;🏆 Classifica&lt;/h2&gt;
+            &lt;h2&gt;&lt;svg class="icona"&gt;&lt;use href="#i-trofeo"/&gt;&lt;/svg&gt;Classifica&lt;/h2&gt;
             &lt;p&gt;Il primo che arriva a &lt;b id="obiettivo"&gt;10&lt;/b&gt; punti vince!&lt;/p&gt;
             &lt;ol id="classifica"&gt;&lt;/ol&gt;
         &lt;/aside&gt;
@@ -367,7 +375,8 @@ function indirizziRete() {
 
     &lt;div id="schermata-nome" class="overlay"&gt;
         &lt;div class="box"&gt;
-            &lt;h2&gt;Benvenuto! 👋&lt;/h2&gt;
+            &lt;svg class="icona grande"&gt;&lt;use href="#i-bersaglio"/&gt;&lt;/svg&gt;
+            &lt;h2&gt;Benvenuto!&lt;/h2&gt;
             &lt;p&gt;Clicca il quadrato giallo prima degli altri giocatori. Ogni quadrato preso vale 1 punto.&lt;/p&gt;
             &lt;input id="input-nome" type="text" maxlength="15" placeholder="Scrivi il tuo nome" autocomplete="off"&gt;
             &lt;button id="entra" disabled&gt;Gioca&lt;/button&gt;
@@ -376,6 +385,7 @@ function indirizziRete() {
 
     &lt;div id="schermata-vittoria" class="overlay nascosto"&gt;
         &lt;div class="box"&gt;
+            &lt;svg class="icona grande"&gt;&lt;use href="#i-trofeo"/&gt;&lt;/svg&gt;
             &lt;h2 id="testo-vittoria"&gt;&lt;/h2&gt;
             &lt;p&gt;Nuova partita tra &lt;b id="conto"&gt;5&lt;/b&gt; secondi...&lt;/p&gt;
         &lt;/div&gt;
@@ -386,7 +396,12 @@ function indirizziRete() {
     </code></pre>
   <div class="spiega"><p>La pagina ha: un'<b>intestazione</b> (nome, connessi, stato, musica), il <b>campo</b> con il quadrato, la <b>classifica</b> (lista <code>&lt;ol&gt;</code> riempita da JavaScript),
   due <b>schermate sovrapposte</b> (nome iniziale e vittoria, mostrate/nascoste aggiungendo o togliendo la classe CSS <code>nascosto</code>) e l'elemento
-  <code>&lt;audio&gt;</code> che prende la musica dalla rotta <code>/musica</code> del server. Il CSS (dentro <code>&lt;style&gt;</code>) serve solo alla grafica.</p></div>
+  <code>&lt;audio&gt;</code> che prende la musica dalla rotta <code>/musica</code> del server. Il CSS (dentro <code>&lt;style&gt;</code>) serve solo alla grafica.</p>
+  <p><b>Icone vettoriali (SVG).</b> All'inizio del <code>body</code> c'è un contenitore <code>&lt;svg&gt;</code> invisibile con 9 <code>&lt;symbol&gt;</code>: ognuno è un'icona
+  disegnata una sola volta (bersaglio, utenti, altoparlante acceso/spento, trofeo, stella, fulmine, play, avviso). Dove serve un'icona scriviamo
+  <code>&lt;svg class="icona"&gt;&lt;use href="#i-trofeo"/&gt;&lt;/svg&gt;</code>: <code>&lt;use&gt;</code> "copia" il simbolo indicato. Essendo vettoriali restano nitide a qualsiasi
+  grandezza e prendono il colore dal CSS (<code>stroke: currentColor</code>). Per cambiare icona da JavaScript basta cambiare l'attributo <code>href</code>
+  con <code>setAttribute</code> (pulsante della musica e fumetto dei messaggi). Lo stile delle icone è quello del set open source Lucide (licenza ISC).</p></div>
 </div>
 
   <div class="blocco">
@@ -395,17 +410,20 @@ function indirizziRete() {
     <div class="spiega">
     <p><code>location.origin</code> è l'indirizzo da cui è arrivata la pagina (es. <code>http://192.168.1.20:3000</code>). Con <code>replace(/^http/, 'ws')</code> diventa
     <code>ws://192.168.1.20:3000</code>: il client si collega sempre allo stesso server che gli ha dato la pagina, qualunque sia l'IP. Stessa riga degli esempi del prof.
-    L'oggetto <code>WebSocket</code> è già incluso nel browser: lato client il modulo <code>ws</code> non serve.</p><p class="rif">📎 Negli esempi del prof: tutti gli esempi (stessa riga)</p></div>
+    L'oggetto <code>WebSocket</code> è già incluso nel browser: lato client il modulo <code>ws</code> non serve.</p><p class="rif"><svg class="ico"><use href="#i-graffetta"/></svg> Negli esempi del prof: tutti gli esempi (stessa riga)</p></div>
   </div>
   <div class="blocco">
     <h3><span class="sez">§ 2</span> Riferimenti agli elementi della pagina</h3>
     <pre><code>const campo = document.getElementById('campo');
 const quadrato = document.getElementById('quadrato');
 const messaggio = document.getElementById('messaggio');
+const testoMessaggio = document.getElementById('testo-messaggio');
+const iconaMessaggio = document.getElementById('icona-messaggio');
 const pallinoMio = document.getElementById('pallino-mio');
 const mioNome = document.getElementById('mio-nome');
 const connessi = document.getElementById('connessi');
 const stato = document.getElementById('stato');
+const pallinoStato = document.getElementById('pallino-stato');
 const obiettivo = document.getElementById('obiettivo');
 const classifica = document.getElementById('classifica');
 const schermataNome = document.getElementById('schermata-nome');
@@ -415,9 +433,10 @@ const schermataVittoria = document.getElementById('schermata-vittoria');
 const testoVittoria = document.getElementById('testo-vittoria');
 const conto = document.getElementById('conto');
 const audio = document.getElementById('audio');
-const pulsanteMusica = document.getElementById('pulsante-musica');</code></pre>
+const pulsanteMusica = document.getElementById('pulsante-musica');
+const iconaMusica = document.getElementById('icona-musica');</code></pre>
     <div class="spiega">
-    <p>Con <code>document.getElementById</code> salviamo una sola volta i riferimenti agli elementi HTML che useremo spesso (DOM = la pagina vista da JavaScript).</p><p class="rif">📎 Negli esempi del prof: ws_socket_01 → 08</p></div>
+    <p>Con <code>document.getElementById</code> salviamo una sola volta i riferimenti agli elementi HTML che useremo spesso (DOM = la pagina vista da JavaScript).</p><p class="rif"><svg class="ico"><use href="#i-graffetta"/></svg> Negli esempi del prof: ws_socket_01 → 08</p></div>
   </div>
   <div class="blocco">
     <h3><span class="sez">§ 3</span> Variabili del client</h3>
@@ -432,15 +451,17 @@ let timerConto = null;</code></pre>
   <div class="blocco">
     <h3><span class="sez">§ 4</span> Eventi del WebSocket</h3>
     <pre><code>webSocket.onopen = () =&gt; {
-    stato.textContent = '🟢 Connesso';
+    stato.textContent = 'Connesso';
+    pallinoStato.className = 'pallino-stato verde';
     pulsanteEntra.disabled = false;
     inputNome.focus();
 };
 
 webSocket.onclose = () =&gt; {
-    stato.textContent = '🔴 Disconnesso';
+    stato.textContent = 'Disconnesso';
+    pallinoStato.className = 'pallino-stato rosso';
     quadrato.style.display = 'none';
-    mostraMessaggio('Connessione persa: ricarica la pagina');
+    mostraMessaggio('Connessione persa: ricarica la pagina', 'avviso');
 };
 
 webSocket.onmessage = (event) =&gt; {
@@ -465,20 +486,21 @@ webSocket.onmessage = (event) =&gt; {
         if (msg.numero !== numeroQuadrato) return;
         quadrato.classList.add('preso');
         quadrato.style.backgroundColor = msg.colore;
-        mostraMessaggio(msg.id === mioId ? '+1 per te! 🎉' : msg.nome + ' è stato più veloce');
+        if (msg.id === mioId) mostraMessaggio('+1 per te!', 'stella');
+        else mostraMessaggio(msg.nome + ' è stato più veloce', 'fulmine');
     } else if (msg.tipo === 'classifica') {
         connessi.textContent = 'Connessi: ' + msg.connessi;
         aggiornaClassifica(msg.giocatori);
     } else if (msg.tipo === 'vittoria') {
         quadrato.style.display = 'none';
-        testoVittoria.textContent = msg.id === mioId ? '🏆 Hai vinto!' : '🏆 Ha vinto ' + msg.nome;
+        testoVittoria.textContent = msg.id === mioId ? 'Hai vinto!' : 'Ha vinto ' + msg.nome;
         testoVittoria.style.color = msg.colore;
         schermataVittoria.classList.remove('nascosto');
         avviaContoAllaRovescia(msg.secondi);
     } else if (msg.tipo === 'nuova_partita') {
         schermataVittoria.classList.add('nascosto');
         clearInterval(timerConto);
-        mostraMessaggio('Nuova partita! Via! 🚀');
+        mostraMessaggio('Nuova partita! Via!', 'play');
     }
 };</code></pre>
     <div class="spiega">
@@ -489,7 +511,7 @@ webSocket.onmessage = (event) =&gt; {
       (<code>benvenuto</code>, <code>quadrato</code>, <code>preso</code>, <code>classifica</code>, <code>vittoria</code>, <code>nuova_partita</code>).</li>
     </ul>
     <p>Posizione del quadrato: spazio disponibile = dimensione del campo − dimensione del quadrato; pixel = spazio × percentuale / 100.
-    Così il quadrato resta sempre dentro il campo, anche sul telefono.</p><p class="rif">📎 Negli esempi del prof: ws_socket_01/02 (onmessage + style.left/top), ws_socket_08 (tipi di messaggio diversi)</p></div>
+    Così il quadrato resta sempre dentro il campo, anche sul telefono.</p><p class="rif"><svg class="ico"><use href="#i-graffetta"/></svg> Negli esempi del prof: ws_socket_01/02 (onmessage + style.left/top), ws_socket_08 (tipi di messaggio diversi)</p></div>
   </div>
   <div class="blocco">
     <h3><span class="sez">§ 5</span> Eventi dell'utente</h3>
@@ -506,17 +528,17 @@ inputNome.addEventListener('keydown', (evento) =&gt; {
 
 pulsanteMusica.addEventListener('click', () =&gt; {
     if (audio.paused) {
-        audio.play().catch(() =&gt; mostraMessaggio('Impossibile riprodurre la musica'));
-        pulsanteMusica.textContent = '🔊 Musica';
+        audio.play().catch(() =&gt; mostraMessaggio('Impossibile riprodurre la musica', 'avviso'));
+        iconaMusica.setAttribute('href', '#i-volume-on');
     } else {
         audio.pause();
-        pulsanteMusica.textContent = '🔈 Musica';
+        iconaMusica.setAttribute('href', '#i-volume-off');
     }
 });</code></pre>
     <div class="spiega">
     <p><code>addEventListener</code> collega una funzione a un evento. Sul quadrato usiamo <code>pointerdown</code>, che scatta appena si preme (mouse o dito): più rapido di <code>click</code>.
     Il client <b>non</b> assegna punti: manda solo <code>{ tipo: 'click', numero }</code> e decide il server.
-    <code>audio.play()</code> restituisce una <b>Promise</b>; con <code>.catch()</code> gestiamo il caso in cui il browser blocchi l'audio.</p><p class="rif">📎 Negli esempi del prof: ws_socket_03 → 08 (addEventListener + webSocket.send)</p></div>
+    <code>audio.play()</code> restituisce una <b>Promise</b>; con <code>.catch()</code> gestiamo il caso in cui il browser blocchi l'audio.</p><p class="rif"><svg class="ico"><use href="#i-graffetta"/></svg> Negli esempi del prof: ws_socket_03 → 08 (addEventListener + webSocket.send)</p></div>
   </div>
   <div class="blocco">
     <h3><span class="sez">§ 6</span> Funzioni</h3>
@@ -555,8 +577,9 @@ function creaElemento(tag, classe, testo) {
     return elemento;
 }
 
-function mostraMessaggio(testo) {
-    messaggio.textContent = testo;
+function mostraMessaggio(testo, icona) {
+    testoMessaggio.textContent = testo;
+    iconaMessaggio.setAttribute('href', '#i-' + icona);
     messaggio.classList.add('visibile');
     clearTimeout(timerMessaggio);
     timerMessaggio = setTimeout(() =&gt; messaggio.classList.remove('visibile'), 1500);
@@ -576,9 +599,9 @@ function avviaContoAllaRovescia(secondi) {
       <li><b>entraInPartita</b>: controlla <code>readyState === WebSocket.OPEN</code>, manda il nome e nasconde la schermata iniziale.</li>
       <li><b>aggiornaClassifica</b>: svuota la lista e la ricrea con <code>createElement</code> / <code>appendChild</code> (come la griglia dell'esempio 07).
       I nomi vengono scritti con <code>textContent</code> e <b>non</b> con <code>innerHTML</code>: se qualcuno si chiamasse <code>&lt;script&gt;...</code> il browser lo mostrerebbe come testo e non lo eseguirebbe (protezione XSS).</li>
-      <li><b>mostraMessaggio</b>: <code>setTimeout</code> nasconde il fumetto dopo 1,5 s; <code>clearTimeout</code> annulla il timer precedente.</li>
+      <li><b>mostraMessaggio(testo, icona)</b>: scrive il testo, sceglie l'icona con <code>setAttribute('href', '#i-' + icona)</code>, poi <code>setTimeout</code> nasconde il fumetto dopo 1,5 s; <code>clearTimeout</code> annulla il timer precedente.</li>
       <li><b>avviaContoAllaRovescia</b>: <code>setInterval</code> ogni secondo, fermato con <code>clearInterval</code> quando parte la nuova partita.</li>
-    </ul><p class="rif">📎 Negli esempi del prof: ws_socket_07 (createElement)</p></div>
+    </ul><p class="rif"><svg class="ico"><use href="#i-graffetta"/></svg> Negli esempi del prof: ws_socket_07 (createElement)</p></div>
   </div>
 </div>
 
