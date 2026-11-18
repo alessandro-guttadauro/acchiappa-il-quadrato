@@ -1,2 +1,4 @@
 node_modules/
 .DS_Store
+# record salvati dal gioco (si creano giocando)
+record.json

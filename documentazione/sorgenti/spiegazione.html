@@ -53,15 +53,23 @@
   I numeri <b>§</b> corrispondono alle sezioni segnate nei file (<code>// * 1.</code>, <code>// * --- 1.</code>).
 </div>
 
-<h2>1. Struttura del progetto</h2>
+<h2>1. Struttura del progetto e modalità</h2>
 <div class="box"><div class="albero">acchiappa-il-quadrato/
 ├── package.json        dati del progetto, dipendenze (express, ws) e script "npm start"
-├── server.js           SERVER: Express (HTTP) + WebSocket (ws) + logica del gioco
+├── server.js           SERVER: Express (HTTP) + WebSocket (ws) + logica delle tre modalità
+├── record.js           MODULO NOSTRO: legge e salva i record (module.exports)
+├── record.json         i record salvati (si crea da solo giocando)
 ├── public/
 │   └── index.html      CLIENT: pagina del gioco (HTML + CSS + JavaScript)
 ├── musica/
 │   └── sottofondo.wav  musica inviata in streaming dalla rotta GET /musica
 └── node_modules/       moduli installati da "npm install" (non si consegna)</div></div>
+<table>
+  <tr><th>Modalità</th><th>Giocatori</th><th>Regole</th></tr>
+  <tr><td><b>Sfida</b></td><td>tutti insieme</td><td>un quadrato uguale per tutti ogni 1,2 s; il primo click vale 1 punto; vince chi arriva a 10</td></tr>
+  <tr><td><b>Difficoltà</b></td><td>da soli</td><td>Facile 3 vite / 1,4 s / 80 px · Difficile 2 / 0,9 s / 56 px · Impossibile 1 / 0,55 s / 38 px; quadrato mancato = −1 vita</td></tr>
+  <tr><td><b>Infinita</b></td><td>da soli</td><td>3 vite; ogni 10 quadrati +1 livello (più veloce, più piccolo, nuovo colore); punti = 40 × livello</td></tr>
+</table>
 
 <h2>2. Architettura</h2>
 <svg viewBox="0 0 700 268" width="100%" style="margin-bottom:4mm">
@@ -77,11 +85,11 @@
   <text x="565" y="42" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">server.js · Node.js · porta 3000</text>
   <rect x="460" y="58" width="210" height="62" rx="9" fill="#2d3250"/>
   <text x="565" y="83" text-anchor="middle" font-size="13" font-weight="700" fill="#f9ca24">Express (HTTP)</text>
-  <text x="565" y="102" text-anchor="middle" font-size="11" fill="#c8cbe0">pagina, /musica, /api/classifica</text>
+  <text x="565" y="102" text-anchor="middle" font-size="11" fill="#c8cbe0">pagina, /musica, /api/...</text>
   <rect x="460" y="132" width="210" height="88" rx="9" fill="#2d3250"/>
   <text x="565" y="157" text-anchor="middle" font-size="13" font-weight="700" fill="#f9ca24">WebSocket (ws)</text>
-  <text x="565" y="176" text-anchor="middle" font-size="11" fill="#c8cbe0">stato del gioco, setInterval,</text>
-  <text x="565" y="192" text-anchor="middle" font-size="11" fill="#c8cbe0">broadcast a tutti i client</text>
+  <text x="565" y="176" text-anchor="middle" font-size="11" fill="#c8cbe0">sfida + partite singole,</text>
+  <text x="565" y="192" text-anchor="middle" font-size="11" fill="#c8cbe0">record.js → record.json</text>
   <line x1="185" y1="40" x2="455" y2="88" stroke="#5d6475" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#f)"/>
   <text x="200" y="22" font-size="11" fill="#5d6475">1) HTTP GET /  →  index.html</text>
   <line x1="185" y1="55" x2="455" y2="151" stroke="#e1a800" stroke-width="2.2" marker-start="url(#f)" marker-end="url(#f)"/><line x1="185" y1="130" x2="455" y2="165" stroke="#e1a800" stroke-width="2.2" marker-start="url(#f)" marker-end="url(#f)"/><line x1="185" y1="205" x2="455" y2="179" stroke="#e1a800" stroke-width="2.2" marker-start="url(#f)" marker-end="url(#f)"/>
@@ -90,21 +98,22 @@
 <p>Il browser chiede la pagina con una normale richiesta <b>HTTP</b> (Express la serve dalla cartella <code>public</code>). Poi lo script della pagina apre un
 <b>WebSocket</b> verso lo stesso server e la stessa porta. Da quel momento client e server si scambiano <b>messaggi JSON</b> in tempo reale.</p>
 
-<h2 style="margin-top:6mm">3. I messaggi scambiati (protocollo)</h2>
-<p>Ogni messaggio è un oggetto JSON con un campo <code>tipo</code>, che dice a chi lo riceve cosa fare.</p>
+<div style="margin-top:6mm">
+<h2>3. I messaggi scambiati (protocollo)</h2>
+<p>Ogni messaggio è un oggetto JSON con un campo <code>tipo</code>, che dice a chi lo riceve cosa fare. "Sfida" = solo i giocatori della sfida; "un client" = solo chi gioca da solo.</p>
 <table>
   <tr><th>Direzione</th><th>tipo</th><th>Contenuto</th><th>Quando</th></tr>
-  <tr><td class="dir">Server → un client</td><td><code>benvenuto</code></td><td><code>{ tipo, id, colore, puntiPerVincere }</code></td><td>appena il client si collega</td></tr><tr><td class="dir">Client → server</td><td><code>nome</code></td><td><code>{ tipo, nome }</code></td><td>il giocatore preme Gioca</td></tr><tr><td class="dir">Server → tutti</td><td><code>quadrato</code></td><td><code>{ tipo, numero, x, y }</code></td><td>ogni 1,2 s (setInterval)</td></tr><tr><td class="dir">Client → server</td><td><code>click</code></td><td><code>{ tipo, numero }</code></td><td>il giocatore preme sul quadrato</td></tr><tr><td class="dir">Server → tutti</td><td><code>preso</code></td><td><code>{ tipo, numero, id, nome, colore }</code></td><td>primo click valido</td></tr><tr><td class="dir">Server → tutti</td><td><code>classifica</code></td><td><code>{ tipo, connessi, giocatori[] }</code></td><td>entra/esce qualcuno, cambia un punteggio</td></tr><tr><td class="dir">Server → tutti</td><td><code>vittoria</code></td><td><code>{ tipo, id, nome, colore, secondi }</code></td><td>qualcuno arriva a 10 punti</td></tr><tr><td class="dir">Server → tutti</td><td><code>nuova_partita</code></td><td><code>{ tipo }</code></td><td>5 s dopo la vittoria (setTimeout)</td></tr>
+  <tr><td class="dir">Server → un client</td><td><code>benvenuto</code></td><td><code>{ tipo, id, colore, puntiPerVincere, difficolta }</code></td><td>appena il client si collega</td></tr><tr><td class="dir">Server → un client / tutti</td><td><code>record</code></td><td><code>{ tipo, record }</code></td><td>alla connessione e quando c'è un nuovo record</td></tr><tr><td class="dir">Client → server</td><td><code>nome</code></td><td><code>{ tipo, nome }</code></td><td>il giocatore preme Continua</td></tr><tr><td class="dir">Client → server</td><td><code>modalita</code></td><td><code>{ tipo, modalita, difficolta }</code></td><td>sceglie la modalità o preme Rigioca</td></tr><tr><td class="dir">Client → server</td><td><code>esci</code></td><td><code>{ tipo }</code></td><td>preme Menu</td></tr><tr><td class="dir">Server → sfida / un client</td><td><code>quadrato</code></td><td><code>{ tipo, numero, x, y, dimensione, colore, durata }</code></td><td>nuovo quadrato (durata solo nelle partite singole)</td></tr><tr><td class="dir">Client → server</td><td><code>click</code></td><td><code>{ tipo, numero }</code></td><td>il giocatore preme sul quadrato</td></tr><tr><td class="dir">Server → sfida / un client</td><td><code>preso</code></td><td><code>{ tipo, numero, id, nome, colore, guadagno }</code></td><td>click valido</td></tr><tr><td class="dir">Server → un client</td><td><code>mancato</code></td><td><code>{ tipo, numero, vite }</code></td><td>il tempo è scaduto: −1 vita</td></tr><tr><td class="dir">Server → un client</td><td><code>livello</code></td><td><code>{ tipo, livello, colore }</code></td><td>ogni 10 quadrati (infinita)</td></tr><tr><td class="dir">Server → un client</td><td><code>stato_partita</code></td><td><code>{ tipo, vite, viteMax, punti, presi, livello, mancanti, ... }</code></td><td>dopo ogni cambiamento della partita singola</td></tr><tr><td class="dir">Server → un client</td><td><code>game_over</code></td><td><code>{ tipo, punti, presi, livello, posizione }</code></td><td>vite finite</td></tr><tr><td class="dir">Server → tutti</td><td><code>classifica</code></td><td><code>{ tipo, connessi, giocatori[] }</code></td><td>entra/esce qualcuno, cambia un punteggio della sfida</td></tr><tr><td class="dir">Server → sfida</td><td><code>vittoria</code></td><td><code>{ tipo, id, nome, colore, secondi }</code></td><td>qualcuno arriva a 10 punti</td></tr><tr><td class="dir">Server → sfida</td><td><code>nuova_partita</code></td><td><code>{ tipo }</code></td><td>5 s dopo la vittoria</td></tr>
 </table>
 
-<div class="box"><b>Una partita, passo per passo.</b>
+<div class="box"><b>Una partita singola (Difficoltà o Infinita), passo per passo.</b>
 <ol style="margin:2mm 0 0; padding-left:5mm">
-  <li>Il browser apre la pagina e il WebSocket → il server crea l'id e manda <code>benvenuto</code>.</li>
-  <li>Il giocatore scrive il nome → <code>nome</code> → il server manda a tutti la <code>classifica</code>.</li>
-  <li>Ogni 1,2 s il server sceglie una posizione e la manda a tutti → <code>quadrato</code>.</li>
-  <li>Un giocatore preme il quadrato → <code>click</code> → il server controlla che sia il primo → +1 punto → <code>preso</code> + <code>classifica</code> a tutti.</li>
-  <li>Qualcuno arriva a 10 → <code>vittoria</code> → pausa di 5 s → <code>nuova_partita</code>.</li>
+  <li>Il client manda <code>nome</code>, poi <code>modalita</code> → il server crea <code>ws.partita</code> e manda <code>stato_partita</code>.</li>
+  <li>Il server manda <code>quadrato</code> (con <code>durata</code>) e avvia un <code>setTimeout</code>.</li>
+  <li>Click in tempo → <code>click</code> → <code>clearTimeout</code>, punti → <code>preso</code> (+ <code>livello</code> ogni 10) + <code>stato_partita</code> → nuovo quadrato.</li>
+  <li>Tempo scaduto → <code>mancato</code>, −1 vita. A 0 vite → <code>game_over</code>; se è un record, <code>record</code> a tutti.</li>
 </ol></div>
+</div>
 
 <div class="capitolo">
 <h2>4. Il server — server.js</h2>
@@ -115,38 +124,56 @@
 const { Server } = require('ws');
 const fs = require('fs');
 const path = require('path');
-const os = require('os');</code></pre>
+const os = require('os');
+const record = require('./record');</code></pre>
     <div class="spiega">
-    <p>Con <code>require()</code> carichiamo i moduli. Ci sono due tipi di moduli:</p>
+    <p>Con <code>require()</code> carichiamo i moduli. Ce ne sono di tre tipi:</p>
     <ul>
-      <li><b>esterni</b> (<code>express</code>, <code>ws</code>): li installa <code>npm install</code> nella cartella <code>node_modules</code>, e sono elencati nelle <code>dependencies</code> del <code>package.json</code>;</li>
-      <li><b>interni</b> (<code>fs</code>, <code>path</code>, <code>os</code>): fanno già parte di Node.js, non vanno installati.</li>
+      <li><b>esterni</b> (<code>express</code>, <code>ws</code>): li installa <code>npm install</code> nella cartella <code>node_modules</code> e sono elencati nelle <code>dependencies</code> del <code>package.json</code>;</li>
+      <li><b>interni</b> (<code>fs</code>, <code>path</code>, <code>os</code>): fanno già parte di Node.js;</li>
+      <li><b>nostri</b> (<code>require('./record')</code>): il <code>./</code> indica un file del progetto, cioè il modulo <code>record.js</code> scritto da noi (vedi capitolo 5).</li>
     </ul>
-    <p><code>const { Server } = require('ws')</code> è una <b>destrutturazione</b>: dal modulo prendiamo solo la classe <code>Server</code>. È la stessa riga degli esempi del prof.</p><p class="rif"><svg class="ico"><use href="#i-graffetta"/></svg> Negli esempi del prof: ws_socket_00 → 08 (require di express e ws), ws_socket_09 (fs)</p></div>
+    <p><code>const { Server } = require('ws')</code> è una <b>destrutturazione</b>: dal modulo prendiamo solo la classe <code>Server</code>, come negli esempi del prof.</p><p class="rif"><svg class="ico"><use href="#i-graffetta"/></svg> Negli esempi del prof: ws_socket_00 → 08 (require di express e ws), ws_socket_09 (fs)</p></div>
   </div>
   <div class="blocco">
     <h3><span class="sez">§ 2</span> Costanti di configurazione</h3>
     <pre><code>const PORTA = process.env.PORT || 3000;
+
 const PUNTI_PER_VINCERE = 10;
 const INTERVALLO_MS = 1200;
+const DIMENSIONE_SFIDA = 64;
 const PAUSA_VITTORIA_MS = 5000;
-const COLORI = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c', '#e84393', '#34495e'];</code></pre>
+const COLORI = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c', '#e84393', '#34495e'];
+
+const DIFFICOLTA = {
+    facile: { nome: 'Facile', vite: 3, tempo: 1400, dimensione: 80 },
+    difficile: { nome: 'Difficile', vite: 2, tempo: 900, dimensione: 56 },
+    impossibile: { nome: 'Impossibile', vite: 1, tempo: 550, dimensione: 38 },
+};
+
+const VITE_INFINITA = 3;
+const QUADRATI_PER_LIVELLO = 10;
+const PUNTI_BASE = 40;
+const COLORI_LIVELLO = ['#f9ca24', '#2ecc71', '#3498db', '#9b59b6', '#e84393', '#e67e22', '#1abc9c', '#e74c3c', '#00cec9', '#fdcb6e'];
+
+const PAUSA_QUADRATO_MS = 350;</code></pre>
     <div class="spiega">
-    <p>Valori fissi del gioco raccolti in un punto solo: per cambiare le regole (es. 15 punti invece di 10) basta modificare una riga.
-    <code>const</code> impedisce di riassegnare la variabile per errore.</p>
-    <p><code>process.env.PORT || 3000</code>: <code>process.env</code> contiene le <b>variabili d'ambiente</b> del sistema. Se qualcuno avvia il server con
-    <code>PORT=4000 npm start</code> usa la 4000, altrimenti l'operatore <code>||</code> sceglie 3000.</p>
-    <p>L'array <code>COLORI</code> funziona come l'array <code>colori</code> dell'esempio 04: il colore si sceglie con l'id del giocatore.</p><p class="rif"><svg class="ico"><use href="#i-graffetta"/></svg> Negli esempi del prof: ws_socket_04 (array colori)</p></div>
+    <p>Tutte le regole del gioco stanno qui, in un punto solo. <code>process.env.PORT || 3000</code> legge una <b>variabile d'ambiente</b> (se manca usa 3000).</p>
+    <p>L'oggetto <code>DIFFICOLTA</code> descrive le tre difficoltà con <b>vite</b>, <b>tempo</b> per cliccare in millisecondi e <b>dimensione</b> del quadrato in pixel:
+    Facile 3 vite / 1400 ms / 80 px, Difficile 2 / 900 / 56, Impossibile 1 / 550 / 38. Lo stesso oggetto viene mandato al client nel <code>benvenuto</code>,
+    così i pulsanti del menu mostrano sempre i valori veri (una sola "fonte" dei dati).</p>
+    <p>Per la modalità infinita: 3 vite, si sale di livello ogni <code>QUADRATI_PER_LIVELLO = 10</code> quadrati, <code>PUNTI_BASE = 40</code> e un colore per ogni livello.</p><p class="rif"><svg class="ico"><use href="#i-graffetta"/></svg> Negli esempi del prof: ws_socket_04 (array colori)</p></div>
   </div>
   <div class="blocco">
-    <h3><span class="sez">§ 3</span> Stato del gioco</h3>
+    <h3><span class="sez">§ 3</span> Stato della sfida</h3>
     <pre><code>let contatoreId = 0;
 let quadrato = { numero: 0, x: 0, y: 0, preso: true };
-let inPausa = false;</code></pre>
+let inPausa = false;
+
+record.carica();</code></pre>
     <div class="spiega">
-    <p>Il server è l'<b>unico arbitro</b>: conserva lui lo stato della partita (quale quadrato è in campo, se è già stato preso, se siamo in pausa).
-    I client non decidono niente: mostrano solo quello che arriva dal server. Così nessuno può "barare" modificando la pagina nel browser.</p>
-    <p><code>quadrato.numero</code> cresce a ogni nuova posizione: serve a scartare i click arrivati in ritardo su un quadrato che ormai si è già spostato.</p><p class="rif"><svg class="ico"><use href="#i-graffetta"/></svg> Negli esempi del prof: ws_socket_04 (variabile quale), ws_socket_03 (contatore tc)</p></div>
+    <p>Il server è l'<b>unico arbitro</b>: conserva lo stato della sfida (quale quadrato è in campo, se è già stato preso, se siamo in pausa).
+    I client mostrano solo quello che ricevono, così nessuno può "barare" modificando la pagina. <code>record.carica()</code> legge all'avvio i record salvati.</p><p class="rif"><svg class="ico"><use href="#i-graffetta"/></svg> Negli esempi del prof: ws_socket_04 (variabile quale), ws_socket_03 (contatore tc)</p></div>
   </div>
   <div class="blocco">
     <h3><span class="sez">§ 4</span> Express: middleware, rotte e avvio del server HTTP</h3>
@@ -174,6 +201,10 @@ app.get('/api/classifica', (req, res) =&gt; {
     res.json({ connessi: ws_server.clients.size, puntiPerVincere: PUNTI_PER_VINCERE, giocatori: listaClassifica() });
 });
 
+app.get('/api/record', (req, res) =&gt; {
+    res.json(record.elenco());
+});
+
 app.use((req, res) =&gt; {
     res.status(404).send('Pagina non trovata');
 });
@@ -185,17 +216,11 @@ const server = app.listen(PORTA, () =&gt; {
     });
 });</code></pre>
     <div class="spiega">
-    <p><b>Middleware</b>: funzione <code>(req, res, next)</code> eseguita per ogni richiesta, <b>nell'ordine in cui è scritta</b>.
-    Il nostro logger stampa la richiesta e chiama <code>next()</code> per passare al successivo.
-    Se non chiamasse <code>next()</code> né rispondesse, il browser resterebbe in attesa per sempre.</p>
-    <p><code>express.static('public')</code> serve in automatico i file della cartella <code>public</code>: quando il browser chiede <code>/</code> riceve <code>index.html</code>.
-    Il prof usava <code>res.sendFile('/index.html', { root: __dirname })</code>: il risultato è lo stesso.</p>
-    <p><b>Rotta <code>GET /musica</code></b>: invia il file audio in <b>streaming</b>. <code>fs.createReadStream()</code> legge il file a pezzi (chunk) e
-    <code>.pipe(res)</code> li manda subito al browser, senza caricare tutto il file in memoria. <code>writeHead</code> imposta codice 200 e intestazioni
-    (<code>Content-Type</code>, <code>Content-Length</code>).</p>
-    <p><b>Rotta <code>GET /api/classifica</code></b>: con <code>res.json()</code> restituisce lo stato della partita in JSON (provare ad aprire <code>localhost:3000/api/classifica</code>).</p>
-    <p>L'<b>ultimo middleware</b> risponde 404: viene raggiunto solo se nessuna rotta prima ha risposto.
-    <code>app.listen()</code> avvia il server e <b>restituisce l'oggetto server HTTP</b>, che passiamo al WebSocket.</p><p class="rif"><svg class="ico"><use href="#i-graffetta"/></svg> Negli esempi del prof: ws_socket_00 → 08 (express + sendFile + listen), ws_socket_09 (createReadStream, pipe, writeHead)</p></div>
+    <p><b>Middleware</b>: funzione <code>(req, res, next)</code> eseguita per ogni richiesta, <b>nell'ordine in cui è scritta</b>. Il logger stampa la richiesta e chiama <code>next()</code>.</p>
+    <p><code>express.static('public')</code> serve i file della cartella <code>public</code> (il prof usava <code>res.sendFile</code>: il risultato è lo stesso).</p>
+    <p><b><code>GET /musica</code></b>: streaming del file audio con <code>fs.createReadStream().pipe(res)</code>, che invia il file a pezzi senza caricarlo tutto in memoria.
+    <b><code>GET /api/classifica</code></b> e <b><code>GET /api/record</code></b> rispondono in JSON con <code>res.json()</code>.
+    L'ultimo middleware risponde 404. <code>app.listen()</code> restituisce il server HTTP, a cui agganciamo il WebSocket.</p><p class="rif"><svg class="ico"><use href="#i-graffetta"/></svg> Negli esempi del prof: ws_socket_00 → 08 (express + sendFile + listen), ws_socket_09 (createReadStream, pipe, writeHead)</p></div>
   </div>
   <div class="blocco">
     <h3><span class="sez">§ 5</span> Server WebSocket ed eventi</h3>
@@ -206,10 +231,13 @@ ws_server.on('connection', (ws) =&gt; {
     ws.id = contatoreId;
     ws.colore = COLORI[(ws.id - 1) % COLORI.length];
     ws.nome = null;
+    ws.modalita = null;
     ws.punti = 0;
+    ws.partita = null;
     console.log(`[WS] nuovo client connesso, id: ${ws.id}`);
 
-    ws.send(JSON.stringify({ tipo: 'benvenuto', id: ws.id, colore: ws.colore, puntiPerVincere: PUNTI_PER_VINCERE }));
+    inviaA(ws, { tipo: 'benvenuto', id: ws.id, colore: ws.colore, puntiPerVincere: PUNTI_PER_VINCERE, difficolta: DIFFICOLTA });
+    inviaA(ws, { tipo: 'record', record: record.elenco() });
     inviaClassifica();
 
     ws.on('message', (dati) =&gt; {
@@ -225,27 +253,39 @@ ws_server.on('connection', (ws) =&gt; {
             const nomePulito = String(msg.nome).trim().substring(0, 15);
             ws.nome = nomePulito || `Giocatore ${ws.id}`;
             console.log(`[WS] il client ${ws.id} si chiama "${ws.nome}"`);
+        }
+
+        if (msg.tipo === 'modalita') {
+            if (!ws.nome) return;
+            fermaPartita(ws);
+            if (msg.modalita === 'sfida') {
+                ws.modalita = 'sfida';
+                ws.punti = 0;
+            } else if (msg.modalita === 'difficolta' &amp;&amp; Object.keys(DIFFICOLTA).includes(msg.difficolta)) {
+                ws.modalita = 'difficolta';
+                iniziaPartitaSingola(ws, 'difficolta', msg.difficolta);
+            } else if (msg.modalita === 'infinita') {
+                ws.modalita = 'infinita';
+                iniziaPartitaSingola(ws, 'infinita', null);
+            }
+            console.log(`[WS] ${ws.nome} gioca in modalità ${ws.modalita}${msg.difficolta ? ' (' + msg.difficolta + ')' : ''}`);
             inviaClassifica();
         }
 
         if (msg.tipo === 'click') {
-            if (!ws.nome || inPausa || quadrato.preso || msg.numero !== quadrato.numero) return;
-            quadrato.preso = true;
-            ws.punti++;
-            console.log(`[GIOCO] ${ws.nome} prende il quadrato n.${quadrato.numero} (${ws.punti} punti)`);
-            inviaATutti({ tipo: 'preso', numero: quadrato.numero, id: ws.id, nome: ws.nome, colore: ws.colore });
-            inviaClassifica();
+            if (ws.modalita === 'sfida') clickSfida(ws, msg.numero);
+            else clickSingolo(ws, msg.numero);
+        }
 
-            if (ws.punti &gt;= PUNTI_PER_VINCERE) {
-                inPausa = true;
-                console.log(`[GIOCO] *** ${ws.nome} ha vinto la partita! ***`);
-                inviaATutti({ tipo: 'vittoria', id: ws.id, nome: ws.nome, colore: ws.colore, secondi: PAUSA_VITTORIA_MS / 1000 });
-                setTimeout(nuovaPartita, PAUSA_VITTORIA_MS);
-            }
+        if (msg.tipo === 'esci') {
+            fermaPartita(ws);
+            ws.modalita = null;
+            inviaClassifica();
         }
     });
 
     ws.on('close', () =&gt; {
+        fermaPartita(ws);
         console.log(`[WS] client disconnesso, id: ${ws.id}`);
         inviaClassifica();
     });
@@ -255,44 +295,51 @@ ws_server.on('connection', (ws) =&gt; {
     });
 });</code></pre>
     <div class="spiega">
-    <p><code>new Server({ server })</code> aggancia il WebSocket al server HTTP: <b>stessa porta 3000</b>. Il browser apre il WebSocket con una richiesta HTTP speciale
-    (intestazione <code>Upgrade: websocket</code>); il server risponde <code>101 Switching Protocols</code> e da lì la connessione resta <b>aperta in entrambe le direzioni</b> (full-duplex).</p>
+    <p><code>new Server({ server })</code> aggancia il WebSocket al server HTTP: <b>stessa porta 3000</b>. Il browser chiede l'<code>Upgrade: websocket</code>, il server risponde
+    <code>101 Switching Protocols</code> e la connessione resta aperta in entrambe le direzioni.</p>
     <ul>
-      <li><b>connection</b>: un nuovo client. Gli diamo id, colore, nome e punti salvandoli <b>dentro l'oggetto <code>ws</code></b> (come <code>ws.id = quale</code> dell'esempio 04),
-      gli mandiamo il <code>benvenuto</code> con <code>ws.send()</code> (solo a lui) e a tutti la classifica.</li>
-      <li><b>message</b>: un messaggio di quel client. Lo convertiamo con <code>JSON.parse</code> dentro un <code>try/catch</code> (un testo non valido non deve far crashare il server)
-      e in base al campo <code>tipo</code> gestiamo <code>nome</code> o <code>click</code>.</li>
-      <li><b>close</b>: il client se n'è andato; ws lo ha già tolto da <code>ws_server.clients</code>, quindi rimandiamo la classifica aggiornata.</li>
-      <li><b>error</b>: gestire l'errore evita che il programma si fermi.</li>
-    </ul>
-    <p><b>Chi vince il click?</b> Node.js esegue il nostro codice su un <b>solo thread</b> (event loop): i messaggi vengono gestiti <b>uno alla volta, in ordine di arrivo</b>.
-    Il primo click valido mette <code>quadrato.preso = true</code>, quindi i click successivi vengono scartati dall'<code>if</code>.</p><p class="rif"><svg class="ico"><use href="#i-graffetta"/></svg> Negli esempi del prof: ws_socket_03 (on message), ws_socket_04/05 (ws.id), ws_socket_06/07 (JSON in arrivo), ws_socket_08 (close + numero connessi)</p></div>
+      <li><b>connection</b>: salviamo nell'oggetto <code>ws</code> id, colore, nome, <b>modalità</b> (<code>null</code> = nel menu), punti della sfida e <b>partita</b> singola;
+      mandiamo a lui <code>benvenuto</code> e <code>record</code>, a tutti la classifica.</li>
+      <li><b>message</b>: <code>JSON.parse</code> dentro <code>try/catch</code>, poi in base a <code>tipo</code>: <code>nome</code>, <code>modalita</code> (sceglie Sfida, Difficoltà o Infinita),
+      <code>click</code> (smistato a <code>clickSfida</code> o <code>clickSingolo</code>), <code>esci</code> (torna al menu).</li>
+      <li>La difficoltà ricevuta viene controllata con <code>Object.keys(DIFFICOLTA).includes(...)</code>: accettiamo solo <code>facile</code>, <code>difficile</code> o <code>impossibile</code>.</li>
+      <li><b>close</b>: <code>fermaPartita(ws)</code> annulla i timer della partita singola, poi aggiorniamo la classifica. <b>error</b>: gestito per non bloccare il server.</li>
+    </ul><p class="rif"><svg class="ico"><use href="#i-graffetta"/></svg> Negli esempi del prof: ws_socket_03 (on message), ws_socket_04/05 (ws.id), ws_socket_06/07 (JSON in arrivo), ws_socket_08 (close + numero connessi)</p></div>
   </div>
   <div class="blocco">
-    <h3><span class="sez">§ 6</span> Ciclo di gioco</h3>
+    <h3><span class="sez">§ 6</span> Sfida: ciclo di gioco</h3>
     <pre><code>setInterval(() =&gt; {
     if (inPausa) return;
-    if (ws_server.clients.size === 0) return;
+    if (giocatoriSfida().length === 0) return;
     nuovaPosizione();
 }, INTERVALLO_MS);</code></pre>
     <div class="spiega">
-    <p><code>setInterval</code> richiama la funzione ogni 1200 ms. È il server che "spinge" (push) i dati ai client senza che li chiedano: è proprio quello che con HTTP
-    normale non si può fare. Se siamo in pausa o non c'è nessuno collegato, la funzione esce subito con <code>return</code>.</p><p class="rif"><svg class="ico"><use href="#i-graffetta"/></svg> Negli esempi del prof: ws_socket_00 → 04 (setInterval + invio a tutti)</p></div>
+    <p><code>setInterval</code> sposta il quadrato della sfida ogni 1200 ms: è il server che "spinge" i dati (push). Se siamo in pausa o <b>nessuno sta giocando la sfida</b>
+    (<code>giocatoriSfida().length === 0</code>) la funzione esce subito.</p><p class="rif"><svg class="ico"><use href="#i-graffetta"/></svg> Negli esempi del prof: ws_socket_00 → 04 (setInterval + invio a tutti)</p></div>
   </div>
   <div class="blocco">
-    <h3><span class="sez">§ 7</span> Funzioni di supporto</h3>
-    <pre><code>function inviaATutti(messaggio) {
+    <h3><span class="sez">§ 7</span> Funzioni di invio e della sfida</h3>
+    <pre><code>function inviaA(ws, messaggio) {
+    if (ws.readyState === ws.OPEN) ws.send(JSON.stringify(messaggio));
+}
+
+function inviaATutti(messaggio) {
     const testo = JSON.stringify(messaggio);
     ws_server.clients.forEach((client) =&gt; {
         if (client.readyState === client.OPEN) client.send(testo);
     });
 }
 
+function giocatoriSfida() {
+    return Array.from(ws_server.clients).filter((client) =&gt; client.modalita === 'sfida');
+}
+
+function inviaASfida(messaggio) {
+    giocatoriSfida().forEach((client) =&gt; inviaA(client, messaggio));
+}
+
 function listaClassifica() {
-    const lista = [];
-    ws_server.clients.forEach((client) =&gt; {
-        if (client.nome) lista.push({ id: client.id, nome: client.nome, colore: client.colore, punti: client.punti });
-    });
+    const lista = giocatoriSfida().map((client) =&gt; ({ id: client.id, nome: client.nome, colore: client.colore, punti: client.punti }));
     lista.sort((a, b) =&gt; b.punti - a.punti);
     return lista;
 }
@@ -306,20 +353,178 @@ function nuovaPosizione() {
     quadrato.x = Math.floor(Math.random() * 101);
     quadrato.y = Math.floor(Math.random() * 101);
     quadrato.preso = false;
-    inviaATutti({ tipo: 'quadrato', numero: quadrato.numero, x: quadrato.x, y: quadrato.y });
+    inviaASfida({ tipo: 'quadrato', numero: quadrato.numero, x: quadrato.x, y: quadrato.y, dimensione: DIMENSIONE_SFIDA, colore: null });
 }
 
-function nuovaPartita() {
-    ws_server.clients.forEach((client) =&gt; {
-        client.punti = 0;
-    });
-    inPausa = false;
-    console.log('[GIOCO] nuova partita!');
-    inviaATutti({ tipo: 'nuova_partita' });
+function clickSfida(ws, numero) {
+    if (inPausa || quadrato.preso || numero !== quadrato.numero) return;
+    quadrato.preso = true;
+    ws.punti++;
+    console.log(`[SFIDA] ${ws.nome} prende il quadrato n.${quadrato.numero} (${ws.punti} punti)`);
+    inviaASfida({ tipo: 'preso', numero: quadrato.numero, id: ws.id, nome: ws.nome, colore: ws.colore });
     inviaClassifica();
+    if (ws.punti &gt;= PUNTI_PER_VINCERE) {
+        inPausa = true;
+        console.log(`[SFIDA] *** ${ws.nome} ha vinto la sfida! ***`);
+        inviaASfida({ tipo: 'vittoria', id: ws.id, nome: ws.nome, colore: ws.colore, secondi: PAUSA_VITTORIA_MS / 1000 });
+        setTimeout(nuovaSfida, PAUSA_VITTORIA_MS);
+    }
 }
 
-function indirizziRete() {
+function nuovaSfida() {
+    giocatoriSfida().forEach((client) =&gt; { client.punti = 0; });
+    inPausa = false;
+    console.log('[SFIDA] nuova sfida!');
+    inviaASfida({ tipo: 'nuova_partita' });
+    inviaClassifica();
+}</code></pre>
+    <div class="spiega">
+    <ul>
+      <li><b>inviaA(ws, msg)</b>: invia a un solo client. <b>inviaATutti(msg)</b>: <b>broadcast</b> a tutti con <code>ws_server.clients.forEach</code>.</li>
+      <li><b>giocatoriSfida()</b>: <code>Array.from</code> trasforma il Set dei client in array e <code>filter</code> tiene solo quelli con <code>modalita === 'sfida'</code>.
+      <b>inviaASfida</b> manda il messaggio solo a loro: chi gioca da solo o è nel menu non riceve il quadrato della sfida.</li>
+      <li><b>listaClassifica</b>: <code>map</code> trasforma i client in oggetti semplici, <code>sort</code> li ordina per punti.</li>
+      <li><b>clickSfida</b>: Node gestisce i messaggi <b>uno alla volta</b> (event loop): il primo click mette <code>quadrato.preso = true</code> e i successivi vengono scartati. A 10 punti: <code>vittoria</code> e <code>setTimeout(nuovaSfida, 5000)</code>.</li>
+    </ul><p class="rif"><svg class="ico"><use href="#i-graffetta"/></svg> Negli esempi del prof: ws_socket_00 → 08 (clients.forEach + send), ws_socket_08 (array dei client)</p></div>
+  </div>
+  <div class="blocco">
+    <h3><span class="sez">§ 8</span> Partite singole: Difficoltà e Infinita</h3>
+    <pre><code>function iniziaPartitaSingola(ws, modalita, difficolta) {
+    const conf = modalita === 'difficolta' ? DIFFICOLTA[difficolta] : null;
+    const vite = conf ? conf.vite : VITE_INFINITA;
+    ws.partita = {
+        modalita: modalita,
+        difficolta: difficolta,
+        vite: vite,
+        viteMax: vite,
+        punti: 0,
+        presi: 0,
+        livello: 1,
+        numero: 0,
+        preso: true,
+        timer: null,
+        finita: false,
+    };
+    inviaStato(ws);
+    ws.partita.timer = setTimeout(() =&gt; prossimoQuadrato(ws), 800);
+}
+
+function parametriInfinita(livello) {
+    const tempo = Math.max(380, Math.round(1500 * Math.pow(0.88, livello - 1)));
+    const dimensione = Math.max(34, 76 - (livello - 1) * 4);
+    const colore = COLORI_LIVELLO[(livello - 1) % COLORI_LIVELLO.length];
+    return { tempo, dimensione, colore };
+}
+
+function prossimoQuadrato(ws) {
+    const p = ws.partita;
+    if (!p || p.finita) return;
+    const param = p.modalita === 'difficolta' ? DIFFICOLTA[p.difficolta] : parametriInfinita(p.livello);
+    p.numero++;
+    p.preso = false;
+    inviaA(ws, {
+        tipo: 'quadrato',
+        numero: p.numero,
+        x: Math.floor(Math.random() * 101),
+        y: Math.floor(Math.random() * 101),
+        dimensione: param.dimensione,
+        colore: param.colore || null,
+        durata: param.tempo,
+    });
+    p.timer = setTimeout(() =&gt; quadratoScaduto(ws), param.tempo);
+}
+
+function quadratoScaduto(ws) {
+    const p = ws.partita;
+    if (!p || p.preso || p.finita) return;
+    p.preso = true;
+    p.vite--;
+    inviaA(ws, { tipo: 'mancato', numero: p.numero, vite: p.vite });
+    inviaStato(ws);
+    if (p.vite &lt;= 0) {
+        finePartita(ws);
+        return;
+    }
+    p.timer = setTimeout(() =&gt; prossimoQuadrato(ws), PAUSA_QUADRATO_MS * 2);
+}
+
+function clickSingolo(ws, numero) {
+    const p = ws.partita;
+    if (!p || p.finita || p.preso || numero !== p.numero) return;
+    p.preso = true;
+    clearTimeout(p.timer);
+    p.presi++;
+    let guadagno = 1;
+    const livelloPrima = p.livello;
+    if (p.modalita === 'infinita') {
+        guadagno = PUNTI_BASE * p.livello;
+        p.livello = Math.floor(p.presi / QUADRATI_PER_LIVELLO) + 1;
+    }
+    p.punti += guadagno;
+    inviaA(ws, { tipo: 'preso', numero: p.numero, id: ws.id, nome: ws.nome, colore: ws.colore, guadagno: guadagno });
+    if (p.livello &gt; livelloPrima) {
+        inviaA(ws, { tipo: 'livello', livello: p.livello, colore: parametriInfinita(p.livello).colore });
+        console.log(`[INFINITA] ${ws.nome} sale al livello ${p.livello}`);
+    }
+    inviaStato(ws);
+    p.timer = setTimeout(() =&gt; prossimoQuadrato(ws), PAUSA_QUADRATO_MS);
+}
+
+function finePartita(ws) {
+    const p = ws.partita;
+    p.finita = true;
+    clearTimeout(p.timer);
+    const classifica = p.modalita === 'infinita' ? 'infinita' : p.difficolta;
+    const posizione = record.aggiungi(classifica, {
+        nome: ws.nome,
+        punti: p.punti,
+        livello: p.livello,
+        presi: p.presi,
+        data: new Date().toLocaleDateString('it-IT'),
+    });
+    console.log(`[GAME OVER] ${ws.nome} (${classifica}): ${p.punti} punti, livello ${p.livello}`);
+    inviaA(ws, { tipo: 'game_over', modalita: p.modalita, difficolta: p.difficolta, punti: p.punti, presi: p.presi, livello: p.livello, posizione: posizione });
+    if (posizione &gt;= 0) inviaATutti({ tipo: 'record', record: record.elenco() });
+}
+
+function fermaPartita(ws) {
+    if (!ws.partita) return;
+    clearTimeout(ws.partita.timer);
+    ws.partita = null;
+}
+
+function inviaStato(ws) {
+    const p = ws.partita;
+    inviaA(ws, {
+        tipo: 'stato_partita',
+        modalita: p.modalita,
+        difficolta: p.difficolta,
+        vite: p.vite,
+        viteMax: p.viteMax,
+        punti: p.punti,
+        presi: p.presi,
+        livello: p.livello,
+        mancanti: QUADRATI_PER_LIVELLO - (p.presi % QUADRATI_PER_LIVELLO),
+        perLivello: QUADRATI_PER_LIVELLO,
+        colore: p.modalita === 'infinita' ? parametriInfinita(p.livello).colore : null,
+    });
+}</code></pre>
+    <div class="spiega">
+    <p>Ogni client ha <b>la sua partita</b>, salvata in <code>ws.partita</code> (vite, punti, quadrati presi, livello, numero del quadrato, timer). Il ciclo è fatto di <code>setTimeout</code>:</p>
+    <ul>
+      <li><b>prossimoQuadrato</b>: manda <b>solo a quel client</b> il quadrato con posizione, <code>dimensione</code>, <code>colore</code> e <code>durata</code>, poi avvia un timer di <code>durata</code> ms.</li>
+      <li>Se il timer scade prima del click scatta <b>quadratoScaduto</b>: −1 vita, messaggio <code>mancato</code>; a 0 vite <b>finePartita</b>.</li>
+      <li><b>clickSingolo</b>: se il numero è giusto e il quadrato è aperto, <code>clearTimeout</code> annulla il timer (niente vita persa), aggiunge punti e prepara il quadrato successivo.</li>
+    </ul>
+    <p><b>Formula di Tetris (modalità infinita).</b> Ogni quadrato vale <code>40 × livello</code> punti, come una riga singola in Tetris.
+    Il livello è <code>Math.floor(presi / 10) + 1</code>: si sale ogni 10 quadrati. <b>parametriInfinita(livello)</b> calcola la difficoltà:
+    tempo <code>1500 × 0,88<sup>livello−1</sup></code> ms (minimo 380), lato <code>76 − 4 × (livello − 1)</code> px (minimo 34), colore preso dall'array con l'operatore <code>%</code>.
+    Esempio: 25 quadrati = 10 × 40 + 10 × 80 + 5 × 120 = <b>1800 punti</b>, livello 3.</p>
+    <p><b>finePartita</b> salva il risultato con <code>record.aggiungi()</code>; se è un nuovo record lo manda <b>a tutti</b> (<code>inviaATutti</code>), così la lista si aggiorna in tempo reale anche per gli altri.</p><p class="rif"><svg class="ico"><use href="#i-graffetta"/></svg> Negli esempi del prof: ws_socket_03 (click → server), ws_socket_00 → 04 (timer lato server)</p></div>
+  </div>
+  <div class="blocco">
+    <h3><span class="sez">§ 9</span> Altre funzioni</h3>
+    <pre><code>function indirizziRete() {
     const indirizzi = [];
     const interfacce = os.networkInterfaces();
     for (const nome in interfacce) {
@@ -330,25 +535,82 @@ function indirizziRete() {
     return indirizzi;
 }</code></pre>
     <div class="spiega">
-    <ul>
-      <li><b>inviaATutti</b>: è il <b>broadcast</b>. Scorre <code>ws_server.clients</code> con <code>forEach</code> e manda il messaggio a ogni client con la connessione <code>OPEN</code>.
-      L'oggetto viene convertito in testo con <code>JSON.stringify</code> una sola volta.</li>
-      <li><b>listaClassifica</b>: costruisce un array con i giocatori che hanno un nome e lo ordina con <code>sort((a, b) =&gt; b.punti - a.punti)</code> (decrescente).</li>
-      <li><b>nuovaPosizione</b>: coordinate casuali da 0 a 100 = <b>percentuale</b> dello spazio. Ogni client le trasforma in pixel secondo la grandezza del suo schermo.</li>
-      <li><b>nuovaPartita</b>: azzera i punti; viene chiamata da <code>setTimeout</code> (una volta sola, dopo 5 secondi).</li>
-      <li><b>indirizziRete</b>: con <code>os.networkInterfaces()</code> trova l'IP del PC per farlo vedere nel terminale (serve per giocare da altri PC).
-      Usa <code>for...in</code> (chiavi di un oggetto) e <code>for...of</code> (elementi di un array).</li>
-    </ul><p class="rif"><svg class="ico"><use href="#i-graffetta"/></svg> Negli esempi del prof: ws_socket_00 → 08 (clients.forEach + send), ws_socket_08 (array dei client)</p></div>
+    <p><b>indirizziRete</b>: con <code>os.networkInterfaces()</code> trova l'IP del PC per mostrarlo nel terminale (serve per giocare da altri PC).
+    Usa <code>for...in</code> (chiavi di un oggetto) e <code>for...of</code> (elementi di un array).</p></div>
   </div>
 </div>
 
 <div class="capitolo">
-<h2>5. Il client — public/index.html</h2>
+<h2>5. Il modulo dei record — record.js</h2>
+<div class="blocco">
+  <h3><span class="sez">MODULO</span> Un modulo scritto da noi</h3>
+  <pre><code>const fs = require('fs');
+const path = require('path');
+
+const FILE_RECORD = path.join(__dirname, 'record.json');
+const MAX_RECORD = 5;
+
+let record = strutturaVuota();
+
+function strutturaVuota() {
+    return { facile: [], difficile: [], impossibile: [], infinita: [] };
+}
+
+function carica() {
+    try {
+        const testo = fs.readFileSync(FILE_RECORD, 'utf8');
+        record = Object.assign(strutturaVuota(), JSON.parse(testo));
+        console.log('[RECORD] record caricati da record.json');
+    } catch (errore) {
+        record = strutturaVuota();
+        console.log('[RECORD] nessun record salvato: si parte da zero');
+    }
+}
+
+function aggiungi(classifica, risultato) {
+    const lista = record[classifica];
+    lista.push(risultato);
+    lista.sort((a, b) =&gt; b.punti - a.punti);
+    const posizione = lista.indexOf(risultato);
+    record[classifica] = lista.slice(0, MAX_RECORD);
+    if (posizione &gt;= MAX_RECORD) return -1;
+    salva();
+    return posizione;
+}
+
+function salva() {
+    const testo = JSON.stringify(record, null, 2);
+    fs.writeFile(FILE_RECORD, testo, (errore) =&gt; {
+        if (errore) console.log('[RECORD] errore nel salvataggio: ' + errore.message);
+    });
+}
+
+function elenco() {
+    return record;
+}
+
+module.exports = { carica, aggiungi, elenco };</code></pre>
+  <div class="spiega">
+    <p>Un modulo è un file JavaScript che <b>esporta</b> qualcosa con <code>module.exports</code>. Qui esportiamo <code>carica</code>, <code>aggiungi</code> ed <code>elenco</code>;
+    <code>salva</code> e <code>strutturaVuota</code> restano private. In <code>server.js</code> basta <code>const record = require('./record')</code> e poi <code>record.aggiungi(...)</code>.</p>
+    <ul>
+      <li><b>carica</b>: <code>fs.readFileSync</code> (sincrona, solo all'avvio) e <code>JSON.parse</code> dentro <code>try/catch</code>: se il file non c'è si parte con i record vuoti.
+      <code>Object.assign</code> unisce la struttura vuota con i dati letti.</li>
+      <li><b>aggiungi</b>: <code>push</code>, <code>sort</code> decrescente, <code>indexOf</code> per la posizione e <code>slice(0, 5)</code> per tenere i 5 migliori. Restituisce la posizione oppure −1.</li>
+      <li><b>salva</b>: <code>fs.writeFile</code> è <b>asincrona</b>: il server non si blocca mentre scrive e la callback segnala eventuali errori. <code>JSON.stringify(record, null, 2)</code> scrive il JSON indentato.</li>
+    </ul>
+    <p class="rif"><svg class="ico"><use href="#i-graffetta"/></svg> Negli esempi del prof: ws_socket_09 (modulo fs)</p>
+  </div>
+</div>
+</div>
+
+<div class="capitolo">
+<h2>6. Il client — public/index.html</h2>
 <div class="blocco">
   <h3><span class="sez">HTML</span> Struttura della pagina</h3>
   <pre><code>&lt;body&gt;
 
-    &lt;svg width="0" height="0" style="position: absolute"&gt; ... 9 icone &lt;symbol id="i-..."&gt; ... &lt;/svg&gt;
+    &lt;svg width="0" height="0" style="position: absolute"&gt; ... 15 icone &lt;symbol id="i-..."&gt; ... &lt;/svg&gt;
 
     &lt;header&gt;
         &lt;h1&gt;&lt;svg class="icona"&gt;&lt;use href="#i-bersaglio"/&gt;&lt;/svg&gt;Acchiappa il quadrato&lt;/h1&gt;
@@ -356,6 +618,7 @@ function indirizziRete() {
             &lt;span class="pillola"&gt;&lt;span id="pallino-mio"&gt;&lt;/span&gt;&lt;span id="mio-nome"&gt;...&lt;/span&gt;&lt;/span&gt;
             &lt;span class="pillola"&gt;&lt;svg class="icona"&gt;&lt;use href="#i-utenti"/&gt;&lt;/svg&gt;&lt;span id="connessi"&gt;Connessi: 0&lt;/span&gt;&lt;/span&gt;
             &lt;span class="pillola"&gt;&lt;span id="pallino-stato" class="pallino-stato"&gt;&lt;/span&gt;&lt;span id="stato"&gt;Connessione...&lt;/span&gt;&lt;/span&gt;
+            &lt;button id="pulsante-menu" class="secondario nascosto"&gt;&lt;svg class="icona"&gt;&lt;use href="#i-menu"/&gt;&lt;/svg&gt;Menu&lt;/button&gt;
             &lt;button id="pulsante-musica"&gt;&lt;svg class="icona"&gt;&lt;use id="icona-musica" href="#i-volume-off"/&gt;&lt;/svg&gt;Musica&lt;/button&gt;
         &lt;/div&gt;
     &lt;/header&gt;
@@ -364,12 +627,31 @@ function indirizziRete() {
         &lt;div id="campo"&gt;
             &lt;div id="quadrato"&gt;&lt;/div&gt;
             &lt;div id="messaggio"&gt;&lt;svg class="icona"&gt;&lt;use id="icona-messaggio" href="#i-stella"/&gt;&lt;/svg&gt;&lt;span id="testo-messaggio"&gt;&lt;/span&gt;&lt;/div&gt;
+            &lt;div id="barra-tempo"&gt;&lt;/div&gt;
         &lt;/div&gt;
 
         &lt;aside&gt;
-            &lt;h2&gt;&lt;svg class="icona"&gt;&lt;use href="#i-trofeo"/&gt;&lt;/svg&gt;Classifica&lt;/h2&gt;
-            &lt;p&gt;Il primo che arriva a &lt;b id="obiettivo"&gt;10&lt;/b&gt; punti vince!&lt;/p&gt;
-            &lt;ol id="classifica"&gt;&lt;/ol&gt;
+            &lt;div id="pannello-sfida"&gt;
+                &lt;h2&gt;&lt;svg class="icona"&gt;&lt;use href="#i-trofeo"/&gt;&lt;/svg&gt;Classifica&lt;/h2&gt;
+                &lt;p&gt;Il primo che arriva a &lt;b id="obiettivo"&gt;10&lt;/b&gt; punti vince!&lt;/p&gt;
+                &lt;ol id="classifica"&gt;&lt;/ol&gt;
+            &lt;/div&gt;
+
+            &lt;div id="pannello-solo" class="nascosto"&gt;
+                &lt;h2&gt;&lt;svg class="icona"&gt;&lt;use id="icona-modalita" href="#i-tachimetro"/&gt;&lt;/svg&gt;&lt;span id="titolo-modalita"&gt;&lt;/span&gt;&lt;/h2&gt;
+                &lt;div id="vite"&gt;&lt;/div&gt;
+                &lt;div class="statistiche"&gt;
+                    &lt;div class="statistica"&gt;&lt;span&gt;PUNTI&lt;/span&gt;&lt;b id="valore-punti"&gt;0&lt;/b&gt;&lt;/div&gt;
+                    &lt;div class="statistica"&gt;&lt;span&gt;QUADRATI&lt;/span&gt;&lt;b id="valore-presi"&gt;0&lt;/b&gt;&lt;/div&gt;
+                    &lt;div class="statistica"&gt;&lt;span id="etichetta-livello"&gt;LIVELLO&lt;/span&gt;&lt;b id="valore-livello"&gt;1&lt;/b&gt;&lt;/div&gt;
+                &lt;/div&gt;
+                &lt;div id="riga-livello"&gt;
+                    &lt;p&gt;Prossimo livello tra &lt;b id="mancanti"&gt;10 quadrati&lt;/b&gt;&lt;/p&gt;
+                    &lt;div id="avanzamento"&gt;&lt;div&gt;&lt;/div&gt;&lt;/div&gt;
+                &lt;/div&gt;
+                &lt;h3&gt;&lt;svg class="icona"&gt;&lt;use href="#i-trofeo"/&gt;&lt;/svg&gt;&lt;span id="titolo-record"&gt;Record&lt;/span&gt;&lt;/h3&gt;
+                &lt;ol id="lista-record"&gt;&lt;/ol&gt;
+            &lt;/div&gt;
         &lt;/aside&gt;
     &lt;/main&gt;
 
@@ -377,45 +659,33 @@ function indirizziRete() {
         &lt;div class="box"&gt;
             &lt;svg class="icona grande"&gt;&lt;use href="#i-bersaglio"/&gt;&lt;/svg&gt;
             &lt;h2&gt;Benvenuto!&lt;/h2&gt;
-            &lt;p&gt;Clicca il quadrato giallo prima degli altri giocatori. Ogni quadrato preso vale 1 punto.&lt;/p&gt;
+            &lt;p&gt;Clicca il quadrato prima che sparisca o prima degli altri giocatori. Scegli un nome e poi la modalità di gioco.&lt;/p&gt;
             &lt;input id="input-nome" type="text" maxlength="15" placeholder="Scrivi il tuo nome" autocomplete="off"&gt;
-            &lt;button id="entra" disabled&gt;Gioca&lt;/button&gt;
+            &lt;button id="entra" disabled&gt;Continua&lt;/button&gt;
         &lt;/div&gt;
     &lt;/div&gt;
-
-    &lt;div id="schermata-vittoria" class="overlay nascosto"&gt;
-        &lt;div class="box"&gt;
-            &lt;svg class="icona grande"&gt;&lt;use href="#i-trofeo"/&gt;&lt;/svg&gt;
-            &lt;h2 id="testo-vittoria"&gt;&lt;/h2&gt;
-            &lt;p&gt;Nuova partita tra &lt;b id="conto"&gt;5&lt;/b&gt; secondi...&lt;/p&gt;
-        &lt;/div&gt;
-    &lt;/div&gt;
-
-    &lt;audio id="audio" src="/musica" loop preload="none"&gt;&lt;/audio&gt;
-
-    </code></pre>
-  <div class="spiega"><p>La pagina ha: un'<b>intestazione</b> (nome, connessi, stato, musica), il <b>campo</b> con il quadrato, la <b>classifica</b> (lista <code>&lt;ol&gt;</code> riempita da JavaScript),
-  due <b>schermate sovrapposte</b> (nome iniziale e vittoria, mostrate/nascoste aggiungendo o togliendo la classe CSS <code>nascosto</code>) e l'elemento
-  <code>&lt;audio&gt;</code> che prende la musica dalla rotta <code>/musica</code> del server. Il CSS (dentro <code>&lt;style&gt;</code>) serve solo alla grafica.</p>
-  <p><b>Icone vettoriali (SVG).</b> All'inizio del <code>body</code> c'è un contenitore <code>&lt;svg&gt;</code> invisibile con 9 <code>&lt;symbol&gt;</code>: ognuno è un'icona
-  disegnata una sola volta (bersaglio, utenti, altoparlante acceso/spento, trofeo, stella, fulmine, play, avviso). Dove serve un'icona scriviamo
-  <code>&lt;svg class="icona"&gt;&lt;use href="#i-trofeo"/&gt;&lt;/svg&gt;</code>: <code>&lt;use&gt;</code> "copia" il simbolo indicato. Essendo vettoriali restano nitide a qualsiasi
-  grandezza e prendono il colore dal CSS (<code>stroke: currentColor</code>). Per cambiare icona da JavaScript basta cambiare l'attributo <code>href</code>
-  con <code>setAttribute</code> (pulsante della musica e fumetto dei messaggi). Lo stile delle icone è quello del set open source Lucide (licenza ISC).</p></div>
+    ... schermate sovrapposte: menu delle modalità, vittoria della sfida, game over ...
+    &lt;audio id="audio" src="/musica" loop preload="none"&gt;&lt;/audio&gt;</code></pre>
+  <div class="spiega"><p>La pagina ha: un'<b>intestazione</b> (nome, connessi, stato, Menu, Musica), il <b>campo</b> con il quadrato, il fumetto e la barra del tempo, e un <b>pannello laterale</b>
+  con due parti mostrate in alternativa: la <b>classifica</b> della sfida oppure il pannello delle partite singole (cuori, punti, quadrati, livello, record).
+  Le <b>schermate sovrapposte</b> (nome, menu delle modalità, vittoria, game over) si mostrano e nascondono con la classe CSS <code>nascosto</code>.</p>
+  <p><b>Icone vettoriali (SVG).</b> All'inizio del <code>body</code> un contenitore <code>&lt;svg&gt;</code> invisibile contiene i <code>&lt;symbol&gt;</code>: ognuno è un'icona
+  disegnata una sola volta. Dove serve scriviamo <code>&lt;svg class="icona"&gt;&lt;use href="#i-trofeo"/&gt;&lt;/svg&gt;</code>: <code>&lt;use&gt;</code> "copia" il simbolo.
+  Restano nitide a ogni grandezza e prendono il colore dal CSS (<code>stroke: currentColor</code>). Stile del set open source Lucide (licenza ISC).</p></div>
 </div>
 
   <div class="blocco">
     <h3><span class="sez">§ 1</span> Connessione WebSocket</h3>
     <pre><code>const webSocket = new WebSocket(location.origin.replace(/^http/, 'ws'));</code></pre>
     <div class="spiega">
-    <p><code>location.origin</code> è l'indirizzo da cui è arrivata la pagina (es. <code>http://192.168.1.20:3000</code>). Con <code>replace(/^http/, 'ws')</code> diventa
-    <code>ws://192.168.1.20:3000</code>: il client si collega sempre allo stesso server che gli ha dato la pagina, qualunque sia l'IP. Stessa riga degli esempi del prof.
-    L'oggetto <code>WebSocket</code> è già incluso nel browser: lato client il modulo <code>ws</code> non serve.</p><p class="rif"><svg class="ico"><use href="#i-graffetta"/></svg> Negli esempi del prof: tutti gli esempi (stessa riga)</p></div>
+    <p><code>location.origin.replace(/^http/, 'ws')</code> trasforma l'indirizzo della pagina (es. <code>http://192.168.1.20:3000</code>) in <code>ws://192.168.1.20:3000</code>:
+    il client si collega sempre al server che gli ha dato la pagina. Lato browser l'oggetto <code>WebSocket</code> è già incluso, il modulo <code>ws</code> serve solo al server.</p><p class="rif"><svg class="ico"><use href="#i-graffetta"/></svg> Negli esempi del prof: tutti gli esempi (stessa riga)</p></div>
   </div>
   <div class="blocco">
     <h3><span class="sez">§ 2</span> Riferimenti agli elementi della pagina</h3>
     <pre><code>const campo = document.getElementById('campo');
 const quadrato = document.getElementById('quadrato');
+const barraTempo = document.getElementById('barra-tempo');
 const messaggio = document.getElementById('messaggio');
 const testoMessaggio = document.getElementById('testo-messaggio');
 const iconaMessaggio = document.getElementById('icona-messaggio');
@@ -424,29 +694,54 @@ const mioNome = document.getElementById('mio-nome');
 const connessi = document.getElementById('connessi');
 const stato = document.getElementById('stato');
 const pallinoStato = document.getElementById('pallino-stato');
+const pulsanteMenu = document.getElementById('pulsante-menu');
+const pulsanteMusica = document.getElementById('pulsante-musica');
+const iconaMusica = document.getElementById('icona-musica');
+const audio = document.getElementById('audio');
+const pannelloSfida = document.getElementById('pannello-sfida');
 const obiettivo = document.getElementById('obiettivo');
 const classifica = document.getElementById('classifica');
+const pannelloSolo = document.getElementById('pannello-solo');
+const iconaModalita = document.getElementById('icona-modalita');
+const titoloModalita = document.getElementById('titolo-modalita');
+const vite = document.getElementById('vite');
+const valorePunti = document.getElementById('valore-punti');
+const valorePresi = document.getElementById('valore-presi');
+const etichettaLivello = document.getElementById('etichetta-livello');
+const valoreLivello = document.getElementById('valore-livello');
+const rigaLivello = document.getElementById('riga-livello');
+const mancanti = document.getElementById('mancanti');
+const avanzamento = document.querySelector('#avanzamento div');
+const titoloRecord = document.getElementById('titolo-record');
+const listaRecord = document.getElementById('lista-record');
 const schermataNome = document.getElementById('schermata-nome');
 const inputNome = document.getElementById('input-nome');
 const pulsanteEntra = document.getElementById('entra');
+const schermataModalita = document.getElementById('schermata-modalita');
 const schermataVittoria = document.getElementById('schermata-vittoria');
 const testoVittoria = document.getElementById('testo-vittoria');
 const conto = document.getElementById('conto');
-const audio = document.getElementById('audio');
-const pulsanteMusica = document.getElementById('pulsante-musica');
-const iconaMusica = document.getElementById('icona-musica');</code></pre>
+const schermataGameover = document.getElementById('schermata-gameover');
+const finePunti = document.getElementById('fine-punti');
+const finePresi = document.getElementById('fine-presi');
+const fineLivello = document.getElementById('fine-livello');
+const testoRecord = document.getElementById('testo-record');</code></pre>
     <div class="spiega">
-    <p>Con <code>document.getElementById</code> salviamo una sola volta i riferimenti agli elementi HTML che useremo spesso (DOM = la pagina vista da JavaScript).</p><p class="rif"><svg class="ico"><use href="#i-graffetta"/></svg> Negli esempi del prof: ws_socket_01 → 08</p></div>
+    <p>Con <code>document.getElementById</code> (e <code>querySelector</code>, che accetta un selettore CSS) salviamo una volta sola i riferimenti agli elementi del DOM che useremo spesso.</p><p class="rif"><svg class="ico"><use href="#i-graffetta"/></svg> Negli esempi del prof: ws_socket_01 → 08</p></div>
   </div>
   <div class="blocco">
     <h3><span class="sez">§ 3</span> Variabili del client</h3>
     <pre><code>let mioId = null;
 let numeroQuadrato = 0;
 let puntiPerVincere = 10;
+let configDifficolta = {};
+let modalitaAttuale = null;
+let difficoltaAttuale = null;
+let record = {};
 let timerMessaggio = null;
 let timerConto = null;</code></pre>
     <div class="spiega">
-    <p>Il client ricorda solo poche cose: il proprio <b>id</b> (per capire "sono io?"), il <b>numero del quadrato</b> in campo (da rimandare con il click) e i timer, per poterli fermare.</p></div>
+    <p>Il client ricorda il proprio <b>id</b>, il <b>numero del quadrato</b> in campo, la <b>modalità</b> e la <b>difficoltà</b> in corso, la configurazione delle difficoltà ricevuta dal server, gli ultimi <b>record</b> e i timer.</p></div>
   </div>
   <div class="blocco">
     <h3><span class="sez">§ 4</span> Eventi del WebSocket</h3>
@@ -461,6 +756,7 @@ webSocket.onclose = () =&gt; {
     stato.textContent = 'Disconnesso';
     pallinoStato.className = 'pallino-stato rosso';
     quadrato.style.display = 'none';
+    fermaBarraTempo();
     mostraMessaggio('Connessione persa: ricarica la pagina', 'avviso');
 };
 
@@ -473,21 +769,49 @@ webSocket.onmessage = (event) =&gt; {
         mioNome.textContent = 'Giocatore ' + msg.id;
         puntiPerVincere = msg.puntiPerVincere;
         obiettivo.textContent = msg.puntiPerVincere;
+        configDifficolta = msg.difficolta;
+        for (const chiave in configDifficolta) {
+            const d = configDifficolta[chiave];
+            document.getElementById('dettagli-' + chiave).textContent = d.vite + (d.vite === 1 ? ' vita' : ' vite') + ' · ' + (d.tempo / 1000).toLocaleString('it-IT') + ' s';
+        }
     } else if (msg.tipo === 'quadrato') {
         numeroQuadrato = msg.numero;
+        quadrato.style.width = msg.dimensione + 'px';
+        quadrato.style.height = msg.dimensione + 'px';
         const spazioX = campo.clientWidth - quadrato.offsetWidth;
         const spazioY = campo.clientHeight - quadrato.offsetHeight;
         quadrato.style.left = (spazioX * msg.x / 100) + 'px';
         quadrato.style.top = (spazioY * msg.y / 100) + 'px';
-        quadrato.style.backgroundColor = '';
+        quadrato.style.backgroundColor = msg.colore || '';
+        quadrato.style.setProperty('--bagliore', msg.colore || 'rgba(249, 202, 36, 0.55)');
         quadrato.classList.remove('preso');
         quadrato.style.display = 'block';
+        if (msg.durata) avviaBarraTempo(msg.durata, msg.colore);
+        else fermaBarraTempo();
     } else if (msg.tipo === 'preso') {
         if (msg.numero !== numeroQuadrato) return;
         quadrato.classList.add('preso');
-        quadrato.style.backgroundColor = msg.colore;
-        if (msg.id === mioId) mostraMessaggio('+1 per te!', 'stella');
+        fermaBarraTempo();
+        if (modalitaAttuale === 'sfida') quadrato.style.backgroundColor = msg.colore;
+        if (msg.id === mioId) mostraMessaggio('+' + (msg.guadagno || 1) + (msg.guadagno &gt; 1 ? ' punti' : ' per te!'), 'stella');
         else mostraMessaggio(msg.nome + ' è stato più veloce', 'fulmine');
+    } else if (msg.tipo === 'mancato') {
+        quadrato.style.display = 'none';
+        fermaBarraTempo();
+        campo.classList.remove('errore');
+        void campo.offsetWidth;
+        campo.classList.add('errore');
+        mostraMessaggio('Mancato! Una vita in meno', 'cuore');
+    } else if (msg.tipo === 'livello') {
+        mostraMessaggio('Livello ' + msg.livello + '!', 'livello');
+        campo.style.borderColor = msg.colore;
+    } else if (msg.tipo === 'stato_partita') {
+        aggiornaStato(msg);
+    } else if (msg.tipo === 'game_over') {
+        mostraGameOver(msg);
+    } else if (msg.tipo === 'record') {
+        record = msg.record;
+        aggiornaRecord();
     } else if (msg.tipo === 'classifica') {
         connessi.textContent = 'Connessi: ' + msg.connessi;
         aggiornaClassifica(msg.giocatori);
@@ -504,14 +828,11 @@ webSocket.onmessage = (event) =&gt; {
     }
 };</code></pre>
     <div class="spiega">
+    <p><code>onopen</code> abilita il pulsante, <code>onclose</code> avvisa che la connessione è persa, <code>onmessage</code> converte il testo con <code>JSON.parse</code> e sceglie cosa fare in base a <code>tipo</code>:</p>
     <ul>
-      <li><code>onopen</code>: connessione pronta, abilitiamo il pulsante <b>Gioca</b>.</li>
-      <li><code>onclose</code>: server spento o rete persa, avvisiamo il giocatore.</li>
-      <li><code>onmessage</code>: il testo ricevuto diventa oggetto con <code>JSON.parse</code>; il campo <b>tipo</b> decide cosa fare
-      (<code>benvenuto</code>, <code>quadrato</code>, <code>preso</code>, <code>classifica</code>, <code>vittoria</code>, <code>nuova_partita</code>).</li>
-    </ul>
-    <p>Posizione del quadrato: spazio disponibile = dimensione del campo − dimensione del quadrato; pixel = spazio × percentuale / 100.
-    Così il quadrato resta sempre dentro il campo, anche sul telefono.</p><p class="rif"><svg class="ico"><use href="#i-graffetta"/></svg> Negli esempi del prof: ws_socket_01/02 (onmessage + style.left/top), ws_socket_08 (tipi di messaggio diversi)</p></div>
+      <li><code>quadrato</code>: imposta <b>grandezza</b>, <b>posizione</b> (percentuale → pixel), <b>colore</b> e bagliore (variabile CSS <code>--bagliore</code> con <code>setProperty</code>); se c'è <code>durata</code> fa partire la barra del tempo.</li>
+      <li><code>preso</code>, <code>mancato</code> (il campo "trema" con un'animazione CSS), <code>livello</code> (il bordo prende il colore del livello), <code>stato_partita</code>, <code>game_over</code>, <code>record</code>, <code>classifica</code>, <code>vittoria</code>, <code>nuova_partita</code>.</li>
+    </ul><p class="rif"><svg class="ico"><use href="#i-graffetta"/></svg> Negli esempi del prof: ws_socket_01/02 (onmessage + style.left/top), ws_socket_08 (tipi di messaggio diversi)</p></div>
   </div>
   <div class="blocco">
     <h3><span class="sez">§ 5</span> Eventi dell'utente</h3>
@@ -526,6 +847,18 @@ inputNome.addEventListener('keydown', (evento) =&gt; {
     if (evento.key === 'Enter') entraInPartita();
 });
 
+document.querySelectorAll('[data-modalita]').forEach((pulsante) =&gt; {
+    pulsante.addEventListener('click', () =&gt; {
+        scegliModalita(pulsante.dataset.modalita, pulsante.dataset.difficolta || null);
+    });
+});
+
+pulsanteMenu.addEventListener('click', tornaAlMenu);
+
+document.getElementById('pulsante-fine-menu').addEventListener('click', tornaAlMenu);
+
+document.getElementById('pulsante-rigioca').addEventListener('click', () =&gt; scegliModalita(modalitaAttuale, difficoltaAttuale));
+
 pulsanteMusica.addEventListener('click', () =&gt; {
     if (audio.paused) {
         audio.play().catch(() =&gt; mostraMessaggio('Impossibile riprodurre la musica', 'avviso'));
@@ -536,9 +869,9 @@ pulsanteMusica.addEventListener('click', () =&gt; {
     }
 });</code></pre>
     <div class="spiega">
-    <p><code>addEventListener</code> collega una funzione a un evento. Sul quadrato usiamo <code>pointerdown</code>, che scatta appena si preme (mouse o dito): più rapido di <code>click</code>.
-    Il client <b>non</b> assegna punti: manda solo <code>{ tipo: 'click', numero }</code> e decide il server.
-    <code>audio.play()</code> restituisce una <b>Promise</b>; con <code>.catch()</code> gestiamo il caso in cui il browser blocchi l'audio.</p><p class="rif"><svg class="ico"><use href="#i-graffetta"/></svg> Negli esempi del prof: ws_socket_03 → 08 (addEventListener + webSocket.send)</p></div>
+    <p><code>pointerdown</code> sul quadrato manda solo <code>{ tipo: 'click', numero }</code>: decide il server. I pulsanti del menu hanno attributi personalizzati
+    <code>data-modalita</code> e <code>data-difficolta</code>: <code>querySelectorAll('[data-modalita]')</code> li trova tutti e <code>dataset</code> ne legge i valori, così un solo
+    <code>forEach</code> collega tutti i pulsanti. <code>audio.play()</code> restituisce una <b>Promise</b> gestita con <code>.catch()</code>.</p><p class="rif"><svg class="ico"><use href="#i-graffetta"/></svg> Negli esempi del prof: ws_socket_03 → 08 (addEventListener + webSocket.send)</p></div>
   </div>
   <div class="blocco">
     <h3><span class="sez">§ 6</span> Funzioni</h3>
@@ -548,6 +881,89 @@ pulsanteMusica.addEventListener('click', () =&gt; {
     webSocket.send(JSON.stringify({ tipo: 'nome', nome: nome }));
     if (nome) mioNome.textContent = nome;
     schermataNome.classList.add('nascosto');
+    schermataModalita.classList.remove('nascosto');
+}
+
+function scegliModalita(modalita, difficolta) {
+    modalitaAttuale = modalita;
+    difficoltaAttuale = difficolta;
+    webSocket.send(JSON.stringify({ tipo: 'modalita', modalita: modalita, difficolta: difficolta }));
+    schermataModalita.classList.add('nascosto');
+    schermataGameover.classList.add('nascosto');
+    pulsanteMenu.classList.remove('nascosto');
+    pulisciCampo();
+    pannelloSfida.classList.toggle('nascosto', modalita !== 'sfida');
+    pannelloSolo.classList.toggle('nascosto', modalita === 'sfida');
+    rigaLivello.classList.toggle('nascosto', modalita !== 'infinita');
+    titoloModalita.textContent = modalita === 'infinita' ? 'Modalità infinita' : 'Difficoltà: ' + (configDifficolta[difficolta] ? configDifficolta[difficolta].nome : '');
+    iconaModalita.setAttribute('href', modalita === 'infinita' ? '#i-infinito' : '#i-tachimetro');
+    aggiornaRecord();
+}
+
+function tornaAlMenu() {
+    webSocket.send(JSON.stringify({ tipo: 'esci' }));
+    modalitaAttuale = null;
+    pulisciCampo();
+    pulsanteMenu.classList.add('nascosto');
+    schermataGameover.classList.add('nascosto');
+    schermataVittoria.classList.add('nascosto');
+    schermataModalita.classList.remove('nascosto');
+}
+
+function pulisciCampo() {
+    quadrato.style.display = 'none';
+    numeroQuadrato = 0;
+    fermaBarraTempo();
+    campo.style.borderColor = '';
+}
+
+function aggiornaStato(dati) {
+    let cuori = '';
+    for (let i = 0; i &lt; dati.viteMax; i++) {
+        cuori += '&lt;svg class="icona' + (i &lt; dati.vite ? ' piena' : '') + '"&gt;&lt;use href="#i-cuore"/&gt;&lt;/svg&gt;';
+    }
+    vite.innerHTML = cuori;
+    valorePunti.textContent = dati.punti;
+    valorePresi.textContent = dati.presi;
+    if (dati.modalita === 'infinita') {
+        etichettaLivello.textContent = 'LIVELLO';
+        valoreLivello.textContent = dati.livello;
+        mancanti.textContent = dati.mancanti + (dati.mancanti === 1 ? ' quadrato' : ' quadrati');
+        avanzamento.style.width = ((dati.perLivello - dati.mancanti) / dati.perLivello * 100) + '%';
+        avanzamento.style.backgroundColor = dati.colore;
+        campo.style.borderColor = dati.colore;
+    } else {
+        etichettaLivello.textContent = 'VITE';
+        valoreLivello.textContent = dati.vite;
+    }
+}
+
+function mostraGameOver(dati) {
+    quadrato.style.display = 'none';
+    finePunti.textContent = dati.punti;
+    finePresi.textContent = dati.presi;
+    fineLivello.textContent = dati.modalita === 'infinita' ? dati.livello : '-';
+    testoRecord.textContent = dati.posizione &gt;= 0 ? 'Nuovo record: ' + (dati.posizione + 1) + '° posto!' : '';
+    schermataGameover.classList.remove('nascosto');
+}
+
+function aggiornaRecord() {
+    const chiave = modalitaAttuale === 'infinita' ? 'infinita' : difficoltaAttuale;
+    if (!chiave || !record[chiave]) return;
+    titoloRecord.textContent = 'Record ' + (chiave === 'infinita' ? 'infinita' : configDifficolta[chiave].nome.toLowerCase());
+    listaRecord.innerHTML = '';
+    if (record[chiave].length === 0) {
+        const riga = creaElemento('li', 'vuoto', 'Nessun record: sii il primo!');
+        listaRecord.appendChild(riga);
+    }
+    record[chiave].forEach((r, indice) =&gt; {
+        const riga = document.createElement('li');
+        const posizione = creaElemento('span', 'posizione', indice + 1 + '.');
+        const nome = creaElemento('span', 'nome', r.nome);
+        const punti = creaElemento('span', 'punti', chiave === 'infinita' ? r.punti + ' (liv. ' + r.livello + ')' : r.punti);
+        riga.append(posizione, nome, punti);
+        listaRecord.appendChild(riga);
+    });
 }
 
 function aggiornaClassifica(giocatori) {
@@ -577,6 +993,20 @@ function creaElemento(tag, classe, testo) {
     return elemento;
 }
 
+function avviaBarraTempo(durata, colore) {
+    barraTempo.style.transition = 'none';
+    barraTempo.style.width = '100%';
+    barraTempo.style.backgroundColor = colore || '#f9ca24';
+    void barraTempo.offsetWidth;
+    barraTempo.style.transition = 'width ' + durata + 'ms linear';
+    barraTempo.style.width = '0%';
+}
+
+function fermaBarraTempo() {
+    barraTempo.style.transition = 'none';
+    barraTempo.style.width = '0';
+}
+
 function mostraMessaggio(testo, icona) {
     testoMessaggio.textContent = testo;
     iconaMessaggio.setAttribute('href', '#i-' + icona);
@@ -596,25 +1026,25 @@ function avviaContoAllaRovescia(secondi) {
 </code></pre>
     <div class="spiega">
     <ul>
-      <li><b>entraInPartita</b>: controlla <code>readyState === WebSocket.OPEN</code>, manda il nome e nasconde la schermata iniziale.</li>
-      <li><b>aggiornaClassifica</b>: svuota la lista e la ricrea con <code>createElement</code> / <code>appendChild</code> (come la griglia dell'esempio 07).
-      I nomi vengono scritti con <code>textContent</code> e <b>non</b> con <code>innerHTML</code>: se qualcuno si chiamasse <code>&lt;script&gt;...</code> il browser lo mostrerebbe come testo e non lo eseguirebbe (protezione XSS).</li>
-      <li><b>mostraMessaggio(testo, icona)</b>: scrive il testo, sceglie l'icona con <code>setAttribute('href', '#i-' + icona)</code>, poi <code>setTimeout</code> nasconde il fumetto dopo 1,5 s; <code>clearTimeout</code> annulla il timer precedente.</li>
-      <li><b>avviaContoAllaRovescia</b>: <code>setInterval</code> ogni secondo, fermato con <code>clearInterval</code> quando parte la nuova partita.</li>
+      <li><b>scegliModalita</b> manda <code>{ tipo: 'modalita' }</code> e mostra il pannello giusto con <code>classList.toggle(classe, condizione)</code>; <b>tornaAlMenu</b> manda <code>esci</code>.</li>
+      <li><b>aggiornaStato</b> disegna i cuori (pieni = vite rimaste) e le statistiche in stile Tetris: punti, quadrati, livello e barra verso il prossimo livello.</li>
+      <li><b>mostraGameOver</b> e <b>aggiornaRecord</b>: i nomi sono scritti con <code>textContent</code>, non <code>innerHTML</code>, così un nome con codice HTML non viene eseguito (protezione XSS).</li>
+      <li><b>avviaBarraTempo</b>: la barra torna al 100% senza transizione, <code>void barraTempo.offsetWidth</code> obbliga il browser a ricalcolare, poi una <b>transizione CSS</b> la porta a 0% in esattamente <code>durata</code> millisecondi.</li>
+      <li><b>mostraMessaggio(testo, icona)</b> sceglie l'icona con <code>setAttribute('href', '#i-' + icona)</code>; <code>setTimeout</code>/<code>clearTimeout</code> gestiscono la durata.</li>
     </ul><p class="rif"><svg class="ico"><use href="#i-graffetta"/></svg> Negli esempi del prof: ws_socket_07 (createElement)</p></div>
   </div>
 </div>
 
 <div class="capitolo">
-<h2>6. Mappa dei concetti</h2>
+<h2>7. Mappa dei concetti</h2>
 <p>Dove si trova nel nostro codice ogni argomento visto a lezione, e in quale esempio del prof (<code>ws_socket_NN</code>) compariva.</p>
 <table>
   <tr><th>Concetto</th><th>Nel nostro codice</th><th>Esempi del prof</th></tr>
-  <tr><td>Moduli e require (interni / esterni)</td><td>server.js § 1</td><td>00 → 09</td></tr><tr><td>package.json, npm install, npm start</td><td>package.json</td><td>—</td></tr><tr><td>Express: app, listen con callback</td><td>server.js § 4</td><td>00 → 08</td></tr><tr><td>Middleware (req, res, next) e ordine</td><td>server.js § 4</td><td>00 (app.use)</td></tr><tr><td>File statici (express.static / sendFile)</td><td>server.js § 4</td><td>00 → 08</td></tr><tr><td>Rotte GET, res.json, codici di stato (200/404)</td><td>server.js § 4</td><td>09 (writeHead)</td></tr><tr><td>Stream: fs.createReadStream().pipe(res)</td><td>server.js § 4</td><td>09</td></tr><tr><td>Server ws agganciato al server HTTP</td><td>server.js § 5</td><td>00 → 08</td></tr><tr><td>Eventi connection / message / close / error</td><td>server.js § 5</td><td>00, 03, 08</td></tr><tr><td>Id e dati salvati sul client (ws.id)</td><td>server.js § 5</td><td>04 → 08</td></tr><tr><td>send a un client e broadcast a tutti</td><td>server.js § 5, § 7</td><td>00 → 08</td></tr><tr><td>Messaggi JSON con campo "tipo"</td><td>server.js § 5, index § 4</td><td>02, 06, 07, 08</td></tr><tr><td>Lista client connessi e numero connessi</td><td>server.js § 7</td><td>08</td></tr><tr><td>Timer: setInterval / setTimeout</td><td>server.js § 6, § 7</td><td>00 → 04</td></tr><tr><td>Gestione errori: try/catch</td><td>server.js § 5</td><td>—</td></tr><tr><td>Variabili d'ambiente e modulo os</td><td>server.js § 2, § 7</td><td>—</td></tr><tr><td>Client: new WebSocket, onopen/onmessage/onclose, send</td><td>index.html § 1, § 4</td><td>00 → 08</td></tr><tr><td>DOM: getElementById, createElement, addEventListener</td><td>index.html § 2, § 5, § 6</td><td>03 → 08</td></tr>
+  <tr><td>Moduli e require (interni / esterni / nostri)</td><td>server.js § 1</td><td>00 → 09</td></tr><tr><td>Modulo personalizzato con module.exports</td><td>record.js</td><td>—</td></tr><tr><td>fs sincrono (readFileSync) e asincrono (writeFile con callback)</td><td>record.js</td><td>09 (fs)</td></tr><tr><td>package.json, npm install, npm start</td><td>package.json</td><td>—</td></tr><tr><td>Express: app, listen con callback</td><td>server.js § 4</td><td>00 → 08</td></tr><tr><td>Middleware (req, res, next) e ordine</td><td>server.js § 4</td><td>00 (app.use)</td></tr><tr><td>File statici (express.static / sendFile)</td><td>server.js § 4</td><td>00 → 08</td></tr><tr><td>Rotte GET, res.json, codici di stato (200/404)</td><td>server.js § 4</td><td>09 (writeHead)</td></tr><tr><td>Stream: fs.createReadStream().pipe(res)</td><td>server.js § 4</td><td>09</td></tr><tr><td>Server ws agganciato al server HTTP</td><td>server.js § 5</td><td>00 → 08</td></tr><tr><td>Eventi connection / message / close / error</td><td>server.js § 5</td><td>00, 03, 08</td></tr><tr><td>Dati salvati sul client (ws.id, ws.modalita, ws.partita)</td><td>server.js § 5, § 8</td><td>04 → 08</td></tr><tr><td>send a un client, broadcast a tutti, invio a un gruppo (filter)</td><td>server.js § 7</td><td>00 → 08</td></tr><tr><td>Messaggi JSON con campo "tipo"</td><td>server.js § 5, index § 4</td><td>02, 06, 07, 08</td></tr><tr><td>Timer: setInterval (sfida) e setTimeout/clearTimeout (partite singole)</td><td>server.js § 6, § 8</td><td>00 → 04</td></tr><tr><td>Validazione dei dati ricevuti, try/catch</td><td>server.js § 5</td><td>—</td></tr><tr><td>Array: map, filter, sort, slice, indexOf, Array.from</td><td>server.js § 7, record.js</td><td>08</td></tr><tr><td>Variabili d'ambiente e modulo os</td><td>server.js § 2, § 9</td><td>—</td></tr><tr><td>Client: new WebSocket, onopen/onmessage/onclose, send</td><td>index.html § 1, § 4</td><td>00 → 08</td></tr><tr><td>DOM: getElementById, createElement, addEventListener, dataset</td><td>index.html § 2, § 5, § 6</td><td>03 → 08</td></tr>
 </table>
 
-<h2 style="margin-top:7mm">7. Domande probabili all'interrogazione</h2>
-<div class="domanda"><b class="q">1. Che differenza c'è tra HTTP e WebSocket?</b>In HTTP è sempre il client a fare una richiesta e il server risponde, poi la comunicazione finisce. Il WebSocket è una connessione <b>persistente e bidirezionale</b> (full-duplex): resta aperta e anche il <b>server può inviare dati quando vuole</b>, come la posizione del quadrato ogni 1,2 secondi.</div><div class="domanda"><b class="q">2. Come fanno HTTP e WebSocket a usare la stessa porta?</b>Il WebSocket parte come una richiesta HTTP con l'intestazione <code>Upgrade: websocket</code>. Il server (ws, agganciato al server di Express con <code>new Server({ server })</code>) risponde <code>101 Switching Protocols</code> e da quel momento la connessione diventa WebSocket.</div><div class="domanda"><b class="q">3. Cos'è un middleware? A cosa serve next()?</b>È una funzione <code>(req, res, next)</code> che Express esegue per ogni richiesta, nell'ordine in cui è registrata. Può rispondere oppure chiamare <code>next()</code> per passare la richiesta al middleware/rotta successivo. Esempi nel nostro codice: logger, <code>express.static</code>, 404.</div><div class="domanda"><b class="q">4. Perché non consegnate la cartella node_modules?</b>Perché si ricrea con <code>npm install</code>: il <code>package.json</code> elenca le dipendenze (express e ws) con le versioni. Così lo zip è leggero.</div><div class="domanda"><b class="q">5. Come fate il broadcast?</b>Il server ws tiene l'insieme dei client in <code>ws_server.clients</code>: lo scorriamo con <code>forEach</code> e chiamiamo <code>client.send()</code> su ognuno (funzione <code>inviaATutti</code>).</div><div class="domanda"><b class="q">6. Perché usate JSON e il campo "tipo"?</b>Il WebSocket trasporta testo: con <code>JSON.stringify</code> trasformiamo un oggetto in testo, con <code>JSON.parse</code> facciamo il contrario. Il campo <code>tipo</code> dice a chi riceve che messaggio è e quindi cosa deve fare.</div><div class="domanda"><b class="q">7. Se due giocatori cliccano quasi insieme, chi prende il punto?</b>Quello il cui messaggio arriva prima al server. Node gestisce gli eventi uno alla volta (event loop su un solo thread): il primo click mette <code>quadrato.preso = true</code> e i successivi vengono ignorati. Il numero del quadrato evita che vengano contati click su un quadrato vecchio.</div><div class="domanda"><b class="q">8. Perché è il server a decidere i punti e non il client?</b>Perché il codice del client si può modificare dal browser: se decidesse il client si potrebbe barare. Il server è l'unico arbitro, i client mostrano solo lo stato.</div><div class="domanda"><b class="q">9. Come assegnate id e colore ai giocatori?</b>Alla connessione incrementiamo <code>contatoreId</code> e lo salviamo in <code>ws.id</code>. Il colore è <code>COLORI[(id - 1) % COLORI.length]</code>: l'operatore modulo fa ripartire l'array quando i colori finiscono.</div><div class="domanda"><b class="q">10. Cosa succede quando un giocatore chiude la pagina?</b>Scatta l'evento <code>close</code>: ws lo toglie da <code>ws_server.clients</code> e noi rimandiamo a tutti la classifica, così sparisce dalla lista e il numero di connessi scende.</div><div class="domanda"><b class="q">11. Cos'è uno stream e perché lo usate per la musica?</b>È un flusso di dati letto a pezzi. <code>fs.createReadStream()</code> legge il file un pezzo alla volta e <code>pipe(res)</code> lo invia mentre legge: non serve caricare tutto il file in memoria.</div><div class="domanda"><b class="q">12. Differenza tra setInterval e setTimeout?</b><code>setInterval</code> ripete la funzione ogni N millisecondi (movimento del quadrato); <code>setTimeout</code> la esegue una sola volta dopo N millisecondi (nuova partita dopo 5 s). Si fermano con <code>clearInterval</code> / <code>clearTimeout</code>.</div><div class="domanda"><b class="q">13. Perché le coordinate sono in percentuale?</b>Ogni giocatore può avere uno schermo diverso (PC, telefono). Il server manda 0-100 e ogni client la trasforma in pixel in base alla grandezza del suo campo.</div><div class="domanda"><b class="q">14. Perché textContent e non innerHTML per i nomi?</b>Con <code>innerHTML</code> un nome contenente codice HTML verrebbe interpretato (rischio XSS); <code>textContent</code> lo mostra sempre come semplice testo.</div><div class="domanda"><b class="q">15. Cosa succederebbe senza il try/catch?</b>Se arrivasse un messaggio non in formato JSON, <code>JSON.parse</code> lancerebbe un errore non gestito e il server si fermerebbe per tutti i giocatori.</div><div class="domanda"><b class="q">16. Come si gioca da un altro PC?</b>Tutti sulla stessa rete; dagli altri PC si apre <code>http://IP-del-server:3000</code>. L'IP lo stampa il server all'avvio grazie al modulo <code>os</code>. Il firewall deve permettere le connessioni a Node.js.</div>
+<h2 style="margin-top:7mm">8. Domande probabili all'interrogazione</h2>
+<div class="domanda"><b class="q">1. Che differenza c'è tra HTTP e WebSocket?</b>In HTTP è sempre il client a chiedere e il server risponde, poi la comunicazione finisce. Il WebSocket è una connessione <b>persistente e bidirezionale</b> (full-duplex): anche il <b>server può inviare dati quando vuole</b>, come i quadrati della sfida o il messaggio "mancato" allo scadere del tempo.</div><div class="domanda"><b class="q">2. Come fanno HTTP e WebSocket a usare la stessa porta?</b>Il WebSocket parte come una richiesta HTTP con l'intestazione <code>Upgrade: websocket</code>. Il server ws, agganciato a quello di Express con <code>new Server({ server })</code>, risponde <code>101 Switching Protocols</code> e la connessione diventa WebSocket.</div><div class="domanda"><b class="q">3. Cos'è un middleware? A cosa serve next()?</b>È una funzione <code>(req, res, next)</code> che Express esegue per ogni richiesta, nell'ordine in cui è registrata. Può rispondere oppure chiamare <code>next()</code> per passare al successivo. Nel nostro codice: logger, <code>express.static</code>, 404.</div><div class="domanda"><b class="q">4. Cos'è record.js e come lo usate?</b>È un <b>modulo scritto da noi</b>. Esporta tre funzioni con <code>module.exports = { carica, aggiungi, elenco }</code> e <code>server.js</code> lo importa con <code>require('./record')</code>. Le funzioni non esportate (<code>salva</code>) restano private al modulo.</div><div class="domanda"><b class="q">5. Perché readFileSync in un punto e writeFile nell'altro?</b><code>readFileSync</code> è <b>sincrona</b>: blocca finché il file è letto, ma la usiamo una volta sola all'avvio. <code>writeFile</code> è <b>asincrona</b>: il server continua a gestire i giocatori mentre scrive, e la callback avvisa quando ha finito o se c'è un errore.</div><div class="domanda"><b class="q">6. Come funziona la modalità infinita?</b>Come Tetris: ogni 10 quadrati presi (le "righe") si sale di livello, <code>livello = Math.floor(presi / 10) + 1</code>. Ogni quadrato vale <code>40 × livello</code> punti. A ogni livello il tempo si moltiplica per 0,88 (−12%), il lato diminuisce di 4 px e il colore cambia.</div><div class="domanda"><b class="q">7. Come fa ogni giocatore ad avere la sua partita?</b>Lo stato è salvato in <code>ws.partita</code>, dentro l'oggetto della connessione di quel client, con il suo timer <code>setTimeout</code>. I messaggi della partita vanno solo a lui con <code>inviaA(ws, ...)</code>.</div><div class="domanda"><b class="q">8. Come si perde una vita?</b>Quando il server manda un quadrato avvia un <code>setTimeout</code> di <code>durata</code> ms. Se il click arriva prima, <code>clearTimeout</code> annulla il timer; altrimenti scatta <code>quadratoScaduto</code>, che toglie una vita e manda <code>mancato</code>.</div><div class="domanda"><b class="q">9. Cosa succede ai timer se il giocatore chiude la pagina?</b>Nell'evento <code>close</code> chiamiamo <code>fermaPartita(ws)</code>, che fa <code>clearTimeout</code> e cancella la partita: altrimenti i timer continuerebbero a girare per un client che non c'è più.</div><div class="domanda"><b class="q">10. Come evitate che chi gioca da solo riceva il quadrato della sfida?</b>Ogni client ha <code>ws.modalita</code>. <code>giocatoriSfida()</code> filtra i client con <code>modalita === 'sfida'</code> e <code>inviaASfida</code> manda i messaggi solo a loro.</div><div class="domanda"><b class="q">11. Perché controllate la difficoltà con Object.keys(...).includes?</b>Il messaggio arriva dal client e potrebbe contenere qualsiasi cosa. Accettiamo solo le chiavi <code>facile</code>, <code>difficile</code>, <code>impossibile</code>: un valore come <code>constructor</code> non deve essere preso per una difficoltà.</div><div class="domanda"><b class="q">12. Se due giocatori della sfida cliccano quasi insieme, chi prende il punto?</b>Quello il cui messaggio arriva prima: Node gestisce gli eventi uno alla volta (event loop su un solo thread). Il primo click mette <code>quadrato.preso = true</code> e gli altri vengono ignorati.</div><div class="domanda"><b class="q">13. Perché è il server a decidere punti e vite?</b>Perché il codice del client si può modificare dal browser: se decidesse il client si potrebbe barare. Il server è l'unico arbitro.</div><div class="domanda"><b class="q">14. Cos'è uno stream e perché lo usate per la musica?</b>Un flusso di dati letto a pezzi: <code>fs.createReadStream()</code> legge il file un pezzo alla volta e <code>pipe(res)</code> lo invia mentre legge, senza caricare tutto in memoria.</div><div class="domanda"><b class="q">15. Perché textContent e non innerHTML per i nomi?</b>Con <code>innerHTML</code> un nome contenente codice HTML verrebbe interpretato (rischio XSS); <code>textContent</code> lo mostra sempre come testo.</div><div class="domanda"><b class="q">16. Come si gioca da un altro PC?</b>Tutti sulla stessa rete; dagli altri PC si apre <code>http://IP-del-server:3000</code>. L'IP lo stampa il server all'avvio grazie al modulo <code>os</code>. Il firewall deve permettere le connessioni a Node.js.</div>
 </div>
 
 </body></html>

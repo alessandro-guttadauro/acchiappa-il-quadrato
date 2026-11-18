@@ -135,9 +135,6 @@
   figure img {
     width: 100%;
     display: block;
-    aspect-ratio: 2360 / 1150;
-    object-fit: cover;
-    object-position: top;
     border-radius: 2.5mm;
     border: 1px solid #c9ccd8;
   }
@@ -188,6 +185,15 @@
     border-top: 1px solid var(--linea);
     padding-top: 2mm;
   }
+
+  .carte { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3mm; margin-bottom: 4mm; }
+  .carta { border: 1px solid var(--linea); border-radius: 3mm; padding: 3.5mm; background: #fff; }
+  .carta .ico { display: block; width: 7mm; height: 7mm; color: #d39e00; margin-bottom: 1.5mm; }
+  .carta b.t { display: block; font-size: 11pt; margin-bottom: 1mm; }
+  .carta p { font-size: 9pt; margin: 0; color: #3b3f4c; }
+  .due { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; margin-bottom: 4mm; }
+  table.diff td, table.diff th { text-align: center; }
+  table.diff td:first-child, table.diff th:first-child { text-align: left; }
 </style>
 </head>
 <body>
@@ -198,6 +204,9 @@
   <symbol id="i-trofeo" viewBox="0 0 24 24"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></symbol>
   <symbol id="i-ricarica" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></symbol>
   <symbol id="i-volume-off" viewBox="0 0 24 24"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="m22 9-6 6"/><path d="m16 9 6 6"/></symbol>
+  <symbol id="i-utenti" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+  <symbol id="i-tachimetro" viewBox="0 0 24 24"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></symbol>
+  <symbol id="i-infinito" viewBox="0 0 24 24"><path d="M12 12c-2-2.67-4-4-6-4a4 4 0 1 0 0 8c2 0 4-1.33 6-4zm0 0c2 2.67 4 4 6 4a4 4 0 0 0 0-8c-2 0-4 1.33-6 4z"/></symbol>
 </svg>
 
 <!-- ============================ PAGINA 1 ============================ -->
@@ -205,7 +214,7 @@
   <div class="testata">
     <div>
       <h1><svg class="ico"><use href="#i-bersaglio"/></svg><span style="color:#fff">Acchiappa il <span style="color:var(--giallo)">quadrato</span></span></h1>
-      <div class="sotto">Manuale d'uso &middot; gioco multiplayer in tempo reale con WebSocket</div>
+      <div class="sotto">Manuale d'uso &middot; gioco in tempo reale con WebSocket</div>
     </div>
     <div class="badge">
       <b>Gentile &middot; Guttadauro &middot; Pavoni</b><br>
@@ -215,10 +224,10 @@
   </div>
 
   <p class="intro">
-    <b>Acchiappa il quadrato</b> è un gioco di riflessi per più giocatori. Il server fa comparire un
-    quadrato giallo in un punto casuale del campo e lo invia a tutti i giocatori nello stesso istante:
-    <b>chi lo clicca per primo prende un punto</b>. Il primo che arriva a <b>10 punti</b> vince la partita.
-    Si può giocare da più finestre dello stesso PC oppure da più PC e telefoni collegati alla stessa rete.
+    <b>Acchiappa il quadrato</b> è un gioco di riflessi: un quadrato compare in un punto casuale del campo e bisogna
+    <b>cliccarlo il più in fretta possibile</b>. Ci sono tre modalità: la <b>Sfida</b> multiplayer, in cui tutti
+    inseguono lo stesso quadrato, e due modalità da soli, <b>Difficoltà</b> e <b>Infinita</b>, con vite, livelli e record.
+    Si gioca da più finestre dello stesso PC oppure da più PC e telefoni collegati alla stessa rete.
   </p>
 
   <div class="colonne">
@@ -240,7 +249,6 @@
           <li>Installare i moduli <code>express</code> e <code>ws</code> indicati nel <code>package.json</code>:
             <span class="cmd">npm install</span>
           </li>
-          <li>Viene creata la cartella <code>node_modules</code>: l'installazione è completa.</li>
         </ol>
       </div>
 
@@ -252,7 +260,7 @@
           </li>
           <li>Nel terminale compaiono gli indirizzi a cui collegarsi, ad esempio:<br>
             <code>http://localhost:3000</code> e <code>http://192.168.1.20:3000</code></li>
-          <li>Per fermare il server premere <code>Ctrl + C</code> nel terminale.</li>
+          <li>Per fermare il server premere <code>Ctrl + C</code>. I record vengono salvati nel file <code>record.json</code>.</li>
         </ol>
       </div>
     </div>
@@ -261,26 +269,25 @@
       <div class="sezione">
         <h2><span class="num">4</span> Entrare in partita</h2>
         <ol class="passi">
-          <li>Aprire il browser all'indirizzo <code>http://localhost:3000</code> (sul PC del server).</li>
-          <li>Dagli <b>altri PC o telefoni</b> usare l'indirizzo con l'IP mostrato nel terminale, es. <code>http://192.168.1.20:3000</code>.</li>
-          <li>Scrivere il proprio nome e premere <b>Gioca</b> (o Invio). Ogni giocatore riceve un <b>colore</b>.</li>
+          <li>Aprire nel browser <code>http://localhost:3000</code>; dagli <b>altri PC o telefoni</b> usare l'IP mostrato nel terminale.</li>
+          <li>Scrivere il proprio nome e premere <b>Continua</b>: ogni giocatore riceve un <b>colore</b>.</li>
+          <li>Scegliere la <b>modalità</b> dal menu. Con il pulsante <b>Menu</b> in alto si torna qui in ogni momento.</li>
         </ol>
         <figure style="margin-top:3mm">
-          <img src="immagini/1-benvenuto.png" alt="Schermata iniziale">
-          <figcaption>La schermata iniziale: si sceglie il nome e si entra in partita.</figcaption>
+          <img src="immagini/2-menu.png" alt="Menu delle modalità">
+          <figcaption>Il menu: Sfida, Difficoltà (Facile, Difficile, Impossibile) e Infinita.</figcaption>
         </figure>
       </div>
 
       <div class="box giallo">
         <h3><svg class="ico"><use href="#i-lampadina"/></svg>Provarlo da soli</h3>
-        <p style="margin:0">Basta aprire <b>due o più finestre</b> del browser su <code>localhost:3000</code>,
-        una accanto all'altra: ogni finestra è un giocatore diverso e si vede il quadrato muoversi
-        in contemporanea su tutte.</p>
+        <p style="margin:0">Per la Sfida basta aprire <b>due o più finestre</b> del browser su <code>localhost:3000</code>,
+        una accanto all'altra: ogni finestra è un giocatore diverso. Le modalità Difficoltà e Infinita si giocano da soli.</p>
       </div>
 
       <figure style="margin-top:5mm">
-        <img src="immagini/3-vittoria.png" alt="Schermata di vittoria">
-        <figcaption>Fine partita: compare il vincitore e il conto alla rovescia per la partita successiva.</figcaption>
+        <img src="immagini/5-gameover.png" alt="Game over">
+        <figcaption>Game over: riepilogo della partita e posizione nei record, con Rigioca o Menu.</figcaption>
       </figure>
     </div>
   </div>
@@ -299,51 +306,47 @@
   </div>
 
   <div class="sezione">
-    <h2><span class="num">5</span> Come si gioca</h2>
-    <figure class="grande">
-      <img src="immagini/2-partita.png" alt="Partita in corso">
-    </figure>
-    <div class="legenda">
-      <div><b>① Intestazione</b>Il tuo nome con il tuo colore, i giocatori connessi e lo stato della connessione.</div>
-      <div><b>② Campo di gioco</b>Il quadrato giallo cambia posizione ogni 1,2 secondi: cliccalo prima degli altri!</div>
-      <div><b>③ Classifica</b>Punti di tutti i giocatori in tempo reale. La tua riga è evidenziata in giallo.</div>
-      <div><b>④ Musica</b>Il pulsante accende o spegne la musica di sottofondo.</div>
+    <h2><span class="num">5</span> Le modalità di gioco</h2>
+    <div class="carte">
+      <div class="carta"><svg class="ico"><use href="#i-utenti"/></svg><b class="t">Sfida (multiplayer)</b>
+        <p>Tutti vedono lo <b>stesso quadrato</b>, che si sposta ogni 1,2 s. Conta solo il primo click: il quadrato prende il colore di chi l'ha preso.
+        Chi arriva per primo a <b>10 punti</b> vince; dopo 5 secondi riparte una nuova sfida.</p></div>
+      <div class="carta"><svg class="ico"><use href="#i-tachimetro"/></svg><b class="t">Difficoltà (da soli)</b>
+        <p>Ogni quadrato preso vale 1 punto. Se il quadrato <b>sparisce prima del click</b> (la barra in fondo al campo si svuota) si perde una vita.
+        Quando le vite finiscono è <b>game over</b>.</p></div>
+      <div class="carta"><svg class="ico"><use href="#i-infinito"/></svg><b class="t">Infinita (da soli, stile Tetris)</b>
+        <p>3 vite. <b>Ogni 10 quadrati si sale di livello</b>: il quadrato diventa più veloce, più piccolo e cambia colore.
+        Come in Tetris, ogni quadrato vale <b>40 × livello</b> punti.</p></div>
     </div>
+    <div class="due">
+      <figure>
+        <img src="immagini/3-sfida.png" alt="Sfida multiplayer">
+        <figcaption>Sfida: a destra la classifica in tempo reale (la tua riga è evidenziata).</figcaption>
+      </figure>
+      <figure>
+        <img src="immagini/4-infinita.png" alt="Modalità infinita">
+        <figcaption>Infinita: vite, punti, quadrati, livello e i record salvati.</figcaption>
+      </figure>
+    </div>
+    <table class="diff">
+      <tr><th>Difficoltà</th><th>Vite</th><th>Tempo per cliccare</th><th>Quadrato</th></tr>
+      <tr><td><b>Facile</b></td><td>3</td><td>1,4 s</td><td>grande</td></tr>
+      <tr><td><b>Difficile</b></td><td>2</td><td>0,9 s</td><td>medio</td></tr>
+      <tr><td><b>Impossibile</b></td><td>1</td><td>0,55 s</td><td>piccolo</td></tr>
+      <tr><td><b>Infinita</b></td><td>3</td><td>da 1,5 s, −12% a livello</td><td>più piccolo a ogni livello</td></tr>
+    </table>
   </div>
 
   <div class="sezione">
-    <h2><span class="num">6</span> Regole</h2>
-    <div class="regole">
-      <div class="regola">
-        <svg class="ico"><use href="#i-fulmine"/></svg>
-        <b>Vince il più veloce</b>
-        <p>Il quadrato vale 1 punto. Conta solo il primo click che arriva al server; il quadrato si colora con il colore di chi l'ha preso.</p>
-      </div>
-      <div class="regola">
-        <svg class="ico"><use href="#i-trofeo"/></svg>
-        <b>Primo a 10 punti</b>
-        <p>Chi arriva per primo a 10 punti vince. A tutti compare la schermata con il nome del vincitore.</p>
-      </div>
-      <div class="regola">
-        <svg class="ico"><use href="#i-ricarica"/></svg>
-        <b>Nuova partita</b>
-        <p>Dopo 5 secondi i punti si azzerano e parte subito una nuova partita. Si può entrare o uscire in qualsiasi momento.</p>
-      </div>
-    </div>
-  </div>
-
-  <div class="sezione">
-    <div>
-      <h2 style="margin-bottom:2mm"><span class="num">7</span> Problemi frequenti</h2>
-      <table>
-        <tr><th style="width:38%">Problema</th><th>Soluzione</th></tr>
-        <tr><td><code>npm start</code> dà errore <i>Cannot find module</i></td><td>Eseguire prima <code>npm install</code> nella cartella del progetto.</td></tr>
-        <tr><td>Errore <i>EADDRINUSE</i> (porta occupata)</td><td>Il server è già avviato in un altro terminale: chiuderlo con <code>Ctrl + C</code>.</td></tr>
-        <tr><td>Gli altri PC non si collegano</td><td>Controllare di essere sulla stessa rete e di usare l'IP mostrato nel terminale; consentire Node.js nel firewall.</td></tr>
-        <tr><td>Stato <span class="pallino"></span><b>Disconnesso</b></td><td>Il server è stato fermato: riavviarlo e ricaricare la pagina.</td></tr>
-        <tr><td>La musica non parte</td><td>Usare Chrome, Edge o Firefox e premere il pulsante <svg class="ico"><use href="#i-volume-off"/></svg> <b>Musica</b>.</td></tr>
-      </table>
-    </div>
+    <h2 style="margin-bottom:2mm"><span class="num">6</span> Problemi frequenti</h2>
+    <table>
+      <tr><th style="width:38%">Problema</th><th>Soluzione</th></tr>
+      <tr><td><code>npm start</code> dà errore <i>Cannot find module</i></td><td>Eseguire prima <code>npm install</code> nella cartella del progetto.</td></tr>
+      <tr><td>Errore <i>EADDRINUSE</i> (porta occupata)</td><td>Il server è già avviato in un altro terminale: chiuderlo con <code>Ctrl + C</code>.</td></tr>
+      <tr><td>Gli altri PC non si collegano</td><td>Stessa rete, IP mostrato nel terminale; consentire Node.js nel firewall.</td></tr>
+      <tr><td>Stato <span class="pallino"></span><b>Disconnesso</b></td><td>Il server è stato fermato: riavviarlo e ricaricare la pagina.</td></tr>
+      <tr><td>La musica non parte</td><td>Usare Chrome, Edge o Firefox e premere il pulsante <svg class="ico"><use href="#i-volume-off"/></svg> <b>Musica</b>.</td></tr>
+    </table>
   </div>
 
   <div class="piede">

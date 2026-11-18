@@ -1,6 +1,12 @@
 # 🎯 Acchiappa il quadrato
 
-Gioco multiplayer in tempo reale con **Node.js**, **Express** e **WebSocket** (modulo `ws`).
+Gioco in tempo reale con **Node.js**, **Express** e **WebSocket** (modulo `ws`), con tre modalità:
+
+- **Sfida** – multiplayer, tutti sullo stesso quadrato, vince chi arriva a 10 punti
+- **Difficoltà** – da soli: Facile (3 vite), Difficile (2 vite), Impossibile (1 vita)
+- **Infinita** – da soli, stile Tetris: ogni 10 quadrati si sale di livello, punti = 40 × livello
+
+I record vengono salvati in `record.json` dal modulo `record.js`.
 Lavoro di gruppo TPSIT 2026/27 – 5A Informatica – Gentile, Guttadauro, Pavoni.
 
 ## Avvio

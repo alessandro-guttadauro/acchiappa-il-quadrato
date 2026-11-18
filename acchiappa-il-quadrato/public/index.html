@@ -2,6 +2,7 @@
 <!--  ACCHIAPPA IL QUADRATO - index.html (CLIENT)                                       -->
 <!--  Questa pagina viene inviata al browser da Express (express.static, cartella public) -->
 <!--  e poi si collega al server con un WebSocket per ricevere/inviare i dati del gioco. -->
+<!--  Tre modalità: Sfida (multiplayer), Difficoltà e Infinita (da soli).               -->
 <!--  Gruppo: Gentile, Guttadauro, Pavoni - 5A Informatica - TPSIT 2026/27               -->
 <!-- ================================================================================= -->
 
@@ -12,7 +13,7 @@
 
 <!-- HEAD: informazioni sulla pagina che non vengono mostrate direttamente -->
 <head>
-    <!-- codifica dei caratteri UTF-8, così le lettere accentate e le emoji si vedono correttamente -->
+    <!-- codifica dei caratteri UTF-8, così le lettere accentate si vedono correttamente -->
     <meta charset="UTF-8">
     <!-- adatta la pagina alla larghezza dello schermo (utile per giocare anche dal telefono) -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -89,6 +90,7 @@
         button {
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 7px;
             font: inherit;
             cursor: pointer;
@@ -99,6 +101,7 @@
             color: #1e2233;
             font-weight: 600;
         }
+        button.secondario { background: #2d3250; color: #f1f2f6; }
         button:disabled { opacity: 0.5; cursor: wait; }
         main {
             display: flex;
@@ -119,6 +122,13 @@
             border: 2px solid #2d3250;
             border-radius: 14px;
             overflow: hidden;
+            transition: border-color 0.4s;
+        }
+        #campo.errore { animation: scossa 0.35s; border-color: #e74c3c; }
+        @keyframes scossa {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            75% { transform: translateX(6px); }
         }
         #quadrato {
             position: absolute;
@@ -127,12 +137,20 @@
             height: 64px;
             border-radius: 10px;
             background: #f9ca24;
-            box-shadow: 0 0 22px rgba(249, 202, 36, 0.55);
+            box-shadow: 0 0 22px var(--bagliore, rgba(249, 202, 36, 0.55));
             cursor: crosshair;
             transition: transform 0.15s, background-color 0.15s, opacity 0.3s;
         }
         #quadrato:hover { transform: scale(1.06); }
         #quadrato.preso { transform: scale(0.6); opacity: 0.35; cursor: default; box-shadow: none; }
+        #barra-tempo {
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            height: 5px;
+            width: 0;
+            background: #f9ca24;
+        }
         #messaggio {
             display: flex;
             align-items: center;
@@ -160,9 +178,10 @@
         }
         aside h2 { margin: 0 0 4px; font-size: 1.2rem; display: flex; align-items: center; gap: 8px; }
         aside h2 .icona { color: #f9ca24; }
+        aside h3 { margin: 18px 0 8px; font-size: 1rem; display: flex; align-items: center; gap: 8px; color: #a4b0be; }
         aside p { margin: 0 0 12px; color: #a4b0be; font-size: 0.9rem; }
-        #classifica { list-style: none; margin: 0; padding: 0; }
-        #classifica li {
+        #classifica, #lista-record { list-style: none; margin: 0; padding: 0; }
+        #classifica li, #lista-record li {
             display: flex;
             align-items: center;
             gap: 10px;
@@ -172,12 +191,30 @@
             background: #1e2233;
         }
         #classifica li.io { outline: 2px solid #f9ca24; }
+        #lista-record li { font-size: 0.9rem; }
+        #lista-record li.vuoto { color: #a4b0be; justify-content: center; }
         .posizione { width: 22px; color: #a4b0be; font-weight: 600; }
         .colore { width: 14px; height: 14px; border-radius: 4px; flex: none; }
         .nome { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .barra { width: 70px; height: 6px; border-radius: 3px; background: #2d3250; overflow: hidden; }
         .barra div { height: 100%; }
-        .punti { width: 26px; text-align: right; font-weight: 700; }
+        .punti { min-width: 26px; text-align: right; font-weight: 700; }
+        #vite { display: flex; gap: 6px; margin: 10px 0 14px; }
+        #vite .icona { width: 26px; height: 26px; color: #4b5170; }
+        #vite .icona.piena { color: #e74c3c; fill: #e74c3c; }
+        .statistiche { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .statistica {
+            background: #1e2233;
+            border-radius: 10px;
+            padding: 10px 8px;
+            text-align: center;
+        }
+        .statistica span { display: block; font-size: 0.72rem; letter-spacing: 1px; color: #a4b0be; }
+        .statistica b { display: block; font-size: 1.45rem; margin-top: 2px; }
+        #riga-livello { margin-top: 12px; }
+        #riga-livello p { margin: 0 0 6px; }
+        #avanzamento { height: 8px; border-radius: 4px; background: #2d3250; overflow: hidden; }
+        #avanzamento div { height: 100%; width: 0; background: #f9ca24; transition: width 0.3s, background-color 0.4s; }
         .overlay {
             position: fixed;
             inset: 0;
@@ -186,8 +223,9 @@
             justify-content: center;
             background: rgba(10, 12, 20, 0.8);
             padding: 16px;
+            overflow-y: auto;
         }
-        .nascosto { display: none; }
+        .nascosto { display: none !important; }
         .box {
             background: #151826;
             border: 2px solid #2d3250;
@@ -197,6 +235,7 @@
             width: 100%;
             text-align: center;
         }
+        .box.largo { max-width: 920px; }
         .box h2 { margin-top: 0; font-size: 1.6rem; }
         .box p { color: #a4b0be; line-height: 1.5; }
         #input-nome {
@@ -210,6 +249,33 @@
             color: inherit;
         }
         #entra { padding: 10px 28px; font-size: 1.05rem; }
+        .modalita {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            margin-top: 18px;
+            text-align: left;
+        }
+        .carta {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: #1e2233;
+            border: 2px solid #2d3250;
+            border-radius: 14px;
+            padding: 18px;
+        }
+        .carta h3 { margin: 0; display: flex; align-items: center; gap: 10px; font-size: 1.15rem; }
+        .carta h3 .icona { color: #f9ca24; width: 1.4em; height: 1.4em; }
+        .carta p { margin: 0; font-size: 0.9rem; flex: 1; }
+        .carta button { padding: 9px 14px; }
+        .carta button small { font-weight: 400; opacity: 0.75; }
+        .pulsanti-difficolta { display: flex; flex-direction: column; gap: 8px; }
+        .pulsanti-difficolta button { justify-content: space-between; }
+        .riepilogo { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 16px 0; }
+        #testo-record { color: #f9ca24; font-weight: 600; }
+        .pulsanti { display: flex; gap: 10px; justify-content: center; margin-top: 8px; }
+        .pulsanti button { padding: 10px 22px; }
     </style>
 <!-- fine della sezione head -->
 </head>
@@ -222,13 +288,13 @@
     <svg width="0" height="0" style="position: absolute">
         <!-- bersaglio (logo del gioco): tre cerchi concentrici -->
         <symbol id="i-bersaglio" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
-        <!-- utenti (giocatori connessi): due teste con le spalle -->
+        <!-- utenti (giocatori connessi e modalità sfida): due teste con le spalle -->
         <symbol id="i-utenti" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
         <!-- altoparlante acceso (musica attiva): cassa con due onde sonore -->
         <symbol id="i-volume-on" viewBox="0 0 24 24"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></symbol>
         <!-- altoparlante spento (musica ferma): cassa con una X -->
         <symbol id="i-volume-off" viewBox="0 0 24 24"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="m22 9-6 6"/><path d="m16 9 6 6"/></symbol>
-        <!-- trofeo (classifica e vittoria) -->
+        <!-- trofeo (classifica, vittoria e record) -->
         <symbol id="i-trofeo" viewBox="0 0 24 24"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></symbol>
         <!-- stella (punto preso da me) -->
         <symbol id="i-stella" viewBox="0 0 24 24"><path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></symbol>
@@ -238,6 +304,18 @@
         <symbol id="i-play" viewBox="0 0 24 24"><path d="m6 3 14 9-14 9V3z"/></symbol>
         <!-- triangolo di avviso (errori: connessione persa, musica non disponibile) -->
         <symbol id="i-avviso" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+        <!-- cuore (vite) -->
+        <symbol id="i-cuore" viewBox="0 0 24 24"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7z"/></symbol>
+        <!-- tachimetro (modalità difficoltà) -->
+        <symbol id="i-tachimetro" viewBox="0 0 24 24"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></symbol>
+        <!-- simbolo di infinito (modalità infinita) -->
+        <symbol id="i-infinito" viewBox="0 0 24 24"><path d="M12 12c-2-2.67-4-4-6-4a4 4 0 1 0 0 8c2 0 4-1.33 6-4zm0 0c2 2.67 4 4 6 4a4 4 0 0 0 0-8c-2 0-4 1.33-6 4z"/></symbol>
+        <!-- grafico che sale (nuovo livello) -->
+        <symbol id="i-livello" viewBox="0 0 24 24"><path d="m22 7-8.5 8.5-5-5L2 17"/><path d="M16 7h6v6"/></symbol>
+        <!-- casa (torna al menu) -->
+        <symbol id="i-menu" viewBox="0 0 24 24"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
+        <!-- frecce in cerchio (rigioca) -->
+        <symbol id="i-ricarica" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></symbol>
     <!-- fine delle icone -->
     </svg>
 
@@ -253,6 +331,8 @@
             <span class="pillola"><svg class="icona"><use href="#i-utenti"/></svg><span id="connessi">Connessi: 0</span></span>
             <!-- stato della connessione WebSocket: pallino colorato (giallo/verde/rosso) e testo -->
             <span class="pillola"><span id="pallino-stato" class="pallino-stato"></span><span id="stato">Connessione...</span></span>
+            <!-- pulsante per tornare al menu delle modalità (nascosto finché non si sta giocando) -->
+            <button id="pulsante-menu" class="secondario nascosto"><svg class="icona"><use href="#i-menu"/></svg>Menu</button>
             <!-- pulsante della musica: l'icona (id="icona-musica") cambia tra altoparlante spento e acceso -->
             <button id="pulsante-musica"><svg class="icona"><use id="icona-musica" href="#i-volume-off"/></svg>Musica</button>
         <!-- fine del contenitore info -->
@@ -260,25 +340,62 @@
     <!-- fine dell'intestazione -->
     </header>
 
-    <!-- contenuto principale: campo di gioco + classifica -->
+    <!-- contenuto principale: campo di gioco + pannello laterale -->
     <main>
         <!-- campo di gioco: il quadrato si muove al suo interno -->
         <div id="campo">
-            <!-- il quadrato da cliccare (posizione decisa dal server) -->
+            <!-- il quadrato da cliccare (posizione, grandezza e colore decisi dal server) -->
             <div id="quadrato"></div>
             <!-- fumetto in alto per i messaggi brevi ("+1 per te!"): un'icona che cambia e un testo -->
             <div id="messaggio"><svg class="icona"><use id="icona-messaggio" href="#i-stella"/></svg><span id="testo-messaggio"></span></div>
+            <!-- barra del tempo in fondo al campo: si accorcia mentre scade il tempo per cliccare (partite singole) -->
+            <div id="barra-tempo"></div>
         <!-- fine del campo di gioco -->
         </div>
 
-        <!-- pannello laterale con la classifica -->
+        <!-- pannello laterale: cambia contenuto in base alla modalità -->
         <aside>
-            <!-- titolo del pannello con l'icona del trofeo -->
-            <h2><svg class="icona"><use href="#i-trofeo"/></svg>Classifica</h2>
-            <!-- regola del gioco; il numero di punti arriva dal server -->
-            <p>Il primo che arriva a <b id="obiettivo">10</b> punti vince!</p>
-            <!-- lista ordinata della classifica, riempita da JavaScript -->
-            <ol id="classifica"></ol>
+            <!-- PANNELLO DELLA SFIDA: classifica dei giocatori -->
+            <div id="pannello-sfida">
+                <!-- titolo del pannello con l'icona del trofeo -->
+                <h2><svg class="icona"><use href="#i-trofeo"/></svg>Classifica</h2>
+                <!-- regola della sfida; il numero di punti arriva dal server -->
+                <p>Il primo che arriva a <b id="obiettivo">10</b> punti vince!</p>
+                <!-- lista ordinata della classifica, riempita da JavaScript -->
+                <ol id="classifica"></ol>
+            <!-- fine del pannello della sfida -->
+            </div>
+
+            <!-- PANNELLO DELLE PARTITE SINGOLE (difficoltà e infinita): nascosto all'inizio -->
+            <div id="pannello-solo" class="nascosto">
+                <!-- titolo: nome della modalità con la sua icona (li sceglie JavaScript) -->
+                <h2><svg class="icona"><use id="icona-modalita" href="#i-tachimetro"/></svg><span id="titolo-modalita"></span></h2>
+                <!-- cuori delle vite, disegnati da JavaScript -->
+                <div id="vite"></div>
+                <!-- statistiche in stile Tetris: punti, quadrati presi, livello -->
+                <div class="statistiche">
+                    <!-- punteggio -->
+                    <div class="statistica"><span>PUNTI</span><b id="valore-punti">0</b></div>
+                    <!-- quadrati presi -->
+                    <div class="statistica"><span>QUADRATI</span><b id="valore-presi">0</b></div>
+                    <!-- livello (nella modalità difficoltà mostra la difficoltà) -->
+                    <div class="statistica"><span id="etichetta-livello">LIVELLO</span><b id="valore-livello">1</b></div>
+                <!-- fine delle statistiche -->
+                </div>
+                <!-- avanzamento verso il prossimo livello (solo modalità infinita) -->
+                <div id="riga-livello">
+                    <!-- quanti quadrati mancano al prossimo livello -->
+                    <p>Prossimo livello tra <b id="mancanti">10 quadrati</b></p>
+                    <!-- barra di avanzamento: il div interno si allarga da 0% a 100% -->
+                    <div id="avanzamento"><div></div></div>
+                <!-- fine della riga del livello -->
+                </div>
+                <!-- titolo dei record della modalità -->
+                <h3><svg class="icona"><use href="#i-trofeo"/></svg><span id="titolo-record">Record</span></h3>
+                <!-- lista dei 5 migliori punteggi, riempita da JavaScript -->
+                <ol id="lista-record"></ol>
+            <!-- fine del pannello delle partite singole -->
+            </div>
         <!-- fine del pannello laterale -->
         </aside>
     <!-- fine del contenuto principale -->
@@ -293,17 +410,70 @@
             <!-- titolo della schermata -->
             <h2>Benvenuto!</h2>
             <!-- spiegazione veloce del gioco -->
-            <p>Clicca il quadrato giallo prima degli altri giocatori. Ogni quadrato preso vale 1 punto.</p>
+            <p>Clicca il quadrato prima che sparisca o prima degli altri giocatori. Scegli un nome e poi la modalità di gioco.</p>
             <!-- casella di testo per il nome (massimo 15 caratteri) -->
             <input id="input-nome" type="text" maxlength="15" placeholder="Scrivi il tuo nome" autocomplete="off">
-            <!-- pulsante per entrare in partita: disabilitato finché il WebSocket non è connesso -->
-            <button id="entra" disabled>Gioca</button>
+            <!-- pulsante per continuare: disabilitato finché il WebSocket non è connesso -->
+            <button id="entra" disabled>Continua</button>
         <!-- fine del riquadro -->
         </div>
     <!-- fine della schermata iniziale -->
     </div>
 
-    <!-- SCHERMATA DI VITTORIA: compare quando qualcuno vince (nascosta all'inizio) -->
+    <!-- SCHERMATA DEL MENU: scelta della modalità (nascosta all'inizio) -->
+    <div id="schermata-modalita" class="overlay nascosto">
+        <!-- riquadro largo che contiene le tre carte -->
+        <div class="box largo">
+            <!-- titolo della schermata -->
+            <h2>Scegli la modalità</h2>
+            <!-- griglia delle tre modalità -->
+            <div class="modalita">
+                <!-- CARTA 1: sfida multiplayer -->
+                <div class="carta">
+                    <!-- titolo con icona -->
+                    <h3><svg class="icona"><use href="#i-utenti"/></svg>Sfida</h3>
+                    <!-- descrizione -->
+                    <p>Tutti contro tutti sullo stesso quadrato: chi lo clicca per primo prende il punto. Vince chi arriva a 10.</p>
+                    <!-- pulsante; data-modalita è un attributo personalizzato letto da JavaScript -->
+                    <button data-modalita="sfida">Gioca in sfida</button>
+                <!-- fine della carta sfida -->
+                </div>
+                <!-- CARTA 2: difficoltà -->
+                <div class="carta">
+                    <!-- titolo con icona -->
+                    <h3><svg class="icona"><use href="#i-tachimetro"/></svg>Difficoltà</h3>
+                    <!-- descrizione -->
+                    <p>Da solo. Se il quadrato sparisce prima del click perdi una vita. Più è difficile, più è veloce e piccolo.</p>
+                    <!-- pulsanti delle tre difficoltà; i dettagli (vite e tempo) li scrive JavaScript con i dati del server -->
+                    <div class="pulsanti-difficolta">
+                        <!-- difficoltà facile -->
+                        <button data-modalita="difficolta" data-difficolta="facile">Facile <small id="dettagli-facile"></small></button>
+                        <!-- difficoltà difficile -->
+                        <button data-modalita="difficolta" data-difficolta="difficile">Difficile <small id="dettagli-difficile"></small></button>
+                        <!-- difficoltà impossibile -->
+                        <button data-modalita="difficolta" data-difficolta="impossibile">Impossibile <small id="dettagli-impossibile"></small></button>
+                    <!-- fine dei pulsanti delle difficoltà -->
+                    </div>
+                <!-- fine della carta difficoltà -->
+                </div>
+                <!-- CARTA 3: modalità infinita -->
+                <div class="carta">
+                    <!-- titolo con icona -->
+                    <h3><svg class="icona"><use href="#i-infinito"/></svg>Infinita</h3>
+                    <!-- descrizione con la formula di Tetris -->
+                    <p>Da solo, 3 vite. Ogni 10 quadrati sali di livello: più veloce, più piccolo, nuovo colore. Ogni quadrato vale 40 × livello punti, come in Tetris.</p>
+                    <!-- pulsante -->
+                    <button data-modalita="infinita">Gioca infinita</button>
+                <!-- fine della carta infinita -->
+                </div>
+            <!-- fine della griglia -->
+            </div>
+        <!-- fine del riquadro -->
+        </div>
+    <!-- fine della schermata del menu -->
+    </div>
+
+    <!-- SCHERMATA DI VITTORIA della sfida: compare quando qualcuno vince (nascosta all'inizio) -->
     <div id="schermata-vittoria" class="overlay nascosto">
         <!-- riquadro centrale -->
         <div class="box">
@@ -311,11 +481,44 @@
             <svg class="icona grande"><use href="#i-trofeo"/></svg>
             <!-- testo con il nome del vincitore -->
             <h2 id="testo-vittoria"></h2>
-            <!-- conto alla rovescia per la nuova partita -->
+            <!-- conto alla rovescia per la nuova sfida -->
             <p>Nuova partita tra <b id="conto">5</b> secondi...</p>
         <!-- fine del riquadro -->
         </div>
     <!-- fine della schermata di vittoria -->
+    </div>
+
+    <!-- SCHERMATA DI GAME OVER delle partite singole (nascosta all'inizio) -->
+    <div id="schermata-gameover" class="overlay nascosto">
+        <!-- riquadro centrale -->
+        <div class="box">
+            <!-- icona grande del cuore (vite finite) -->
+            <svg class="icona grande" style="color: #e74c3c"><use href="#i-cuore"/></svg>
+            <!-- titolo -->
+            <h2>Game over</h2>
+            <!-- riepilogo della partita: punti, quadrati e livello -->
+            <div class="riepilogo">
+                <!-- punti finali -->
+                <div class="statistica"><span>PUNTI</span><b id="fine-punti">0</b></div>
+                <!-- quadrati presi -->
+                <div class="statistica"><span>QUADRATI</span><b id="fine-presi">0</b></div>
+                <!-- livello raggiunto -->
+                <div class="statistica"><span>LIVELLO</span><b id="fine-livello">1</b></div>
+            <!-- fine del riepilogo -->
+            </div>
+            <!-- testo del record (es. "Nuovo record: 1° posto!"), scritto da JavaScript -->
+            <p id="testo-record"></p>
+            <!-- pulsanti finali -->
+            <div class="pulsanti">
+                <!-- rigioca con la stessa modalità -->
+                <button id="pulsante-rigioca"><svg class="icona"><use href="#i-ricarica"/></svg>Rigioca</button>
+                <!-- torna al menu -->
+                <button id="pulsante-fine-menu" class="secondario"><svg class="icona"><use href="#i-menu"/></svg>Menu</button>
+            <!-- fine dei pulsanti -->
+            </div>
+        <!-- fine del riquadro -->
+        </div>
+    <!-- fine della schermata di game over -->
     </div>
 
     <!-- elemento audio: il file arriva in streaming dalla rotta GET /musica del server; loop = ricomincia da capo -->
@@ -336,6 +539,8 @@
         const campo = document.getElementById('campo');
         // il quadrato da cliccare
         const quadrato = document.getElementById('quadrato');
+        // la barra del tempo in fondo al campo
+        const barraTempo = document.getElementById('barra-tempo');
         // il fumetto dei messaggi
         const messaggio = document.getElementById('messaggio');
         // il testo dentro il fumetto
@@ -352,28 +557,70 @@
         const stato = document.getElementById('stato');
         // il pallino colorato dello stato della connessione
         const pallinoStato = document.getElementById('pallino-stato');
-        // il numero di punti per vincere
+        // il pulsante per tornare al menu
+        const pulsanteMenu = document.getElementById('pulsante-menu');
+        // il pulsante della musica
+        const pulsanteMusica = document.getElementById('pulsante-musica');
+        // l'icona del pulsante della musica (altoparlante acceso/spento)
+        const iconaMusica = document.getElementById('icona-musica');
+        // l'elemento audio
+        const audio = document.getElementById('audio');
+        // il pannello della sfida
+        const pannelloSfida = document.getElementById('pannello-sfida');
+        // il numero di punti per vincere la sfida
         const obiettivo = document.getElementById('obiettivo');
-        // la lista della classifica
+        // la lista della classifica della sfida
         const classifica = document.getElementById('classifica');
+        // il pannello delle partite singole
+        const pannelloSolo = document.getElementById('pannello-solo');
+        // l'icona della modalità nel pannello
+        const iconaModalita = document.getElementById('icona-modalita');
+        // il titolo della modalità nel pannello
+        const titoloModalita = document.getElementById('titolo-modalita');
+        // il contenitore dei cuori
+        const vite = document.getElementById('vite');
+        // il valore dei punti
+        const valorePunti = document.getElementById('valore-punti');
+        // il valore dei quadrati presi
+        const valorePresi = document.getElementById('valore-presi');
+        // l'etichetta sopra il livello
+        const etichettaLivello = document.getElementById('etichetta-livello');
+        // il valore del livello
+        const valoreLivello = document.getElementById('valore-livello');
+        // la riga con l'avanzamento verso il prossimo livello
+        const rigaLivello = document.getElementById('riga-livello');
+        // quanti quadrati mancano al prossimo livello
+        const mancanti = document.getElementById('mancanti');
+        // la parte colorata della barra di avanzamento (il div dentro #avanzamento)
+        const avanzamento = document.querySelector('#avanzamento div');
+        // il titolo della lista dei record
+        const titoloRecord = document.getElementById('titolo-record');
+        // la lista dei record
+        const listaRecord = document.getElementById('lista-record');
         // la schermata iniziale
         const schermataNome = document.getElementById('schermata-nome');
         // la casella del nome
         const inputNome = document.getElementById('input-nome');
-        // il pulsante "Gioca"
+        // il pulsante "Continua"
         const pulsanteEntra = document.getElementById('entra');
-        // la schermata di vittoria
+        // la schermata del menu delle modalità
+        const schermataModalita = document.getElementById('schermata-modalita');
+        // la schermata di vittoria della sfida
         const schermataVittoria = document.getElementById('schermata-vittoria');
         // il testo della vittoria
         const testoVittoria = document.getElementById('testo-vittoria');
         // il numero del conto alla rovescia
         const conto = document.getElementById('conto');
-        // l'elemento audio
-        const audio = document.getElementById('audio');
-        // il pulsante della musica
-        const pulsanteMusica = document.getElementById('pulsante-musica');
-        // l'icona del pulsante della musica (altoparlante acceso/spento)
-        const iconaMusica = document.getElementById('icona-musica');
+        // la schermata di game over
+        const schermataGameover = document.getElementById('schermata-gameover');
+        // i punti finali
+        const finePunti = document.getElementById('fine-punti');
+        // i quadrati presi a fine partita
+        const finePresi = document.getElementById('fine-presi');
+        // il livello raggiunto
+        const fineLivello = document.getElementById('fine-livello');
+        // il testo del record
+        const testoRecord = document.getElementById('testo-record');
 
         // * --- 3. VARIABILI DEL CLIENT ---
 
@@ -381,8 +628,16 @@
         let mioId = null;
         // il numero del quadrato attualmente in campo (lo rimandiamo al server quando clicchiamo)
         let numeroQuadrato = 0;
-        // i punti necessari per vincere (servono per disegnare le barre della classifica)
+        // i punti necessari per vincere la sfida (servono per disegnare le barre della classifica)
         let puntiPerVincere = 10;
+        // configurazione delle difficoltà ricevuta dal server (nome, vite, tempo, dimensione)
+        let configDifficolta = {};
+        // modalità in corso: null (menu), 'sfida', 'difficolta' o 'infinita'
+        let modalitaAttuale = null;
+        // difficoltà in corso ('facile', 'difficile', 'impossibile') o null
+        let difficoltaAttuale = null;
+        // ultimi record ricevuti dal server
+        let record = {};
         // riferimento al timer del fumetto, per poterlo azzerare
         let timerMessaggio = null;
         // riferimento al timer del conto alla rovescia
@@ -396,7 +651,7 @@
             stato.textContent = 'Connesso';
             // coloriamo di verde il pallino (className sostituisce tutte le classi CSS dell'elemento)
             pallinoStato.className = 'pallino-stato verde';
-            // ora si può premere "Gioca"
+            // ora si può premere "Continua"
             pulsanteEntra.disabled = false;
             // mettiamo il cursore nella casella del nome
             inputNome.focus();
@@ -411,6 +666,8 @@
             pallinoStato.className = 'pallino-stato rosso';
             // nascondiamo il quadrato perché il gioco non può continuare
             quadrato.style.display = 'none';
+            // fermiamo la barra del tempo
+            fermaBarraTempo();
             // mostriamo un messaggio esplicativo con l'icona di avviso
             mostraMessaggio('Connessione persa: ricarica la pagina', 'avviso');
         // fine di onclose
@@ -429,14 +686,28 @@
                 pallinoMio.style.background = msg.colore;
                 // mostriamo un nome provvisorio
                 mioNome.textContent = 'Giocatore ' + msg.id;
-                // salviamo i punti per vincere
+                // salviamo i punti per vincere la sfida
                 puntiPerVincere = msg.puntiPerVincere;
                 // e li scriviamo nella regola della classifica
                 obiettivo.textContent = msg.puntiPerVincere;
+                // salviamo la configurazione delle difficoltà
+                configDifficolta = msg.difficolta;
+                // per ogni difficoltà (for...in scorre le chiavi: facile, difficile, impossibile)...
+                for (const chiave in configDifficolta) {
+                    // ...prendiamo la sua configurazione
+                    const d = configDifficolta[chiave];
+                    // e scriviamo nel pulsante vite e secondi (toLocaleString('it-IT') usa la virgola: 1,4)
+                    document.getElementById('dettagli-' + chiave).textContent = d.vite + (d.vite === 1 ? ' vita' : ' vite') + ' · ' + (d.tempo / 1000).toLocaleString('it-IT') + ' s';
+                // fine del ciclo for...in
+                }
             // messaggio "quadrato": il server ha deciso una nuova posizione
             } else if (msg.tipo === 'quadrato') {
                 // ricordiamo il numero di questo quadrato
                 numeroQuadrato = msg.numero;
+                // impostiamo la grandezza del quadrato decisa dal server (prima di calcolare la posizione)
+                quadrato.style.width = msg.dimensione + 'px';
+                // il quadrato ha la stessa altezza e larghezza
+                quadrato.style.height = msg.dimensione + 'px';
                 // spazio orizzontale disponibile = larghezza del campo meno la larghezza del quadrato
                 const spazioX = campo.clientWidth - quadrato.offsetWidth;
                 // spazio verticale disponibile = altezza del campo meno l'altezza del quadrato
@@ -445,31 +716,73 @@
                 quadrato.style.left = (spazioX * msg.x / 100) + 'px';
                 // stessa cosa per la coordinata verticale
                 quadrato.style.top = (spazioY * msg.y / 100) + 'px';
-                // togliamo il colore del giocatore precedente (torna giallo)
-                quadrato.style.backgroundColor = '';
+                // colore del quadrato: quello del livello oppure '' (= il giallo del CSS)
+                quadrato.style.backgroundColor = msg.colore || '';
+                // colore del bagliore: setProperty imposta la variabile CSS --bagliore usata nel box-shadow
+                quadrato.style.setProperty('--bagliore', msg.colore || 'rgba(249, 202, 36, 0.55)');
                 // togliamo l'effetto "preso"
                 quadrato.classList.remove('preso');
                 // rendiamo visibile il quadrato
                 quadrato.style.display = 'block';
-            // messaggio "preso": qualcuno ha preso il quadrato
+                // se c'è un tempo limite (partite singole) facciamo partire la barra del tempo, altrimenti la fermiamo
+                if (msg.durata) avviaBarraTempo(msg.durata, msg.colore);
+                // nella sfida la barra non serve
+                else fermaBarraTempo();
+            // messaggio "preso": il quadrato è stato preso
             } else if (msg.tipo === 'preso') {
                 // controlliamo che si tratti del quadrato attuale
                 if (msg.numero !== numeroQuadrato) return;
                 // aggiungiamo la classe CSS che rimpicciolisce il quadrato
                 quadrato.classList.add('preso');
-                // lo coloriamo con il colore di chi l'ha preso
-                quadrato.style.backgroundColor = msg.colore;
-                // se l'ho preso io: "+1 per te" con la stella
-                if (msg.id === mioId) mostraMessaggio('+1 per te!', 'stella');
+                // fermiamo la barra del tempo
+                fermaBarraTempo();
+                // nella sfida coloriamo il quadrato con il colore di chi l'ha preso
+                if (modalitaAttuale === 'sfida') quadrato.style.backgroundColor = msg.colore;
+                // se l'ho preso io: "+N" con la stella (msg.guadagno c'è solo nelle partite singole)
+                if (msg.id === mioId) mostraMessaggio('+' + (msg.guadagno || 1) + (msg.guadagno > 1 ? ' punti' : ' per te!'), 'stella');
                 // altrimenti il nome di chi è stato più veloce, con il fulmine
                 else mostraMessaggio(msg.nome + ' è stato più veloce', 'fulmine');
+            // messaggio "mancato": il tempo è scaduto e si perde una vita
+            } else if (msg.tipo === 'mancato') {
+                // nascondiamo il quadrato
+                quadrato.style.display = 'none';
+                // fermiamo la barra del tempo
+                fermaBarraTempo();
+                // togliamo la classe "errore" (se c'era) per poter far ripartire l'animazione
+                campo.classList.remove('errore');
+                // void campo.offsetWidth costringe il browser a ricalcolare la pagina: così l'animazione riparte da capo
+                void campo.offsetWidth;
+                // aggiungiamo la classe che fa "tremare" il campo con il bordo rosso
+                campo.classList.add('errore');
+                // messaggio con il cuore
+                mostraMessaggio('Mancato! Una vita in meno', 'cuore');
+            // messaggio "livello": si è saliti di livello (modalità infinita)
+            } else if (msg.tipo === 'livello') {
+                // messaggio con l'icona del livello
+                mostraMessaggio('Livello ' + msg.livello + '!', 'livello');
+                // il bordo del campo prende il colore del nuovo livello
+                campo.style.borderColor = msg.colore;
+            // messaggio "stato_partita": vite, punti e livello aggiornati
+            } else if (msg.tipo === 'stato_partita') {
+                // aggiorniamo il pannello laterale
+                aggiornaStato(msg);
+            // messaggio "game_over": vite finite
+            } else if (msg.tipo === 'game_over') {
+                // mostriamo la schermata di fine partita
+                mostraGameOver(msg);
+            // messaggio "record": la lista dei record è cambiata
+            } else if (msg.tipo === 'record') {
+                // salviamo i nuovi record
+                record = msg.record;
+                // e li ridisegniamo
+                aggiornaRecord();
             // messaggio "classifica": punti e connessi aggiornati
             } else if (msg.tipo === 'classifica') {
                 // aggiorniamo il numero dei connessi
                 connessi.textContent = 'Connessi: ' + msg.connessi;
-                // ridisegniamo la classifica
+                // ridisegniamo la classifica della sfida
                 aggiornaClassifica(msg.giocatori);
-            // messaggio "vittoria": qualcuno ha raggiunto i punti per vincere
+            // messaggio "vittoria": qualcuno ha vinto la sfida
             } else if (msg.tipo === 'vittoria') {
                 // nascondiamo il quadrato
                 quadrato.style.display = 'none';
@@ -481,7 +794,7 @@
                 schermataVittoria.classList.remove('nascosto');
                 // facciamo partire il conto alla rovescia dai secondi indicati dal server
                 avviaContoAllaRovescia(msg.secondi);
-            // messaggio "nuova_partita": i punti sono stati azzerati
+            // messaggio "nuova_partita": la sfida ricomincia
             } else if (msg.tipo === 'nuova_partita') {
                 // nascondiamo la schermata di vittoria
                 schermataVittoria.classList.add('nascosto');
@@ -505,15 +818,35 @@
         // fine dell'evento sul quadrato
         });
 
-        // click sul pulsante "Gioca": entriamo in partita
+        // click sul pulsante "Continua": salviamo il nome e apriamo il menu
         pulsanteEntra.addEventListener('click', entraInPartita);
 
         // tasto premuto nella casella del nome
         inputNome.addEventListener('keydown', (evento) => {
-            // se è il tasto Invio entriamo in partita, come se avessimo premuto "Gioca"
+            // se è il tasto Invio è come premere "Continua"
             if (evento.key === 'Enter') entraInPartita();
         // fine dell'evento sulla casella
         });
+
+        // tutti i pulsanti del menu che hanno l'attributo data-modalita (querySelectorAll li trova tutti)
+        document.querySelectorAll('[data-modalita]').forEach((pulsante) => {
+            // a ognuno colleghiamo l'evento click
+            pulsante.addEventListener('click', () => {
+                // dataset legge gli attributi data-...: data-modalita → dataset.modalita, data-difficolta → dataset.difficolta
+                scegliModalita(pulsante.dataset.modalita, pulsante.dataset.difficolta || null);
+            // fine dell'evento click
+            });
+        // fine del forEach
+        });
+
+        // pulsante "Menu" nell'intestazione
+        pulsanteMenu.addEventListener('click', tornaAlMenu);
+
+        // pulsante "Menu" nella schermata di game over
+        document.getElementById('pulsante-fine-menu').addEventListener('click', tornaAlMenu);
+
+        // pulsante "Rigioca": nuova partita con la stessa modalità e difficoltà
+        document.getElementById('pulsante-rigioca').addEventListener('click', () => scegliModalita(modalitaAttuale, difficoltaAttuale));
 
         // click sul pulsante della musica
         pulsanteMusica.addEventListener('click', () => {
@@ -536,7 +869,7 @@
 
         // * --- 6. FUNZIONI ---
 
-        // invia il nome al server e chiude la schermata iniziale
+        // invia il nome al server e apre il menu delle modalità
         function entraInPartita() {
             // se la connessione non è ancora aperta non facciamo nulla
             if (webSocket.readyState !== WebSocket.OPEN) return;
@@ -548,10 +881,170 @@
             if (nome) mioNome.textContent = nome;
             // nascondiamo la schermata iniziale
             schermataNome.classList.add('nascosto');
+            // mostriamo il menu delle modalità
+            schermataModalita.classList.remove('nascosto');
         // fine della funzione entraInPartita
         }
 
-        // ridisegna la lista della classifica
+        // avvia la modalità scelta (anche quando si preme "Rigioca")
+        function scegliModalita(modalita, difficolta) {
+            // ricordiamo modalità e difficoltà
+            modalitaAttuale = modalita;
+            // la difficoltà c'è solo nella modalità difficoltà
+            difficoltaAttuale = difficolta;
+            // chiediamo al server di iniziare
+            webSocket.send(JSON.stringify({ tipo: 'modalita', modalita: modalita, difficolta: difficolta }));
+            // nascondiamo il menu
+            schermataModalita.classList.add('nascosto');
+            // nascondiamo la schermata di game over
+            schermataGameover.classList.add('nascosto');
+            // il pulsante "Menu" ora serve
+            pulsanteMenu.classList.remove('nascosto');
+            // puliamo il campo
+            pulisciCampo();
+            // mostriamo il pannello giusto: classifica per la sfida, statistiche per le partite singole
+            pannelloSfida.classList.toggle('nascosto', modalita !== 'sfida');
+            // toggle(classe, condizione) aggiunge la classe se la condizione è vera, la toglie se è falsa
+            pannelloSolo.classList.toggle('nascosto', modalita === 'sfida');
+            // la riga del livello serve solo nella modalità infinita
+            rigaLivello.classList.toggle('nascosto', modalita !== 'infinita');
+            // titolo del pannello: nome della difficoltà oppure "Modalità infinita"
+            titoloModalita.textContent = modalita === 'infinita' ? 'Modalità infinita' : 'Difficoltà: ' + (configDifficolta[difficolta] ? configDifficolta[difficolta].nome : '');
+            // icona del pannello: infinito o tachimetro
+            iconaModalita.setAttribute('href', modalita === 'infinita' ? '#i-infinito' : '#i-tachimetro');
+            // ridisegniamo i record della modalità scelta
+            aggiornaRecord();
+        // fine della funzione scegliModalita
+        }
+
+        // torna al menu delle modalità
+        function tornaAlMenu() {
+            // avvisiamo il server che usciamo dalla modalità attuale
+            webSocket.send(JSON.stringify({ tipo: 'esci' }));
+            // nessuna modalità attiva
+            modalitaAttuale = null;
+            // puliamo il campo
+            pulisciCampo();
+            // nascondiamo il pulsante "Menu"
+            pulsanteMenu.classList.add('nascosto');
+            // nascondiamo game over e vittoria
+            schermataGameover.classList.add('nascosto');
+            // la schermata di vittoria potrebbe essere aperta
+            schermataVittoria.classList.add('nascosto');
+            // mostriamo il menu
+            schermataModalita.classList.remove('nascosto');
+        // fine della funzione tornaAlMenu
+        }
+
+        // riporta il campo di gioco allo stato iniziale
+        function pulisciCampo() {
+            // nascondiamo il quadrato
+            quadrato.style.display = 'none';
+            // nessun quadrato in campo
+            numeroQuadrato = 0;
+            // fermiamo la barra del tempo
+            fermaBarraTempo();
+            // il bordo torna al colore normale ('' = quello del CSS)
+            campo.style.borderColor = '';
+        // fine della funzione pulisciCampo
+        }
+
+        // aggiorna il pannello delle partite singole con i dati del server
+        function aggiornaStato(dati) {
+            // disegniamo i cuori: pieni per le vite rimaste, vuoti per quelle perse
+            let cuori = '';
+            // un cuore per ogni vita iniziale
+            for (let i = 0; i < dati.viteMax; i++) {
+                // la classe "piena" (cuore rosso) solo per le vite ancora disponibili
+                cuori += '<svg class="icona' + (i < dati.vite ? ' piena' : '') + '"><use href="#i-cuore"/></svg>';
+            // fine del ciclo for
+            }
+            // inseriamo i cuori nella pagina (innerHTML va bene: il testo è scritto da noi, non dall'utente)
+            vite.innerHTML = cuori;
+            // punti
+            valorePunti.textContent = dati.punti;
+            // quadrati presi
+            valorePresi.textContent = dati.presi;
+            // nella modalità infinita mostriamo il livello...
+            if (dati.modalita === 'infinita') {
+                // etichetta "LIVELLO"
+                etichettaLivello.textContent = 'LIVELLO';
+                // numero del livello
+                valoreLivello.textContent = dati.livello;
+                // quadrati mancanti al prossimo livello (singolare se manca 1 solo quadrato)
+                mancanti.textContent = dati.mancanti + (dati.mancanti === 1 ? ' quadrato' : ' quadrati');
+                // larghezza della barra = quadrati fatti in questo livello / quadrati per livello
+                avanzamento.style.width = ((dati.perLivello - dati.mancanti) / dati.perLivello * 100) + '%';
+                // colore della barra = colore del livello
+                avanzamento.style.backgroundColor = dati.colore;
+                // anche il bordo del campo prende il colore del livello
+                campo.style.borderColor = dati.colore;
+            // ...nella modalità difficoltà mostriamo le vite iniziali al posto del livello
+            } else {
+                // etichetta "VITE"
+                etichettaLivello.textContent = 'VITE';
+                // vite rimaste
+                valoreLivello.textContent = dati.vite;
+            // fine dell'if/else
+            }
+        // fine della funzione aggiornaStato
+        }
+
+        // mostra la schermata di fine partita
+        function mostraGameOver(dati) {
+            // nascondiamo il quadrato
+            quadrato.style.display = 'none';
+            // scriviamo i punti finali
+            finePunti.textContent = dati.punti;
+            // i quadrati presi
+            finePresi.textContent = dati.presi;
+            // e il livello raggiunto (nella modalità difficoltà "-")
+            fineLivello.textContent = dati.modalita === 'infinita' ? dati.livello : '-';
+            // se il server dice che è un record (posizione 0 = primo posto) lo scriviamo, altrimenti testo vuoto
+            testoRecord.textContent = dati.posizione >= 0 ? 'Nuovo record: ' + (dati.posizione + 1) + '° posto!' : '';
+            // mostriamo la schermata
+            schermataGameover.classList.remove('nascosto');
+        // fine della funzione mostraGameOver
+        }
+
+        // disegna i 5 migliori punteggi della modalità in corso
+        function aggiornaRecord() {
+            // quale lista mostrare: 'infinita' oppure il nome della difficoltà
+            const chiave = modalitaAttuale === 'infinita' ? 'infinita' : difficoltaAttuale;
+            // se non stiamo giocando da soli non c'è niente da mostrare
+            if (!chiave || !record[chiave]) return;
+            // titolo della lista
+            titoloRecord.textContent = 'Record ' + (chiave === 'infinita' ? 'infinita' : configDifficolta[chiave].nome.toLowerCase());
+            // svuotiamo la lista
+            listaRecord.innerHTML = '';
+            // se non ci sono ancora record lo scriviamo
+            if (record[chiave].length === 0) {
+                // riga di testo "Nessun record"
+                const riga = creaElemento('li', 'vuoto', 'Nessun record: sii il primo!');
+                // la aggiungiamo alla lista
+                listaRecord.appendChild(riga);
+            // fine del caso lista vuota
+            }
+            // per ogni record (già ordinati dal server)...
+            record[chiave].forEach((r, indice) => {
+                // ...creiamo una riga <li>
+                const riga = document.createElement('li');
+                // posizione (indice + 1)
+                const posizione = creaElemento('span', 'posizione', indice + 1 + '.');
+                // nome (textContent: un nome con codice HTML non viene eseguito)
+                const nome = creaElemento('span', 'nome', r.nome);
+                // punti, e nella modalità infinita anche il livello raggiunto
+                const punti = creaElemento('span', 'punti', chiave === 'infinita' ? r.punti + ' (liv. ' + r.livello + ')' : r.punti);
+                // mettiamo i pezzi nella riga
+                riga.append(posizione, nome, punti);
+                // e la riga nella lista
+                listaRecord.appendChild(riga);
+            // fine del forEach
+            });
+        // fine della funzione aggiornaRecord
+        }
+
+        // ridisegna la lista della classifica della sfida
         function aggiornaClassifica(giocatori) {
             // svuotiamo la lista
             classifica.innerHTML = '';
@@ -592,7 +1085,7 @@
 
         // crea un elemento HTML con una classe CSS e un testo (funzione di aiuto per non ripetere codice)
         function creaElemento(tag, classe, testo) {
-            // creiamo l'elemento del tipo richiesto (span, div...)
+            // creiamo l'elemento del tipo richiesto (span, li...)
             const elemento = document.createElement(tag);
             // assegniamo la classe CSS
             elemento.className = classe;
@@ -603,7 +1096,33 @@
         // fine della funzione creaElemento
         }
 
-        // mostra per 1,5 secondi un messaggio nel fumetto in alto; "icona" è il nome del simbolo SVG (stella, fulmine, play, avviso)
+        // fa partire la barra del tempo: si accorcia da 100% a 0% in "durata" millisecondi
+        function avviaBarraTempo(durata, colore) {
+            // togliamo la transizione per poter riportare subito la barra al 100%
+            barraTempo.style.transition = 'none';
+            // barra piena
+            barraTempo.style.width = '100%';
+            // colore della barra: quello del livello o il giallo
+            barraTempo.style.backgroundColor = colore || '#f9ca24';
+            // leggere offsetWidth costringe il browser a "registrare" il 100% prima di far partire la nuova transizione
+            void barraTempo.offsetWidth;
+            // transizione lineare della larghezza che dura esattamente il tempo concesso dal server
+            barraTempo.style.transition = 'width ' + durata + 'ms linear';
+            // la barra si svuota fino a 0%
+            barraTempo.style.width = '0%';
+        // fine della funzione avviaBarraTempo
+        }
+
+        // ferma e nasconde la barra del tempo
+        function fermaBarraTempo() {
+            // niente transizione
+            barraTempo.style.transition = 'none';
+            // larghezza 0 = barra invisibile
+            barraTempo.style.width = '0';
+        // fine della funzione fermaBarraTempo
+        }
+
+        // mostra per 1,5 secondi un messaggio nel fumetto in alto; "icona" è il nome del simbolo SVG (stella, fulmine, cuore...)
         function mostraMessaggio(testo, icona) {
             // scriviamo il testo
             testoMessaggio.textContent = testo;
@@ -618,7 +1137,7 @@
         // fine della funzione mostraMessaggio
         }
 
-        // conto alla rovescia mostrato nella schermata di vittoria
+        // conto alla rovescia mostrato nella schermata di vittoria della sfida
         function avviaContoAllaRovescia(secondi) {
             // scriviamo il numero di partenza
             conto.textContent = secondi;
