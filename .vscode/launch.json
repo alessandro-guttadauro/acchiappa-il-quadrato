@@ -1,0 +1,14 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Avvia il gioco",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceFolder}/acchiappa-il-quadrato/server.js",
+            "cwd": "${workspaceFolder}/acchiappa-il-quadrato",
+            "console": "integratedTerminal",
+            "skipFiles": ["<node_internals>/**"]
+        }
+    ]
+}

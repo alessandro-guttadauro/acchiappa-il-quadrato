@@ -408,4 +408,5 @@ const stampa = (html, pdf) => {
 };
 stampa('manuale.html', "Manuale d'uso - Acchiappa il quadrato.pdf");
 stampa('spiegazione.html', 'Spiegazione del codice - Acchiappa il quadrato.pdf');
+stampa('guida-di-gioco.html', 'Guida di gioco - Acchiappa il quadrato.pdf');
 fs.rmSync(profilo, { recursive: true, force: true });

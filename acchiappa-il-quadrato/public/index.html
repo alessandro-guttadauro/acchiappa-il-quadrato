@@ -124,7 +124,7 @@
             overflow: hidden;
             transition: border-color 0.4s;
         }
-        #campo.errore { animation: scossa 0.35s; border-color: #e74c3c; }
+        #campo.errore { animation: scossa 0.35s; border-color: #e74c3c !important; }
         @keyframes scossa {
             0%, 100% { transform: translateX(0); }
             25% { transform: translateX(-6px); }
@@ -719,6 +719,8 @@
                 quadrato.style.setProperty('--bagliore', msg.colore || 'rgba(249, 202, 36, 0.55)');
                 // togliamo l'effetto "preso"
                 quadrato.classList.remove('preso');
+                // il bordo rosso dell'errore dura solo fino al quadrato successivo
+                campo.classList.remove('errore');
                 // rendiamo visibile il quadrato
                 quadrato.style.display = 'block';
                 // se c'è un tempo limite (partite singole) facciamo partire la barra del tempo, altrimenti la fermiamo

@@ -786,6 +786,7 @@ webSocket.onmessage = (event) =&gt; {
         quadrato.style.backgroundColor = msg.colore || '';
         quadrato.style.setProperty('--bagliore', msg.colore || 'rgba(249, 202, 36, 0.55)');
         quadrato.classList.remove('preso');
+        campo.classList.remove('errore');
         quadrato.style.display = 'block';
         if (msg.durata) avviaBarraTempo(msg.durata, msg.colore);
         else fermaBarraTempo();
