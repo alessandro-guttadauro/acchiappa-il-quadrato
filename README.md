@@ -24,4 +24,3 @@ Poi aprire `http://localhost:3000` nel browser (anche in più finestre).
 - `acchiappa-il-quadrato/` – l'applicazione (server.js, public/index.html)
 - `documentazione/` – manuale d'uso (2 pagine) e spiegazione del codice per l'orale
 - Per rigenerare i PDF: `node documentazione/sorgenti/genera_pdf.js`
-gggg
