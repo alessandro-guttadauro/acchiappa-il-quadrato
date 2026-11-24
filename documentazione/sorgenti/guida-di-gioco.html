@@ -180,8 +180,8 @@
     display: flex; align-items: center; justify-content: center;
     box-shadow: 0 0 0 0.6mm rgba(249,202,36,0.35);
   }
-  .legenda { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2mm 5mm; margin-top: 3mm; }
-  .legenda div { display: flex; gap: 2.2mm; align-items: flex-start; font-size: 8.8pt; line-height: 1.35; }
+  .legenda { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2mm 4mm; margin-top: 3mm; }
+  .legenda div { display: flex; gap: 2mm; align-items: flex-start; font-size: 8.4pt; line-height: 1.32; }
   .legenda .n {
     width: 6mm; height: 6mm; border-radius: 50%; flex: none;
     background: var(--giallo); color: var(--scuro); font-weight: 800; font-size: 8.5pt;
@@ -337,32 +337,34 @@
   <h3 style="margin-top:1mm"><svg class="ico"><use href="#i-occhio"/></svg>Lo schermo di gioco</h3>
   <div class="annotata">
     <img src="immagini/4-infinita.png" alt="Schermo di gioco">
-    <span class="pin" style="left:52.7%; top:13.5%">1</span>
-    <span class="pin" style="left:63.9%; top:13.5%">2</span>
-    <span class="pin" style="left:74.5%; top:13.5%">3</span>
-    <span class="pin" style="left:84%; top:13.5%">4</span>
-    <span class="pin" style="left:93.4%; top:13.5%">5</span>
-    <span class="pin" style="left:28.5%; top:20%">6</span>
-    <span class="pin" style="left:46.5%; top:84%">7</span>
-    <span class="pin" style="left:20%; top:91%">8</span>
-    <span class="pin" style="left:68.3%; top:24.9%">9</span>
-    <span class="pin" style="left:68.3%; top:35%">10</span>
-    <span class="pin" style="left:68.3%; top:44.8%">11</span>
-    <span class="pin" style="left:68.3%; top:58.5%">12</span>
+    <span class="pin" style="left:40.4%; top:13.5%">1</span>
+    <span class="pin" style="left:51.4%; top:13.5%">2</span>
+    <span class="pin" style="left:62.1%; top:13.5%">3</span>
+    <span class="pin" style="left:73.3%; top:13.5%">4</span>
+    <span class="pin" style="left:84%; top:13.5%">5</span>
+    <span class="pin" style="left:93.4%; top:13.5%">6</span>
+    <span class="pin" style="left:28.5%; top:20%">7</span>
+    <span class="pin" style="left:32%; top:36%">8</span>
+    <span class="pin" style="left:20%; top:91%">9</span>
+    <span class="pin" style="left:68.3%; top:25%">10</span>
+    <span class="pin" style="left:68.3%; top:35%">11</span>
+    <span class="pin" style="left:68.3%; top:45.1%">12</span>
+    <span class="pin" style="left:68.3%; top:62%">13</span>
   </div>
   <div class="legenda">
     <div><span class="n">1</span><span><b>Il tuo nome</b>con il pallino del tuo colore.</span></div>
     <div><span class="n">2</span><span><b>Connessi</b>quante persone sono collegate al server.</span></div>
     <div><span class="n">3</span><span><b>Stato</b>verde = connesso, rosso = server non raggiungibile.</span></div>
-    <div><span class="n">4</span><span><b>Menu</b>torna alla scelta della modalità.</span></div>
-    <div><span class="n">5</span><span><b>Musica</b>accende o spegne la musica di sottofondo.</span></div>
-    <div><span class="n">6</span><span><b>Fumetto</b>messaggi veloci: punto preso, vita persa, nuovo livello.</span></div>
-    <div><span class="n">7</span><span><b>Il quadrato</b>premilo appena compare: conta già la pressione, non serve rilasciare.</span></div>
-    <div><span class="n">8</span><span><b>Barra del tempo</b>si svuota mentre il tempo per cliccare finisce (modalità da soli).</span></div>
-    <div><span class="n">9</span><span><b>Vite</b>cuori pieni = vite rimaste, vuoti = vite perse.</span></div>
-    <div><span class="n">10</span><span><b>Punti, quadrati, livello</b>il tuo andamento, in stile Tetris.</span></div>
-    <div><span class="n">11</span><span><b>Prossimo livello</b>quanti quadrati mancano (solo Infinita).</span></div>
-    <div><span class="n">12</span><span><b>Record</b>i 5 migliori punteggi della modalità.</span></div>
+    <div><span class="n">4</span><span><b>Classifiche</b>i record di tutte le modalità.</span></div>
+    <div><span class="n">5</span><span><b>Menu</b>torna alla scelta della modalità.</span></div>
+    <div><span class="n">6</span><span><b>Musica</b>accende o spegne la musica di sottofondo.</span></div>
+    <div><span class="n">7</span><span><b>Fumetto</b>messaggi veloci: punto preso, vita persa, nuovo livello.</span></div>
+    <div><span class="n">8</span><span><b>Il quadrato</b>premilo appena compare: conta già la pressione.</span></div>
+    <div><span class="n">9</span><span><b>Barra del tempo</b>si svuota mentre il tempo per cliccare finisce.</span></div>
+    <div><span class="n">10</span><span><b>Vite</b>cuori pieni = vite rimaste, vuoti = vite perse.</span></div>
+    <div><span class="n">11</span><span><b>Punti, quadrati, livello</b>il tuo andamento, in stile Tetris.</span></div>
+    <div><span class="n">12</span><span><b>Prossimo livello</b>quanti quadrati mancano (solo Infinita).</span></div>
+    <div><span class="n">13</span><span><b>Record</b>i 5 migliori punteggi della modalità.</span></div>
   </div>
 
   <div class="piede"><span>Acchiappa il quadrato · Guida di gioco</span><span>3</span></div>
@@ -517,7 +519,7 @@
 <section class="pagina">
   <div class="testata"><span><svg class="ico"><use href="#i-bersaglio"/></svg><b>Acchiappa il quadrato</b> · Guida di gioco</span><span>4 · Insieme</span></div>
 
-  <div class="capitolo"><div class="num">4</div><div><h2>Record, amici e consigli</h2><p>Tutto quello che serve per giocare insieme.</p></div></div>
+  <div class="capitolo"><div class="num">4</div><div><h2>Record e amici</h2><p>Le classifiche e come giocare insieme, anche a distanza.</p></div></div>
 
   <div class="colonne">
     <div>
@@ -541,7 +543,21 @@
     </div>
   </div>
 
-  <h3><svg class="ico"><use href="#i-lampadina"/></svg>Consigli veloci</h3>
+  <figure style="margin-top:5mm">
+    <img src="immagini/9-classifiche.png" alt="Schermata delle classifiche">
+    <figcaption>La schermata Classifiche: i 5 migliori record di ogni modalità, aggiornati in tempo reale.</figcaption>
+  </figure>
+
+  <div class="piede"><span>Acchiappa il quadrato · Guida di gioco</span><span>7</span></div>
+</section>
+
+<!-- ============================ PAGINA 8 : CONSIGLI E FAQ ============================ -->
+<section class="pagina">
+  <div class="testata"><span><svg class="ico"><use href="#i-bersaglio"/></svg><b>Acchiappa il quadrato</b> · Guida di gioco</span><span>4 · Insieme</span></div>
+
+  <div class="capitolo"><div class="num">4</div><div><h2>Consigli e domande frequenti</h2><p>Per giocare meglio e risolvere i piccoli problemi.</p></div></div>
+
+  <h3 style="margin-top:0"><svg class="ico"><use href="#i-lampadina"/></svg>Consigli veloci</h3>
   <div class="consigli">
     <div><svg class="ico"><use href="#i-mouse"/></svg><span>Usa un <b>mouse</b> o il touch: sul touchpad si è più lenti.</span></div>
     <div><svg class="ico"><use href="#i-occhio"/></svg><span>Guarda il <b>centro del campo</b> e usa la vista "larga": il quadrato può comparire ovunque.</span></div>
@@ -561,7 +577,7 @@
     <div><b>Posso cambiare modalità a metà?</b>Sì, con il pulsante Menu: la partita in corso viene chiusa senza salvare il record.</div>
   </div>
 
-  <div class="piede"><span>Acchiappa il quadrato · Guida di gioco</span><span>7</span></div>
+  <div class="piede"><span>Acchiappa il quadrato · Guida di gioco</span><span>8</span></div>
 </section>
 
 </body>
