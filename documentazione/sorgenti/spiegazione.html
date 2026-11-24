@@ -619,6 +619,7 @@ module.exports = { carica, aggiungi, elenco };</code></pre>
             &lt;span class="pillola"&gt;&lt;span id="pallino-mio"&gt;&lt;/span&gt;&lt;span id="mio-nome"&gt;...&lt;/span&gt;&lt;/span&gt;
             &lt;span class="pillola"&gt;&lt;svg class="icona"&gt;&lt;use href="#i-utenti"/&gt;&lt;/svg&gt;&lt;span id="connessi"&gt;Connessi: 0&lt;/span&gt;&lt;/span&gt;
             &lt;span class="pillola"&gt;&lt;span id="pallino-stato" class="pallino-stato"&gt;&lt;/span&gt;&lt;span id="stato"&gt;Connessione...&lt;/span&gt;&lt;/span&gt;
+            &lt;button id="pulsante-classifiche" class="secondario"&gt;&lt;svg class="icona"&gt;&lt;use href="#i-trofeo"/&gt;&lt;/svg&gt;Classifiche&lt;/button&gt;
             &lt;button id="pulsante-menu" class="secondario nascosto"&gt;&lt;svg class="icona"&gt;&lt;use href="#i-menu"/&gt;&lt;/svg&gt;Menu&lt;/button&gt;
             &lt;button id="pulsante-musica"&gt;&lt;svg class="icona"&gt;&lt;use id="icona-musica" href="#i-volume-off"/&gt;&lt;/svg&gt;Musica&lt;/button&gt;
         &lt;/div&gt;
@@ -726,7 +727,8 @@ const schermataGameover = document.getElementById('schermata-gameover');
 const finePunti = document.getElementById('fine-punti');
 const finePresi = document.getElementById('fine-presi');
 const fineLivello = document.getElementById('fine-livello');
-const testoRecord = document.getElementById('testo-record');</code></pre>
+const testoRecord = document.getElementById('testo-record');
+const schermataClassifiche = document.getElementById('schermata-classifiche');</code></pre>
     <div class="spiega">
     <p>Con <code>document.getElementById</code> (e <code>querySelector</code>, che accetta un selettore CSS) salviamo una volta sola i riferimenti agli elementi del DOM che useremo spesso.</p><p class="rif"><svg class="ico"><use href="#i-graffetta"/></svg> Negli esempi del prof: ws_socket_01 → 08</p></div>
   </div>
@@ -814,6 +816,7 @@ webSocket.onmessage = (event) =&gt; {
     } else if (msg.tipo === 'record') {
         record = msg.record;
         aggiornaRecord();
+        disegnaClassifiche();
     } else if (msg.tipo === 'classifica') {
         connessi.textContent = 'Connessi: ' + msg.connessi;
         aggiornaClassifica(msg.giocatori);
@@ -856,6 +859,12 @@ document.querySelectorAll('[data-modalita]').forEach((pulsante) =&gt; {
 });
 
 pulsanteMenu.addEventListener('click', tornaAlMenu);
+
+document.getElementById('pulsante-classifiche').addEventListener('click', mostraClassifiche);
+
+document.getElementById('pulsante-classifiche-menu').addEventListener('click', mostraClassifiche);
+
+document.getElementById('pulsante-chiudi-classifiche').addEventListener('click', () =&gt; schermataClassifiche.classList.add('nascosto'));
 
 document.getElementById('pulsante-fine-menu').addEventListener('click', tornaAlMenu);
 
@@ -953,10 +962,25 @@ function aggiornaRecord() {
     const chiave = modalitaAttuale === 'infinita' ? 'infinita' : difficoltaAttuale;
     if (!chiave || !record[chiave]) return;
     titoloRecord.textContent = 'Record ' + (chiave === 'infinita' ? 'infinita' : configDifficolta[chiave].nome.toLowerCase());
-    listaRecord.innerHTML = '';
+    riempiListaRecord(listaRecord, chiave);
+}
+
+function mostraClassifiche() {
+    disegnaClassifiche();
+    schermataClassifiche.classList.remove('nascosto');
+}
+
+function disegnaClassifiche() {
+    ['facile', 'difficile', 'impossibile', 'infinita'].forEach((chiave) =&gt; {
+        if (record[chiave]) riempiListaRecord(document.getElementById('classifica-' + chiave), chiave);
+    });
+}
+
+function riempiListaRecord(lista, chiave) {
+    lista.innerHTML = '';
     if (record[chiave].length === 0) {
         const riga = creaElemento('li', 'vuoto', 'Nessun record: sii il primo!');
-        listaRecord.appendChild(riga);
+        lista.appendChild(riga);
     }
     record[chiave].forEach((r, indice) =&gt; {
         const riga = document.createElement('li');
@@ -964,7 +988,7 @@ function aggiornaRecord() {
         const nome = creaElemento('span', 'nome', r.nome);
         const punti = creaElemento('span', 'punti', chiave === 'infinita' ? r.punti + ' (liv. ' + r.livello + ')' : r.punti);
         riga.append(posizione, nome, punti);
-        listaRecord.appendChild(riga);
+        lista.appendChild(riga);
     });
 }
 
