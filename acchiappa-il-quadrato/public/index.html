@@ -705,10 +705,12 @@
                 quadrato.style.width = msg.dimensione + 'px';
                 // il quadrato ha la stessa altezza e larghezza
                 quadrato.style.height = msg.dimensione + 'px';
-                // spazio orizzontale disponibile = larghezza del campo meno la larghezza del quadrato
-                const spazioX = campo.clientWidth - quadrato.offsetWidth;
-                // spazio verticale disponibile = altezza del campo meno l'altezza del quadrato
-                const spazioY = campo.clientHeight - quadrato.offsetHeight;
+                // spazio orizzontale disponibile = larghezza del campo meno il lato del quadrato
+                // (usiamo msg.dimensione e non offsetWidth: se il quadrato è nascosto il browser dice che è largo 0
+                // e il quadrato potrebbe finire fuori dal campo; Math.max evita valori negativi su schermi piccolissimi)
+                const spazioX = Math.max(0, campo.clientWidth - msg.dimensione);
+                // spazio verticale disponibile = altezza del campo meno il lato del quadrato
+                const spazioY = Math.max(0, campo.clientHeight - msg.dimensione);
                 // il server manda una percentuale (0-100): la trasformiamo in pixel, così funziona con ogni dimensione di schermo
                 quadrato.style.left = (spazioX * msg.x / 100) + 'px';
                 // stessa cosa per la coordinata verticale

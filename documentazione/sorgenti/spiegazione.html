@@ -779,8 +779,8 @@ webSocket.onmessage = (event) =&gt; {
         numeroQuadrato = msg.numero;
         quadrato.style.width = msg.dimensione + 'px';
         quadrato.style.height = msg.dimensione + 'px';
-        const spazioX = campo.clientWidth - quadrato.offsetWidth;
-        const spazioY = campo.clientHeight - quadrato.offsetHeight;
+        const spazioX = Math.max(0, campo.clientWidth - msg.dimensione);
+        const spazioY = Math.max(0, campo.clientHeight - msg.dimensione);
         quadrato.style.left = (spazioX * msg.x / 100) + 'px';
         quadrato.style.top = (spazioY * msg.y / 100) + 'px';
         quadrato.style.backgroundColor = msg.colore || '';
