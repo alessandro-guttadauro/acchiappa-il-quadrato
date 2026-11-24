@@ -354,7 +354,7 @@ ${blocchiServer.map((b) => blocco(b[0], b[1], b[2], b[3], codice(S[b[0]] || ''))
     <ul>
       <li><b>carica</b>: <code>fs.readFileSync</code> (sincrona, solo all'avvio) e <code>JSON.parse</code> dentro <code>try/catch</code>: se il file non c'è si parte con i record vuoti.
       <code>Object.assign</code> unisce la struttura vuota con i dati letti.</li>
-      <li><b>aggiungi</b>: <code>push</code>, <code>sort</code> decrescente, <code>indexOf</code> per la posizione e <code>slice(0, 5)</code> per tenere i 5 migliori. Restituisce la posizione oppure −1.</li>
+      <li><b>aggiungi</b>: una partita con 0 punti non è un record e viene scartata subito (restituisce −1); altrimenti <code>push</code>, <code>sort</code> decrescente, <code>indexOf</code> per la posizione e <code>slice(0, 5)</code> per tenere i 5 migliori. Restituisce la posizione oppure −1.</li>
       <li><b>salva</b>: <code>fs.writeFile</code> è <b>asincrona</b>: il server non si blocca mentre scrive e la callback segnala eventuali errori. <code>JSON.stringify(record, null, 2)</code> scrive il JSON indentato.</li>
     </ul>
     <p class="rif"><svg class="ico"><use href="#i-graffetta"/></svg> Negli esempi del prof: ws_socket_09 (modulo fs)</p>

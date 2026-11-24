@@ -21,9 +21,7 @@ let record = strutturaVuota();
 
 // crea la struttura vuota: una lista per ogni difficoltà e una per la modalità infinita
 function strutturaVuota() {
-    // restituiamo un oggetto con quattro array vuoti
     return { facile: [], difficile: [], impossibile: [], infinita: [] };
-// fine della funzione strutturaVuota
 }
 
 // legge i record dal file record.json (viene chiamata una sola volta, all'avvio del server)
@@ -34,24 +32,19 @@ function carica() {
         const testo = fs.readFileSync(FILE_RECORD, 'utf8');
         // Object.assign parte dalla struttura vuota e ci copia sopra i dati letti (così le liste mancanti esistono comunque)
         record = Object.assign(strutturaVuota(), JSON.parse(testo));
-        // avvisiamo sulla console del server
         console.log('[RECORD] record caricati da record.json');
-    // se qualcosa va storto...
     } catch (errore) {
-        // ...partiamo con i record vuoti
         record = strutturaVuota();
-        // avvisiamo sulla console del server
         console.log('[RECORD] nessun record salvato: si parte da zero');
-    // fine del try/catch
     }
-// fine della funzione carica
 }
 
 // aggiunge un risultato a una classifica; restituisce la posizione raggiunta (0 = primo posto) oppure -1 se non entra nei primi 5
 function aggiungi(classifica, risultato) {
+    // una partita chiusa con 0 punti non è un record: la scartiamo subito
+    if (risultato.punti <= 0) return -1;
     // prendiamo la lista giusta (es. record['facile'])
     const lista = record[classifica];
-    // aggiungiamo il nuovo risultato in fondo all'array
     lista.push(risultato);
     // ordiniamo dal punteggio più alto al più basso (a parità di punti resta prima chi c'era già)
     lista.sort((a, b) => b.punti - a.punti);
@@ -61,11 +54,8 @@ function aggiungi(classifica, risultato) {
     record[classifica] = lista.slice(0, MAX_RECORD);
     // se il risultato è fuori dai primi 5 non è un record: niente da salvare
     if (posizione >= MAX_RECORD) return -1;
-    // altrimenti salviamo i record aggiornati sul file
     salva();
-    // e restituiamo la posizione raggiunta
     return posizione;
-// fine della funzione aggiungi
 }
 
 // scrive tutti i record nel file record.json
@@ -74,18 +64,13 @@ function salva() {
     const testo = JSON.stringify(record, null, 2);
     // writeFile è ASINCRONA: il server non si blocca mentre scrive; la callback viene chiamata quando ha finito
     fs.writeFile(FILE_RECORD, testo, (errore) => {
-        // se la scrittura non è riuscita lo segnaliamo
         if (errore) console.log('[RECORD] errore nel salvataggio: ' + errore.message);
-    // fine della callback di writeFile
     });
-// fine della funzione salva
 }
 
 // restituisce l'oggetto con tutte le classifiche dei record
 function elenco() {
-    // restituiamo la variabile record
     return record;
-// fine della funzione elenco
 }
 
 // ESPORTAZIONE: rendiamo disponibili queste tre funzioni a chi fa require('./record')

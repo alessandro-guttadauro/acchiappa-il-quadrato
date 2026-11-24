@@ -65,7 +65,6 @@ const DIFFICOLTA = {
     difficile: { nome: 'Difficile', vite: 2, tempo: 900, dimensione: 56 },
     // impossibile: 1 vita, tempo di reazione molto basso, quadrato piccolo
     impossibile: { nome: 'Impossibile', vite: 1, tempo: 550, dimensione: 38 },
-// fine dell'oggetto DIFFICOLTA
 };
 
 // --- modalità INFINITA (stile Tetris) ---
@@ -111,7 +110,6 @@ app.use((req, res, next) => {
     console.log(`[HTTP] ${req.method} ${req.url}`);
     // next() passa la richiesta al middleware/rotta successivo; senza next() la richiesta resterebbe bloccata qui
     next();
-// fine del middleware di log
 });
 
 // MIDDLEWARE STATICO: express.static serve automaticamente i file della cartella "public" (index.html, immagini...)
@@ -134,30 +132,25 @@ app.get('/musica', (req, res) => {
     } else {
         // ...rispondiamo con il codice 404 (non trovato) e un messaggio di testo
         res.status(404).send('Musica non trovata');
-    // fine dell'if/else
     }
-// fine della rotta /musica
 });
 
 // ROTTA GET /api/classifica: restituisce lo stato della sfida in formato JSON (utile per controllare il server dal browser)
 app.get('/api/classifica', (req, res) => {
     // res.json() trasforma l'oggetto JavaScript in testo JSON e imposta da solo il Content-Type
     res.json({ connessi: ws_server.clients.size, puntiPerVincere: PUNTI_PER_VINCERE, giocatori: listaClassifica() });
-// fine della rotta /api/classifica
 });
 
 // ROTTA GET /api/record: restituisce in JSON tutti i record salvati (dal nostro modulo record.js)
 app.get('/api/record', (req, res) => {
     // inviamo l'oggetto con le classifiche dei record
     res.json(record.elenco());
-// fine della rotta /api/record
 });
 
 // MIDDLEWARE FINALE (404): se nessuna rotta precedente ha risposto, la pagina richiesta non esiste
 app.use((req, res) => {
     // impostiamo il codice di stato 404 e inviamo un messaggio
     res.status(404).send('Pagina non trovata');
-// fine del middleware 404
 });
 
 // avviamo il server HTTP sulla PORTA: listen() restituisce l'oggetto server, che servirà anche al WebSocket
@@ -168,9 +161,7 @@ const server = app.listen(PORTA, () => {
     indirizziRete().forEach((ip) => {
         // ...stampiamo l'indirizzo che gli altri PC della stessa rete possono usare per giocare
         console.log(`Dagli altri PC della rete:   http://${ip}:${PORTA}`);
-    // fine del forEach
     });
-// fine della callback di listen
 });
 
 
@@ -193,16 +184,13 @@ ws_server.on('connection', (ws) => {
     ws.nome = null;
     // modalità scelta: null finché il giocatore è nel menu, poi 'sfida', 'difficolta' o 'infinita'
     ws.modalita = null;
-    // punti della sfida multiplayer
     ws.punti = 0;
     // partita singola in corso (difficoltà o infinita): null se non sta giocando da solo
     ws.partita = null;
-    // stampiamo sulla console del server chi si è collegato
     console.log(`[WS] nuovo client connesso, id: ${ws.id}`);
 
     // inviamo SOLO a questo client il benvenuto: id, colore e la configurazione delle difficoltà (per scrivere i pulsanti del menu)
     inviaA(ws, { tipo: 'benvenuto', id: ws.id, colore: ws.colore, puntiPerVincere: PUNTI_PER_VINCERE, difficolta: DIFFICOLTA });
-    // gli inviamo anche i record attuali
     inviaA(ws, { tipo: 'record', record: record.elenco() });
     // inviamo a TUTTI la classifica aggiornata, così vedono che il numero di connessi è cambiato (come ws_socket_08)
     inviaClassifica();
@@ -215,13 +203,9 @@ ws_server.on('connection', (ws) => {
         try {
             // JSON.parse: testo -> oggetto JavaScript
             msg = JSON.parse(dati);
-        // se si verifica un errore lo "catturiamo" qui
         } catch (errore) {
-            // segnaliamo il problema sulla console
             console.log(`[WS] messaggio non valido da ${ws.id}`);
-            // usciamo dalla funzione senza fare altro
             return;
-        // fine del try/catch
         }
 
         // CASO 1: il client ci comunica il nome scelto dal giocatore
@@ -230,9 +214,7 @@ ws_server.on('connection', (ws) => {
             const nomePulito = String(msg.nome).trim().substring(0, 15);
             // se il nome è vuoto usiamo un nome automatico (l'operatore || sceglie il secondo valore se il primo è vuoto)
             ws.nome = nomePulito || `Giocatore ${ws.id}`;
-            // stampiamo il nome sulla console del server
             console.log(`[WS] il client ${ws.id} si chiama "${ws.nome}"`);
-        // fine del caso "nome"
         }
 
         // CASO 2: il giocatore ha scelto una modalità dal menu (o preme "Rigioca")
@@ -243,30 +225,23 @@ ws_server.on('connection', (ws) => {
             fermaPartita(ws);
             // modalità SFIDA multiplayer
             if (msg.modalita === 'sfida') {
-                // segniamo che il giocatore è nella sfida
                 ws.modalita = 'sfida';
-                // entra con 0 punti
                 ws.punti = 0;
             // modalità DIFFICOLTÀ: controlliamo che la difficoltà sia una di quelle previste
             // (Object.keys restituisce l'array ['facile', 'difficile', 'impossibile'], includes controlla se c'è)
             } else if (msg.modalita === 'difficolta' && Object.keys(DIFFICOLTA).includes(msg.difficolta)) {
-                // segniamo la modalità
                 ws.modalita = 'difficolta';
                 // facciamo partire la sua partita singola
                 iniziaPartitaSingola(ws, 'difficolta', msg.difficolta);
             // modalità INFINITA
             } else if (msg.modalita === 'infinita') {
-                // segniamo la modalità
                 ws.modalita = 'infinita';
                 // facciamo partire la sua partita singola (null = nessuna difficoltà)
                 iniziaPartitaSingola(ws, 'infinita', null);
-            // fine della scelta della modalità
             }
-            // stampiamo la scelta sulla console del server
             console.log(`[WS] ${ws.nome} gioca in modalità ${ws.modalita}${msg.difficolta ? ' (' + msg.difficolta + ')' : ''}`);
             // la classifica della sfida cambia (qualcuno è entrato o uscito): la mandiamo a tutti
             inviaClassifica();
-        // fine del caso "modalita"
         }
 
         // CASO 3: il client ha cliccato il quadrato
@@ -275,20 +250,16 @@ ws_server.on('connection', (ws) => {
             if (ws.modalita === 'sfida') clickSfida(ws, msg.numero);
             // ...altrimenti da quella della partita singola
             else clickSingolo(ws, msg.numero);
-        // fine del caso "click"
         }
 
         // CASO 4: il giocatore torna al menu
         if (msg.tipo === 'esci') {
             // fermiamo l'eventuale partita singola
             fermaPartita(ws);
-            // nessuna modalità attiva
             ws.modalita = null;
             // se era nella sfida esce dalla classifica: la aggiorniamo per tutti
             inviaClassifica();
-        // fine del caso "esci"
         }
-    // fine dell'evento "message"
     });
 
     // evento "close": scatta quando il client si disconnette (pagina chiusa, rete persa...)
@@ -299,16 +270,13 @@ ws_server.on('connection', (ws) => {
         console.log(`[WS] client disconnesso, id: ${ws.id}`);
         // mandiamo a chi è rimasto la classifica senza il giocatore uscito (come ws_socket_08)
         inviaClassifica();
-    // fine dell'evento "close"
     });
 
     // evento "error": scatta se c'è un problema sulla connessione; gestendolo il server non si blocca
     ws.on('error', (errore) => {
         // stampiamo il messaggio di errore
         console.log(`[WS] errore sul client ${ws.id}: ${errore.message}`);
-    // fine dell'evento "error"
     });
-// fine dell'evento "connection"
 });
 
 
@@ -336,7 +304,6 @@ setInterval(() => {
 function inviaA(ws, messaggio) {
     // readyState OPEN = connessione aperta; JSON.stringify trasforma l'oggetto in testo
     if (ws.readyState === ws.OPEN) ws.send(JSON.stringify(messaggio));
-// fine della funzione inviaA
 }
 
 // BROADCAST: invia lo stesso messaggio a tutti i client collegati
@@ -347,23 +314,19 @@ function inviaATutti(messaggio) {
     ws_server.clients.forEach((client) => {
         // inviamo solo ai client con la connessione aperta (OPEN), per evitare errori su quelli che si stanno chiudendo
         if (client.readyState === client.OPEN) client.send(testo);
-    // fine del forEach
     });
-// fine della funzione inviaATutti
 }
 
 // restituisce l'array dei client che stanno giocando la sfida multiplayer
 function giocatoriSfida() {
     // Array.from trasforma il Set dei client in un array; filter tiene solo quelli con modalità 'sfida'
     return Array.from(ws_server.clients).filter((client) => client.modalita === 'sfida');
-// fine della funzione giocatoriSfida
 }
 
 // invia un messaggio solo ai giocatori della sfida
 function inviaASfida(messaggio) {
     // per ogni giocatore della sfida usiamo la funzione inviaA
     giocatoriSfida().forEach((client) => inviaA(client, messaggio));
-// fine della funzione inviaASfida
 }
 
 // crea l'array della classifica della sfida, ordinato dal giocatore con più punti a quello con meno
@@ -372,16 +335,13 @@ function listaClassifica() {
     const lista = giocatoriSfida().map((client) => ({ id: client.id, nome: client.nome, colore: client.colore, punti: client.punti }));
     // sort con funzione di confronto: se b ha più punti di a, b va prima (ordine decrescente)
     lista.sort((a, b) => b.punti - a.punti);
-    // restituiamo l'array ordinato
     return lista;
-// fine della funzione listaClassifica
 }
 
 // invia a tutti il numero di connessi e la classifica della sfida
 function inviaClassifica() {
     // ws_server.clients è un Set: la proprietà size indica quanti elementi contiene
     inviaATutti({ tipo: 'classifica', connessi: ws_server.clients.size, giocatori: listaClassifica() });
-// fine della funzione inviaClassifica
 }
 
 // sceglie una nuova posizione casuale del quadrato della sfida e la invia ai giocatori
@@ -396,7 +356,6 @@ function nuovaPosizione() {
     quadrato.preso = false;
     // inviamo la nuova posizione ai giocatori della sfida (colore null = giallo standard)
     inviaASfida({ tipo: 'quadrato', numero: quadrato.numero, x: quadrato.x, y: quadrato.y, dimensione: DIMENSIONE_SFIDA, colore: null });
-// fine della funzione nuovaPosizione
 }
 
 // gestisce il click di un giocatore della sfida
@@ -406,9 +365,7 @@ function clickSfida(ws, numero) {
     // segniamo il quadrato come preso: i click degli altri arrivati DOPO verranno ignorati
     // (Node gestisce i messaggi uno alla volta in ordine di arrivo, quindi vince davvero il più veloce)
     quadrato.preso = true;
-    // aggiungiamo un punto a chi ha cliccato
     ws.punti++;
-    // stampiamo l'evento sulla console del server
     console.log(`[SFIDA] ${ws.nome} prende il quadrato n.${quadrato.numero} (${ws.punti} punti)`);
     // avvisiamo i giocatori della sfida: chi ha preso il quadrato e con che colore
     inviaASfida({ tipo: 'preso', numero: quadrato.numero, id: ws.id, nome: ws.nome, colore: ws.colore });
@@ -416,17 +373,13 @@ function clickSfida(ws, numero) {
     inviaClassifica();
     // controlliamo se il giocatore ha raggiunto i punti per vincere
     if (ws.punti >= PUNTI_PER_VINCERE) {
-        // mettiamo la sfida in pausa
         inPausa = true;
-        // stampiamo il vincitore sulla console del server
         console.log(`[SFIDA] *** ${ws.nome} ha vinto la sfida! ***`);
         // avvisiamo della vittoria, indicando anche quanti secondi mancano alla nuova sfida
         inviaASfida({ tipo: 'vittoria', id: ws.id, nome: ws.nome, colore: ws.colore, secondi: PAUSA_VITTORIA_MS / 1000 });
         // setTimeout esegue nuovaSfida UNA sola volta dopo PAUSA_VITTORIA_MS millisecondi
         setTimeout(nuovaSfida, PAUSA_VITTORIA_MS);
-    // fine del controllo vittoria
     }
-// fine della funzione clickSfida
 }
 
 // azzera i punti e fa ripartire la sfida dopo una vittoria
@@ -435,13 +388,11 @@ function nuovaSfida() {
     giocatoriSfida().forEach((client) => { client.punti = 0; });
     // togliamo la pausa: il setInterval ricomincerà a muovere il quadrato
     inPausa = false;
-    // stampiamo l'evento sulla console del server
     console.log('[SFIDA] nuova sfida!');
     // avvisiamo i giocatori che inizia una nuova sfida
     inviaASfida({ tipo: 'nuova_partita' });
     // mandiamo la classifica azzerata
     inviaClassifica();
-// fine della funzione nuovaSfida
 }
 
 
@@ -461,11 +412,9 @@ function iniziaPartitaSingola(ws, modalita, difficolta) {
         modalita: modalita,
         // 'facile', 'difficile', 'impossibile' oppure null
         difficolta: difficolta,
-        // vite rimaste
         vite: vite,
         // vite iniziali (servono al client per disegnare i cuori vuoti)
         viteMax: vite,
-        // punteggio
         punti: 0,
         // quadrati presi (in Tetris sarebbero le righe completate)
         presi: 0,
@@ -479,13 +428,10 @@ function iniziaPartitaSingola(ws, modalita, difficolta) {
         timer: null,
         // diventa true al game over
         finita: false,
-    // fine dell'oggetto partita
     };
-    // inviamo al client lo stato iniziale (vite, punti, livello)
     inviaStato(ws);
     // il primo quadrato arriva dopo 800 ms, per dare il tempo di prepararsi
     ws.partita.timer = setTimeout(() => prossimoQuadrato(ws), 800);
-// fine della funzione iniziaPartitaSingola
 }
 
 // calcola tempo, grandezza e colore della modalità infinita in base al livello
@@ -498,7 +444,6 @@ function parametriInfinita(livello) {
     const colore = COLORI_LIVELLO[(livello - 1) % COLORI_LIVELLO.length];
     // restituiamo i tre valori in un oggetto (scrittura abbreviata: { tempo } equivale a { tempo: tempo })
     return { tempo, dimensione, colore };
-// fine della funzione parametriInfinita
 }
 
 // mostra al client un nuovo quadrato e fa partire il conto alla rovescia per cliccarlo
@@ -515,9 +460,7 @@ function prossimoQuadrato(ws) {
     p.preso = false;
     // inviamo SOLO a questo client il quadrato: posizione casuale in percentuale, grandezza, colore e tempo a disposizione
     inviaA(ws, {
-        // tipo del messaggio
         tipo: 'quadrato',
-        // numero del quadrato
         numero: p.numero,
         // coordinata orizzontale casuale da 0 a 100
         x: Math.floor(Math.random() * 101),
@@ -529,51 +472,38 @@ function prossimoQuadrato(ws) {
         colore: param.colore || null,
         // millisecondi a disposizione (il client li usa per la barra del tempo)
         durata: param.tempo,
-    // fine del messaggio
     });
     // se entro param.tempo millisecondi il quadrato non viene preso, scatta quadratoScaduto
     p.timer = setTimeout(() => quadratoScaduto(ws), param.tempo);
-// fine della funzione prossimoQuadrato
 }
 
 // il tempo è finito e il quadrato non è stato preso: si perde una vita
 function quadratoScaduto(ws) {
-    // prendiamo la partita del client
     const p = ws.partita;
     // controllo di sicurezza: partita assente, quadrato già chiuso o partita finita
     if (!p || p.preso || p.finita) return;
     // chiudiamo il quadrato: un click arrivato in ritardo non varrà più
     p.preso = true;
-    // togliamo una vita
     p.vite--;
-    // avvisiamo il client che il quadrato è stato mancato
     inviaA(ws, { tipo: 'mancato', numero: p.numero, vite: p.vite });
-    // mandiamo lo stato aggiornato (cuori)
     inviaStato(ws);
     // se le vite sono finite è game over
     if (p.vite <= 0) {
-        // chiudiamo la partita
         finePartita(ws);
-        // e usciamo dalla funzione
         return;
-    // fine del controllo delle vite
     }
     // altrimenti dopo una pausa un po' più lunga arriva il prossimo quadrato
     p.timer = setTimeout(() => prossimoQuadrato(ws), PAUSA_QUADRATO_MS * 2);
-// fine della funzione quadratoScaduto
 }
 
 // gestisce il click nelle partite singole
 function clickSingolo(ws, numero) {
-    // prendiamo la partita del client
     const p = ws.partita;
     // il click non vale se: non c'è partita, è finita, il quadrato è già chiuso o è un quadrato vecchio
     if (!p || p.finita || p.preso || numero !== p.numero) return;
-    // chiudiamo il quadrato
     p.preso = true;
     // annulliamo il timer che avrebbe tolto una vita
     clearTimeout(p.timer);
-    // un quadrato preso in più
     p.presi++;
     // punti guadagnati con questo quadrato
     let guadagno = 1;
@@ -585,58 +515,40 @@ function clickSingolo(ws, numero) {
         guadagno = PUNTI_BASE * p.livello;
         // livello = (quadrati presi diviso 10, arrotondato per difetto) + 1 → si sale ogni 10 quadrati
         p.livello = Math.floor(p.presi / QUADRATI_PER_LIVELLO) + 1;
-    // fine del caso infinita
     }
-    // aggiungiamo i punti guadagnati
     p.punti += guadagno;
-    // avvisiamo il client: preso, con i punti guadagnati
     inviaA(ws, { tipo: 'preso', numero: p.numero, id: ws.id, nome: ws.nome, colore: ws.colore, guadagno: guadagno });
     // se il livello è aumentato lo comunichiamo con il nuovo colore
     if (p.livello > livelloPrima) {
-        // messaggio di nuovo livello
         inviaA(ws, { tipo: 'livello', livello: p.livello, colore: parametriInfinita(p.livello).colore });
-        // stampiamo sulla console del server
         console.log(`[INFINITA] ${ws.nome} sale al livello ${p.livello}`);
-    // fine del controllo del livello
     }
-    // mandiamo lo stato aggiornato (punti, quadrati, livello)
     inviaStato(ws);
     // dopo una breve pausa arriva il prossimo quadrato
     p.timer = setTimeout(() => prossimoQuadrato(ws), PAUSA_QUADRATO_MS);
-// fine della funzione clickSingolo
 }
 
 // fine della partita singola (vite finite): salva il record e avvisa il client
 function finePartita(ws) {
-    // prendiamo la partita del client
     const p = ws.partita;
-    // segniamo la partita come finita
     p.finita = true;
-    // annulliamo eventuali timer rimasti
     clearTimeout(p.timer);
     // la classifica dei record in cui va il risultato: 'infinita' oppure il nome della difficoltà
     const classifica = p.modalita === 'infinita' ? 'infinita' : p.difficolta;
     // proviamo ad aggiungere il risultato ai record (funzione del nostro modulo record.js)
     const posizione = record.aggiungi(classifica, {
-        // nome del giocatore
         nome: ws.nome,
-        // punteggio
         punti: p.punti,
-        // livello raggiunto
         livello: p.livello,
-        // quadrati presi
         presi: p.presi,
         // data di oggi in formato italiano (es. 18/11/2026)
         data: new Date().toLocaleDateString('it-IT'),
-    // fine del risultato
     });
-    // stampiamo il risultato sulla console del server
     console.log(`[GAME OVER] ${ws.nome} (${classifica}): ${p.punti} punti, livello ${p.livello}`);
     // avvisiamo il client: game over con il riepilogo e la posizione nei record (-1 = nessun record)
     inviaA(ws, { tipo: 'game_over', modalita: p.modalita, difficolta: p.difficolta, punti: p.punti, presi: p.presi, livello: p.livello, posizione: posizione });
     // se è un nuovo record lo mandiamo a TUTTI i client collegati, così lo vedono subito
     if (posizione >= 0) inviaATutti({ tipo: 'record', record: record.elenco() });
-// fine della funzione finePartita
 }
 
 // ferma la partita singola del client (cambio modalità, ritorno al menu, disconnessione)
@@ -645,32 +557,21 @@ function fermaPartita(ws) {
     if (!ws.partita) return;
     // annulliamo il timer in corso
     clearTimeout(ws.partita.timer);
-    // togliamo la partita
     ws.partita = null;
-// fine della funzione fermaPartita
 }
 
 // invia al client lo stato della sua partita singola
 function inviaStato(ws) {
-    // prendiamo la partita del client
     const p = ws.partita;
     // inviamo i dati che il client mostra nel pannello laterale
     inviaA(ws, {
-        // tipo del messaggio
         tipo: 'stato_partita',
-        // modalità e difficoltà
         modalita: p.modalita,
-        // difficoltà scelta (o null)
         difficolta: p.difficolta,
-        // vite rimaste e vite iniziali
         vite: p.vite,
-        // vite iniziali
         viteMax: p.viteMax,
-        // punteggio
         punti: p.punti,
-        // quadrati presi
         presi: p.presi,
-        // livello
         livello: p.livello,
         // quadrati che mancano al prossimo livello (% = resto della divisione)
         mancanti: QUADRATI_PER_LIVELLO - (p.presi % QUADRATI_PER_LIVELLO),
@@ -678,9 +579,7 @@ function inviaStato(ws) {
         perLivello: QUADRATI_PER_LIVELLO,
         // colore del livello attuale
         colore: p.modalita === 'infinita' ? parametriInfinita(p.livello).colore : null,
-    // fine del messaggio
     });
-// fine della funzione inviaStato
 }
 
 
@@ -690,7 +589,6 @@ function inviaStato(ws) {
 
 // restituisce gli indirizzi IPv4 del computer nella rete locale (es. 192.168.1.20)
 function indirizziRete() {
-    // array dei risultati
     const indirizzi = [];
     // os.networkInterfaces() restituisce un oggetto con tutte le schede di rete (Wi-Fi, Ethernet...)
     const interfacce = os.networkInterfaces();
@@ -700,11 +598,7 @@ function indirizziRete() {
         for (const info of interfacce[nome]) {
             // teniamo solo gli indirizzi IPv4 non interni (escludiamo 127.0.0.1 = localhost)
             if (info.family === 'IPv4' && !info.internal) indirizzi.push(info.address);
-        // fine del ciclo for...of
         }
-    // fine del ciclo for...in
     }
-    // restituiamo l'array degli indirizzi trovati
     return indirizzi;
-// fine della funzione indirizziRete
 }

@@ -655,7 +655,6 @@
             pulsanteEntra.disabled = false;
             // mettiamo il cursore nella casella del nome
             inputNome.focus();
-        // fine di onopen
         };
 
         // onclose: la connessione si è chiusa (ad esempio il server è stato spento)
@@ -670,7 +669,6 @@
             fermaBarraTempo();
             // mostriamo un messaggio esplicativo con l'icona di avviso
             mostraMessaggio('Connessione persa: ricarica la pagina', 'avviso');
-        // fine di onclose
         };
 
         // onmessage: è arrivato un messaggio dal server
@@ -698,7 +696,6 @@
                     const d = configDifficolta[chiave];
                     // e scriviamo nel pulsante vite e secondi (toLocaleString('it-IT') usa la virgola: 1,4)
                     document.getElementById('dettagli-' + chiave).textContent = d.vite + (d.vite === 1 ? ' vita' : ' vite') + ' · ' + (d.tempo / 1000).toLocaleString('it-IT') + ' s';
-                // fine del ciclo for...in
                 }
             // messaggio "quadrato": il server ha deciso una nuova posizione
             } else if (msg.tipo === 'quadrato') {
@@ -802,9 +799,7 @@
                 clearInterval(timerConto);
                 // avvisiamo i giocatori con l'icona play
                 mostraMessaggio('Nuova partita! Via!', 'play');
-            // fine della catena di if
             }
-        // fine di onmessage
         };
 
         // * --- 5. EVENTI DELL'UTENTE (addEventListener) ---
@@ -815,7 +810,6 @@
             if (quadrato.classList.contains('preso')) return;
             // mandiamo al server il click con il numero del quadrato (sarà il server a decidere se vale)
             webSocket.send(JSON.stringify({ tipo: 'click', numero: numeroQuadrato }));
-        // fine dell'evento sul quadrato
         });
 
         // click sul pulsante "Continua": salviamo il nome e apriamo il menu
@@ -825,7 +819,6 @@
         inputNome.addEventListener('keydown', (evento) => {
             // se è il tasto Invio è come premere "Continua"
             if (evento.key === 'Enter') entraInPartita();
-        // fine dell'evento sulla casella
         });
 
         // tutti i pulsanti del menu che hanno l'attributo data-modalita (querySelectorAll li trova tutti)
@@ -834,9 +827,7 @@
             pulsante.addEventListener('click', () => {
                 // dataset legge gli attributi data-...: data-modalita → dataset.modalita, data-difficolta → dataset.difficolta
                 scegliModalita(pulsante.dataset.modalita, pulsante.dataset.difficolta || null);
-            // fine dell'evento click
             });
-        // fine del forEach
         });
 
         // pulsante "Menu" nell'intestazione
@@ -862,9 +853,7 @@
                 audio.pause();
                 // e rimettiamo l'icona dell'altoparlante spento
                 iconaMusica.setAttribute('href', '#i-volume-off');
-            // fine dell'if/else
             }
-        // fine dell'evento sulla musica
         });
 
         // * --- 6. FUNZIONI ---
@@ -883,7 +872,6 @@
             schermataNome.classList.add('nascosto');
             // mostriamo il menu delle modalità
             schermataModalita.classList.remove('nascosto');
-        // fine della funzione entraInPartita
         }
 
         // avvia la modalità scelta (anche quando si preme "Rigioca")
@@ -914,14 +902,12 @@
             iconaModalita.setAttribute('href', modalita === 'infinita' ? '#i-infinito' : '#i-tachimetro');
             // ridisegniamo i record della modalità scelta
             aggiornaRecord();
-        // fine della funzione scegliModalita
         }
 
         // torna al menu delle modalità
         function tornaAlMenu() {
             // avvisiamo il server che usciamo dalla modalità attuale
             webSocket.send(JSON.stringify({ tipo: 'esci' }));
-            // nessuna modalità attiva
             modalitaAttuale = null;
             // puliamo il campo
             pulisciCampo();
@@ -933,7 +919,6 @@
             schermataVittoria.classList.add('nascosto');
             // mostriamo il menu
             schermataModalita.classList.remove('nascosto');
-        // fine della funzione tornaAlMenu
         }
 
         // riporta il campo di gioco allo stato iniziale
@@ -946,7 +931,6 @@
             fermaBarraTempo();
             // il bordo torna al colore normale ('' = quello del CSS)
             campo.style.borderColor = '';
-        // fine della funzione pulisciCampo
         }
 
         // aggiorna il pannello delle partite singole con i dati del server
@@ -957,13 +941,11 @@
             for (let i = 0; i < dati.viteMax; i++) {
                 // la classe "piena" (cuore rosso) solo per le vite ancora disponibili
                 cuori += '<svg class="icona' + (i < dati.vite ? ' piena' : '') + '"><use href="#i-cuore"/></svg>';
-            // fine del ciclo for
             }
             // inseriamo i cuori nella pagina (innerHTML va bene: il testo è scritto da noi, non dall'utente)
             vite.innerHTML = cuori;
             // punti
             valorePunti.textContent = dati.punti;
-            // quadrati presi
             valorePresi.textContent = dati.presi;
             // nella modalità infinita mostriamo il livello...
             if (dati.modalita === 'infinita') {
@@ -983,11 +965,8 @@
             } else {
                 // etichetta "VITE"
                 etichettaLivello.textContent = 'VITE';
-                // vite rimaste
                 valoreLivello.textContent = dati.vite;
-            // fine dell'if/else
             }
-        // fine della funzione aggiornaStato
         }
 
         // mostra la schermata di fine partita
@@ -1004,7 +983,6 @@
             testoRecord.textContent = dati.posizione >= 0 ? 'Nuovo record: ' + (dati.posizione + 1) + '° posto!' : '';
             // mostriamo la schermata
             schermataGameover.classList.remove('nascosto');
-        // fine della funzione mostraGameOver
         }
 
         // disegna i 5 migliori punteggi della modalità in corso
@@ -1023,7 +1001,6 @@
                 const riga = creaElemento('li', 'vuoto', 'Nessun record: sii il primo!');
                 // la aggiungiamo alla lista
                 listaRecord.appendChild(riga);
-            // fine del caso lista vuota
             }
             // per ogni record (già ordinati dal server)...
             record[chiave].forEach((r, indice) => {
@@ -1039,9 +1016,7 @@
                 riga.append(posizione, nome, punti);
                 // e la riga nella lista
                 listaRecord.appendChild(riga);
-            // fine del forEach
             });
-        // fine della funzione aggiornaRecord
         }
 
         // ridisegna la lista della classifica della sfida
@@ -1078,9 +1053,7 @@
                 riga.append(posizione, colore, nome, barra, punti);
                 // aggiungiamo la riga alla lista nella pagina
                 classifica.appendChild(riga);
-            // fine del forEach
             });
-        // fine della funzione aggiornaClassifica
         }
 
         // crea un elemento HTML con una classe CSS e un testo (funzione di aiuto per non ripetere codice)
@@ -1093,7 +1066,6 @@
             elemento.textContent = testo;
             // restituiamo l'elemento pronto
             return elemento;
-        // fine della funzione creaElemento
         }
 
         // fa partire la barra del tempo: si accorcia da 100% a 0% in "durata" millisecondi
@@ -1110,7 +1082,6 @@
             barraTempo.style.transition = 'width ' + durata + 'ms linear';
             // la barra si svuota fino a 0%
             barraTempo.style.width = '0%';
-        // fine della funzione avviaBarraTempo
         }
 
         // ferma e nasconde la barra del tempo
@@ -1119,7 +1090,6 @@
             barraTempo.style.transition = 'none';
             // larghezza 0 = barra invisibile
             barraTempo.style.width = '0';
-        // fine della funzione fermaBarraTempo
         }
 
         // mostra per 1,5 secondi un messaggio nel fumetto in alto; "icona" è il nome del simbolo SVG (stella, fulmine, cuore...)
@@ -1134,7 +1104,6 @@
             clearTimeout(timerMessaggio);
             // dopo 1500 ms nascondiamo di nuovo il fumetto
             timerMessaggio = setTimeout(() => messaggio.classList.remove('visibile'), 1500);
-        // fine della funzione mostraMessaggio
         }
 
         // conto alla rovescia mostrato nella schermata di vittoria della sfida
@@ -1151,9 +1120,7 @@
                 conto.textContent = Math.max(secondi, 0);
             // fine del setInterval
             }, 1000);
-        // fine della funzione avviaContoAllaRovescia
         }
-    // fine dello script
     </script>
 <!-- fine del body -->
 </body>
