@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="it"><head><meta charset="UTF-8"><title>Studio - record.js</title><style>
+  @page { size: A4; margin: 15mm 14mm 16mm; @bottom-right { content: counter(page) " / " counter(pages); font: 8pt -apple-system, sans-serif; color: #8a90a2; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, "Helvetica Neue", "Segoe UI", Roboto, sans-serif; color: #23262f; font-size: 10.2pt; line-height: 1.5; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  h1 { font-size: 26pt; margin: 0; letter-spacing: -0.5px; font-family: "SF Mono", Menlo, monospace; }
+  h2 { font-size: 15pt; margin: 8mm 0 4mm; padding-bottom: 2mm; border-bottom: 2.5px solid #f9ca24; break-after: avoid; }
+  h2.nuova { break-before: page; margin-top: 0; }
+  h2 .num { display: inline-block; background: #1e2233; color: #f9ca24; border-radius: 1.5mm; padding: 0 2.2mm; margin-right: 2mm; font-size: 12pt; }
+  h3 { font-size: 11.5pt; margin: 0 0 2.5mm; break-after: avoid; display: flex; align-items: baseline; gap: 3mm; }
+  h3 .righe { margin-left: auto; font-size: 8.5pt; font-weight: 600; color: #5d6475; background: #f2f3f7; border: 1px solid #e3e5ec; border-radius: 1.2mm; padding: 0 1.8mm; white-space: nowrap; }
+  p { margin: 0 0 2.2mm; }
+  ul, ol { margin: 0 0 2.2mm; padding-left: 5.5mm; } li { margin-bottom: 1.2mm; }
+  code { font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 8.7pt; background: #f2f3f7; border: 1px solid #e3e5ec; border-radius: 1mm; padding: 0 1mm; }
+  .codice { background: #1e2233; color: #e8eaf6; border-radius: 2.5mm; padding: 2.8mm 3.5mm 2.8mm 1.5mm; margin: 0 0 3mm; font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 7.8pt; line-height: 1.55; }
+  .codice .r { display: flex; break-inside: avoid; }
+  .codice .ln { flex: none; width: 9mm; text-align: right; padding-right: 3mm; color: #6b7194; user-select: none; }
+  .codice .tx { flex: 1; white-space: pre-wrap; word-break: break-all; }
+  .codice .salto .ln { color: #f9ca24; }
+  .t-k { color: #f9ca24; } .t-s { color: #9be29b; } .t-n { color: #ffab70; } .t-c { color: #7f86a8; font-style: italic; } .t-a { color: #8ecbff; }
+  .copertina { background: #1e2233; color: #fff; border-radius: 4mm; padding: 11mm 11mm 9mm; margin-bottom: 6mm; }
+  .copertina h1 span { color: #f9ca24; }
+  .copertina .sotto { color: #f9ca24; font-size: 12.5pt; font-weight: 600; margin-top: 2mm; }
+  .copertina .descr { color: #c8cbe0; margin-top: 3mm; font-size: 10.5pt; max-width: 150mm; }
+  .copertina .chi { margin-top: 6mm; font-size: 9pt; color: #9aa0bd; }
+  .box { background: #f6f7fb; border: 1px solid #e3e5ec; border-radius: 3mm; padding: 4mm 5mm; margin-bottom: 5mm; break-inside: avoid; }
+  .box.giallo { background: #fff8db; border-color: #f3dd85; }
+  .box > b:first-child { display: block; margin-bottom: 1.5mm; }
+  .blocco { margin-bottom: 7mm; }
+  .unito { break-inside: avoid; }
+  .spiega { padding: 0 1mm; }
+  .ricorda { break-inside: avoid; margin: 2mm 1mm 0; padding: 2.5mm 4mm; border-left: 4px solid #f9ca24; background: #fffbea; border-radius: 0 2mm 2mm 0; font-size: 9.6pt; }
+  .ricorda b { display: block; font-size: 8.4pt; text-transform: uppercase; letter-spacing: 0.5px; color: #9a7500; margin-bottom: 0.8mm; }
+  table { width: 100%; border-collapse: collapse; font-size: 9pt; margin: 1mm 0 4mm; }
+  th, td { text-align: left; padding: 1.6mm 2.4mm; border-bottom: 1px solid #e3e5ec; vertical-align: top; }
+  th { background: #f6f7fb; font-size: 8.2pt; text-transform: uppercase; color: #5d6475; letter-spacing: 0.3px; }
+  tr { break-inside: avoid; }
+  .domanda { break-inside: avoid; margin-bottom: 3.2mm; padding: 3mm 4mm; border: 1px solid #e3e5ec; border-left: 4px solid #f9ca24; border-radius: 2mm; }
+  .domanda b.q { display: block; margin-bottom: 1mm; }
+  .glossario { columns: 2; column-gap: 8mm; font-size: 9.4pt; }
+  .glossario p { break-inside: avoid; margin-bottom: 2mm; }
+  .chip { display: inline-block; min-width: 9mm; text-align: center; font-family: "SF Mono", Menlo, monospace; font-size: 8.6pt; padding: 0.6mm 1.8mm; margin: 0 0.8mm 0.8mm 0; border-radius: 1.2mm; background: #e9ebf3; border: 1px solid #d5d8e5; }
+  .chip.nuovo { background: #f9ca24; border-color: #d9a900; font-weight: 700; }
+  .chip.fuori { background: #fde2e0; border-color: #f0b4ae; text-decoration: line-through; color: #a33; }
+  svg text { font-family: -apple-system, "Helvetica Neue", sans-serif; }
+  .due { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; }
+</style></head><body>
+<div class="copertina">
+  <h1>record<span>.js</span></h1>
+  <div class="sotto">Il nostro modulo: salva i migliori punteggi</div>
+  <div class="descr">Un modulo scritto da noi. Tiene in memoria le classifiche dei record (i 5 migliori punteggi di ogni modalità), le legge dal file record.json quando il server parte e le riscrive ogni volta che arriva un nuovo record, così non si perdono spegnendo il server.</div>
+  <div class="chi">Acchiappa il quadrato · Gentile · Guttadauro · Pavoni — 5A Informatica — TPSIT 2026/27 · Guida di studio</div>
+</div>
+<div class="box giallo"><b>Come usare questa guida</b>
+  Il codice è quello vero del progetto. I <b>numeri a sinistra</b> sono i numeri di riga che vedete in VS Code; le righe che contengono
+  solo commenti sono state tolte, per questo ogni tanto un numero "salta". Il simbolo <b style="color:#b38600">⋮</b> indica che una parte del file è stata saltata.
+  Per ogni pezzo c'è la spiegazione e, nei riquadri gialli, la frase da sapere dire all'interrogazione.</div>
+
+<h2><span class="num">0</span>Il file in breve</h2>
+<div class="box"><b>Cosa fa record.js, in quattro punti</b>
+<ol>
+  <li>Ha una variabile <code>record</code> con <b>quattro classifiche</b>: <code>facile</code>, <code>difficile</code>, <code>impossibile</code>, <code>infinita</code>.</li>
+  <li><code>carica()</code> legge il file <code>record.json</code> all'avvio (lettura <b>sincrona</b>).</li>
+  <li><code>aggiungi()</code> inserisce un risultato, riordina, tiene i primi 5 e dice in che posizione è arrivato; se è un record chiama <code>salva()</code>, che scrive il file (scrittura <b>asincrona</b>).</li>
+  <li>Con <code>module.exports</code> rende disponibili a <code>server.js</code> solo tre funzioni: <code>carica</code>, <code>aggiungi</code>, <code>elenco</code>.</li>
+</ol></div>
+
+<h3>Mappa del file</h3>
+<table><tr><th>Righe</th><th>Elemento</th><th>Esportato?</th><th>Cosa fa</th></tr>
+  <tr><td>10–17</td><td>require e costanti</td><td>—</td><td>moduli fs e path, percorso del file, numero massimo di record</td></tr><tr><td>20</td><td><code>let record</code></td><td>no</td><td>le classifiche in memoria</td></tr><tr><td>23–25</td><td><code>strutturaVuota()</code></td><td>no (privata)</td><td>crea le quattro liste vuote</td></tr><tr><td>28–40</td><td><code>carica()</code></td><td><b>sì</b></td><td>legge record.json</td></tr><tr><td>43–59</td><td><code>aggiungi(classifica, risultato)</code></td><td><b>sì</b></td><td>inserisce un risultato e restituisce la posizione o −1</td></tr><tr><td>62–69</td><td><code>salva()</code></td><td>no (privata)</td><td>scrive record.json</td></tr><tr><td>72–74</td><td><code>elenco()</code></td><td><b>sì</b></td><td>restituisce tutte le classifiche</td></tr><tr><td>78</td><td><code>module.exports</code></td><td>—</td><td>decide cosa esportare</td></tr></table>
+
+<h3>Come lo usa server.js</h3>
+<table><tr><th>Riga di server.js</th><th>Chiamata</th><th>Quando</th></tr>
+  <tr><td>36</td><td><code>const record = require('./record')</code></td><td>importa il modulo; <code>record</code> diventa l'oggetto <code>{ carica, aggiungi, elenco }</code></td></tr><tr><td>97</td><td><code>record.carica()</code></td><td>una volta, all'avvio del server</td></tr><tr><td>147, 194, 551</td><td><code>record.elenco()</code></td><td>API <code>/api/record</code>, benvenuto di un nuovo client, invio a tutti dopo un nuovo record</td></tr><tr><td>539</td><td><code>record.aggiungi(classifica, {...})</code></td><td>a ogni game over di una partita singola</td></tr></table>
+
+<h2 class="nuova"><span class="num">1</span>Moduli e costanti</h2>
+<section class="blocco">
+    <div class="unito">
+    <h3>require, percorso del file e limite<span class="righe">righe 10–17</span></h3>
+    <div class="codice"><div class="r"><span class="ln">10</span><span class="tx"><span class="t-k">const</span> fs = require(<span class="t-s">'fs'</span>);</span></div><div class="r"><span class="ln">12</span><span class="tx"><span class="t-k">const</span> path = require(<span class="t-s">'path'</span>);</span></div><div class="r"><span class="ln">13</span><span class="tx"> </span></div><div class="r"><span class="ln">15</span><span class="tx"><span class="t-k">const</span> FILE_RECORD = path.join(__dirname, <span class="t-s">'record.json'</span>);</span></div><div class="r"><span class="ln">17</span><span class="tx"><span class="t-k">const</span> MAX_RECORD = <span class="t-n">5</span>;</span></div></div></div>
+    <div class="spiega">
+  <p>Il modulo usa due moduli <b>interni</b> di Node: <code>fs</code> (file system, per leggere e scrivere file) e <code>path</code> (per costruire i percorsi).</p>
+  <p><code>path.join(__dirname, 'record.json')</code>: <code>__dirname</code> è la cartella di <code>record.js</code>, quindi il file dei record sta sempre accanto al modulo,
+  da qualunque cartella si avvii il server.</p>
+  <p><code>MAX_RECORD = 5</code>: in ogni classifica teniamo solo i 5 migliori. Scritto come costante, basta cambiarlo qui per tenerne di più.</p></div>
+    
+  </section>
+
+<h2><span class="num">2</span>I dati in memoria</h2>
+<section class="blocco">
+    <div class="unito">
+    <h3>La variabile record e strutturaVuota()<span class="righe">righe 20–25</span></h3>
+    <div class="codice"><div class="r"><span class="ln">20</span><span class="tx"><span class="t-k">let</span> record = strutturaVuota();</span></div><div class="r"><span class="ln">21</span><span class="tx"> </span></div><div class="r"><span class="ln">23</span><span class="tx"><span class="t-k">function</span> strutturaVuota() {</span></div><div class="r"><span class="ln">24</span><span class="tx">    <span class="t-k">return</span> { facile: [], difficile: [], impossibile: [], infinita: [] };</span></div><div class="r"><span class="ln">25</span><span class="tx">}</span></div></div></div>
+    <div class="spiega">
+  <p><code>record</code> è dichiarata con <code>let</code> perché verrà <b>riassegnata</b> (da <code>carica()</code> e da <code>aggiungi()</code>). È dichiarata fuori dalle funzioni, quindi tutte le funzioni del modulo la vedono;
+  ma non è esportata, quindi <code>server.js</code> non può toccarla direttamente: deve passare dalle funzioni.</p>
+  <p><code>strutturaVuota()</code> restituisce un oggetto nuovo con quattro array vuoti. È una funzione (e non una costante) così ogni volta crea un oggetto <b>nuovo</b>.</p>
+  <p>Struttura dei dati (esempio inventato):</p>
+  <div class="codice"><div class="r"><span class="ln"></span><span class="tx">{
+  <span class="t-s">"facile"</span>: [ { <span class="t-s">"nome"</span>: <span class="t-s">"Luca"</span>, <span class="t-s">"punti"</span>: <span class="t-n">31</span>, <span class="t-s">"livello"</span>: <span class="t-n">1</span>, <span class="t-s">"presi"</span>: <span class="t-n">31</span>, <span class="t-s">"data"</span>: <span class="t-s">"20/11/2026"</span> } ],
+  <span class="t-s">"difficile"</span>: [],
+  <span class="t-s">"impossibile"</span>: [],
+  <span class="t-s">"infinita"</span>: [ { <span class="t-s">"nome"</span>: <span class="t-s">"Sara"</span>, <span class="t-s">"punti"</span>: <span class="t-n">1800</span>, <span class="t-s">"livello"</span>: <span class="t-n">3</span>, <span class="t-s">"presi"</span>: <span class="t-n">25</span>, <span class="t-s">"data"</span>: <span class="t-s">"21/11/2026"</span> } ]
+}</span></div></div>
+  <p>È un <b>oggetto</b> che contiene <b>array</b> di oggetti: per leggere il primo record dell'infinita si scrive <code>record.infinita[0].punti</code> oppure <code>record['infinita'][0].punti</code>.</p></div>
+    <div class="ricorda"><b>Da ricordare</b>Le variabili e funzioni non esportate restano "private" dentro il modulo.</div>
+  </section>
+
+<h2><span class="num">3</span>carica(): lettura all'avvio</h2>
+<section class="blocco">
+    <div class="unito">
+    <h3>Leggere record.json<span class="righe">righe 28–40</span></h3>
+    <div class="codice"><div class="r"><span class="ln">28</span><span class="tx"><span class="t-k">function</span> carica() {</span></div><div class="r"><span class="ln">30</span><span class="tx">    <span class="t-k">try</span> {</span></div><div class="r"><span class="ln">32</span><span class="tx">        <span class="t-k">const</span> testo = fs.readFileSync(FILE_RECORD, <span class="t-s">'utf8'</span>);</span></div><div class="r"><span class="ln">34</span><span class="tx">        record = Object.assign(strutturaVuota(), JSON.parse(testo));</span></div><div class="r"><span class="ln">35</span><span class="tx">        console.log(<span class="t-s">'[RECORD] record caricati da record.json'</span>);</span></div><div class="r"><span class="ln">36</span><span class="tx">    } <span class="t-k">catch</span> (errore) {</span></div><div class="r"><span class="ln">37</span><span class="tx">        record = strutturaVuota();</span></div><div class="r"><span class="ln">38</span><span class="tx">        console.log(<span class="t-s">'[RECORD] nessun record salvato: si parte da zero'</span>);</span></div><div class="r"><span class="ln">39</span><span class="tx">    }</span></div><div class="r"><span class="ln">40</span><span class="tx">}</span></div></div></div>
+    <div class="spiega">
+  <ol>
+    <li><code>fs.readFileSync(FILE_RECORD, 'utf8')</code> legge tutto il file come testo. È <b>sincrona</b>: il programma aspetta finché la lettura non è finita.
+    Qui va bene, perché succede una volta sola all'avvio, prima che arrivino giocatori.</li>
+    <li><code>JSON.parse(testo)</code> trasforma il testo in oggetto.</li>
+    <li><code>Object.assign(strutturaVuota(), datiLetti)</code> parte dalla struttura vuota e ci <b>copia sopra</b> le proprietà lette dal file. Se nel file mancasse una lista
+    (es. un file vecchio senza <code>infinita</code>), quella lista esisterebbe comunque, vuota.</li>
+  </ol>
+  <p><b>try/catch</b>: la prima volta il file non esiste e <code>readFileSync</code> lancia un errore; se il file è rovinato lo lancia <code>JSON.parse</code>. In entrambi i casi
+  il <code>catch</code> riparte con le classifiche vuote, invece di far crollare il server.</p></div>
+    <div class="ricorda"><b>Da ricordare</b>readFileSync è sincrona (blocca), ma si usa solo all'avvio. try/catch gestisce il file mancante o rovinato.</div>
+  </section>
+
+<h2 class="nuova"><span class="num">4</span>aggiungi(): inserire un risultato</h2>
+<section class="blocco">
+    <div class="unito">
+    <h3>L'algoritmo passo per passo<span class="righe">righe 43–59</span></h3>
+    <div class="codice"><div class="r"><span class="ln">43</span><span class="tx"><span class="t-k">function</span> aggiungi(classifica, risultato) {</span></div><div class="r"><span class="ln">45</span><span class="tx">    <span class="t-k">if</span> (risultato.punti &lt;= <span class="t-n">0</span>) <span class="t-k">return</span> -<span class="t-n">1</span>;</span></div><div class="r"><span class="ln">47</span><span class="tx">    <span class="t-k">const</span> lista = record[classifica];</span></div><div class="r"><span class="ln">48</span><span class="tx">    lista.push(risultato);</span></div><div class="r"><span class="ln">50</span><span class="tx">    lista.sort((a, b) =&gt; b.punti - a.punti);</span></div><div class="r"><span class="ln">52</span><span class="tx">    <span class="t-k">const</span> posizione = lista.indexOf(risultato);</span></div><div class="r"><span class="ln">54</span><span class="tx">    record[classifica] = lista.slice(<span class="t-n">0</span>, MAX_RECORD);</span></div><div class="r"><span class="ln">56</span><span class="tx">    <span class="t-k">if</span> (posizione &gt;= MAX_RECORD) <span class="t-k">return</span> -<span class="t-n">1</span>;</span></div><div class="r"><span class="ln">57</span><span class="tx">    salva();</span></div><div class="r"><span class="ln">58</span><span class="tx">    <span class="t-k">return</span> posizione;</span></div><div class="r"><span class="ln">59</span><span class="tx">}</span></div></div></div>
+    <div class="spiega">
+  <ol>
+    <li><code>if (risultato.punti <= 0) return -1;</code> una partita con 0 punti non è mai un record.</li>
+    <li><code>record[classifica]</code>: le parentesi quadre permettono di scegliere la lista con il nome contenuto in una variabile (<code>'facile'</code>, <code>'infinita'</code>…).</li>
+    <li><code>push</code> aggiunge il risultato in fondo alla lista.</li>
+    <li><code>sort((a, b) => b.punti - a.punti)</code> ordina dal punteggio più alto al più basso. L'ordinamento di JavaScript è <b>stabile</b>: a parità di punti l'ordine di prima resta, quindi chi c'era già resta davanti al nuovo.</li>
+    <li><code>indexOf(risultato)</code> trova la posizione del nuovo risultato (cerca proprio quell'oggetto).</li>
+    <li><code>slice(0, MAX_RECORD)</code> crea un nuovo array con gli elementi da 0 a 4: i primi 5. Il nuovo array sostituisce quello vecchio.</li>
+    <li>Se la posizione è 5 o più, il risultato è stato tagliato fuori → <code>-1</code>, e non si salva niente. Altrimenti <code>salva()</code> e restituisce la posizione.</li>
+  </ol>
+  <p>La posizione parte da <b>0</b> (primo posto): per questo la pagina scrive <code>posizione + 1</code> ("Nuovo record: 1° posto!").</p></div>
+    <div class="ricorda"><b>Da ricordare</b>push → sort decrescente → indexOf → slice(0, 5). Restituisce la posizione (0 = primo) oppure −1.</div>
+  </section>
+<div class="box"><b>Esempio 1: il nuovo risultato entra in classifica</b>
+  <p>Classifica facile prima: <span class="chip ">30</span><span class="chip ">25</span><span class="chip ">20</span><span class="chip ">12</span><span class="chip ">8</span> — arriva una partita da <b>22 punti</b>.</p>
+  <p>dopo <code>push</code>: <span class="chip ">30</span><span class="chip ">25</span><span class="chip ">20</span><span class="chip ">12</span><span class="chip ">8</span><span class="chip nuovo">22</span></p>
+  <p>dopo <code>sort</code>: <span class="chip ">30</span><span class="chip ">25</span><span class="chip nuovo">22</span><span class="chip ">20</span><span class="chip ">12</span><span class="chip ">8</span> → <code>indexOf</code> = <b>2</b></p>
+  <p>dopo <code>slice(0, 5)</code>: <span class="chip ">30</span><span class="chip ">25</span><span class="chip nuovo">22</span><span class="chip ">20</span><span class="chip ">12</span><span class="chip fuori">8</span> → restituisce <b>2</b>, si salva, la pagina mostra "Nuovo record: 3° posto!"</p>
+</div>
+<div class="box"><b>Esempio 2: il nuovo risultato non basta</b>
+  <p>Stessa classifica, arriva una partita da <b>5 punti</b>: dopo <code>sort</code> <span class="chip ">30</span><span class="chip ">25</span><span class="chip ">20</span><span class="chip ">12</span><span class="chip ">8</span><span class="chip nuovo fuori">5</span> → <code>indexOf</code> = 5, che è ≥ 5:
+  con <code>slice</code> viene tagliato fuori, la funzione restituisce <b>−1</b> e il file non viene riscritto.</p>
+</div>
+<p><b>Perché è importante il controllo nel server.</b> Se <code>classifica</code> fosse un nome che non esiste, <code>record[classifica]</code> sarebbe <code>undefined</code> e <code>push</code> darebbe errore.
+Non succede perché <code>server.js</code> passa solo <code>'infinita'</code> o una difficoltà già controllata con <code>Object.keys(DIFFICOLTA).includes(...)</code>.</p>
+
+<h2 class="nuova"><span class="num">5</span>salva(): scrittura asincrona</h2>
+<section class="blocco">
+    <div class="unito">
+    <h3>Scrivere record.json<span class="righe">righe 62–69</span></h3>
+    <div class="codice"><div class="r"><span class="ln">62</span><span class="tx"><span class="t-k">function</span> salva() {</span></div><div class="r"><span class="ln">64</span><span class="tx">    <span class="t-k">const</span> testo = JSON.stringify(record, <span class="t-k">null</span>, <span class="t-n">2</span>);</span></div><div class="r"><span class="ln">66</span><span class="tx">    fs.writeFile(FILE_RECORD, testo, (errore) =&gt; {</span></div><div class="r"><span class="ln">67</span><span class="tx">        <span class="t-k">if</span> (errore) console.log(<span class="t-s">'[RECORD] errore nel salvataggio: '</span> + errore.message);</span></div><div class="r"><span class="ln">68</span><span class="tx">    });</span></div><div class="r"><span class="ln">69</span><span class="tx">}</span></div></div></div>
+    <div class="spiega">
+  <p><code>JSON.stringify(record, null, 2)</code> trasforma l'oggetto in testo JSON. Il terzo parametro <code>2</code> indenta il testo con 2 spazi, così il file si legge bene anche aprendolo a mano
+  (il secondo parametro, <code>null</code>, serve per filtri che non usiamo).</p>
+  <p><code>fs.writeFile(file, testo, callback)</code> è <b>asincrona</b>: avvia la scrittura e il programma va subito avanti. Quando la scrittura finisce, Node chiama la <b>callback</b>
+  con un eventuale <code>errore</code> (se è tutto ok vale <code>null</code>).</p></div>
+    <div class="ricorda"><b>Da ricordare</b>writeFile è asincrona: il server continua a gestire i giocatori mentre il file viene scritto; la callback segnala la fine o un errore.</div>
+  </section>
+<div class="due">
+  <div class="box"><b>Sincrono: readFileSync</b>
+    <p><code>const testo = fs.readFileSync(...)</code><br>il programma <b>si ferma</b> finché il file non è letto, poi continua con il risultato.</p>
+    <p>Usato in <code>carica()</code>: una volta, all'avvio, quando non c'è ancora nessuno da far aspettare.</p></div>
+  <div class="box"><b>Asincrono: writeFile</b>
+    <p><code>fs.writeFile(..., (errore) => {...})</code><br>il programma <b>non aspetta</b>: continua subito, e la callback viene eseguita a scrittura finita.</p>
+    <p>Usato in <code>salva()</code>: durante il gioco, così nessuno sente rallentamenti.</p></div>
+</div>
+
+<h2><span class="num">6</span>elenco() e module.exports</h2>
+<section class="blocco">
+    <div class="unito">
+    <h3>Esportare le funzioni<span class="righe">righe 72–78</span></h3>
+    <div class="codice"><div class="r"><span class="ln">72</span><span class="tx"><span class="t-k">function</span> elenco() {</span></div><div class="r"><span class="ln">73</span><span class="tx">    <span class="t-k">return</span> record;</span></div><div class="r"><span class="ln">74</span><span class="tx">}</span></div><div class="r"><span class="ln">75</span><span class="tx"> </span></div><div class="r"><span class="ln">78</span><span class="tx">module.exports = { carica, aggiungi, elenco };</span></div></div></div>
+    <div class="spiega">
+  <p><code>elenco()</code> restituisce l'oggetto con tutte le classifiche: <code>server.js</code> lo manda ai client nel messaggio <code>record</code> e nella rotta <code>/api/record</code>.</p>
+  <p><code>module.exports</code> è l'oggetto che il modulo "consegna" a chi fa <code>require('./record')</code>. Scriviamo <code>{ carica, aggiungi, elenco }</code>
+  (forma breve di <code>{ carica: carica, aggiungi: aggiungi, elenco: elenco }</code>).</p>
+  <p>Quello che <b>non</b> è nell'oggetto resta privato: <code>salva</code>, <code>strutturaVuota</code>, la variabile <code>record</code> e le costanti. È un modo per proteggere i dati:
+  da fuori si possono usare solo le tre funzioni pensate per farlo.</p>
+  <p>Una curiosità: <code>elenco()</code> restituisce un <b>riferimento</b> allo stesso oggetto, non una copia. Nel nostro progetto va bene perché <code>server.js</code> lo usa solo per inviarlo.</p></div>
+    <div class="ricorda"><b>Da ricordare</b>module.exports decide cosa vede chi fa require: il resto del modulo rimane privato.</div>
+  </section>
+
+<h2 class="nuova"><span class="num">?</span>Domande probabili su record.js</h2>
+<div class="domanda"><b class="q">1. Cos'è record.js?</b>Un <b>modulo personalizzato</b> scritto da noi: esporta <code>carica</code>, <code>aggiungi</code> ed <code>elenco</code> con <code>module.exports</code>, e <code>server.js</code> lo importa con <code>require('./record')</code>.</div><div class="domanda"><b class="q">2. Perché nel require c'è ./ ?</b>Indica un file del progetto, nella stessa cartella di <code>server.js</code>. Senza <code>./</code> Node cercherebbe un modulo chiamato <code>record</code> in <code>node_modules</code>.</div><div class="domanda"><b class="q">3. Quali funzioni sono private e perché?</b><code>salva</code> e <code>strutturaVuota</code> (e la variabile <code>record</code>): non sono in <code>module.exports</code>, quindi <code>server.js</code> non le vede. Servono solo al funzionamento interno.</div><div class="domanda"><b class="q">4. Perché readFileSync in carica e writeFile in salva?</b><code>readFileSync</code> blocca il programma, ma si usa una volta sola all'avvio. <code>writeFile</code> è asincrona: durante il gioco il server non si blocca mentre scrive.</div><div class="domanda"><b class="q">5. Cosa succede la prima volta, quando record.json non esiste?</b><code>readFileSync</code> lancia un errore, il <code>catch</code> lo gestisce e si parte con le classifiche vuote. Il file viene creato al primo record, da <code>salva()</code>.</div><div class="domanda"><b class="q">6. A cosa serve Object.assign in carica?</b>Unisce la struttura vuota con i dati letti: se nel file manca una lista, esiste comunque vuota.</div><div class="domanda"><b class="q">7. Spiega l'algoritmo di aggiungi.</b><code>push</code> del risultato, <code>sort</code> decrescente per punti, <code>indexOf</code> per la posizione, <code>slice(0, 5)</code> per tenere i primi 5. Se la posizione è ≥ 5 restituisce −1, altrimenti salva e restituisce la posizione.</div><div class="domanda"><b class="q">8. Cosa restituisce aggiungi e chi usa il valore?</b>La posizione (0 = primo posto) o −1. <code>finePartita</code> la manda al client nel <code>game_over</code> (che mostra "Nuovo record: N° posto!") e, se è ≥ 0, invia i record aggiornati a tutti.</div><div class="domanda"><b class="q">9. A parità di punti chi sta davanti?</b>Chi c'era già: <code>sort</code> in JavaScript è stabile e il nuovo risultato era stato aggiunto in fondo con <code>push</code>.</div><div class="domanda"><b class="q">10. Cosa fanno null e 2 in JSON.stringify(record, null, 2)?</b><code>null</code>: nessun filtro sulle proprietà; <code>2</code>: indentazione di 2 spazi per rendere il file leggibile.</div><div class="domanda"><b class="q">11. Perché un record con 0 punti viene scartato?</b>Una partita persa senza prendere nessun quadrato non è un risultato da ricordare: la prima riga di <code>aggiungi</code> restituisce subito −1.</div>
+
+<h2><span class="num">A–Z</span>Glossario</h2>
+<div class="glossario">
+  <p><b>Asincrono</b>: l'operazione parte e il programma continua; il risultato arriva dopo, in una callback.</p>
+  <p><b>Callback</b>: funzione chiamata quando un'operazione è finita (qui, la scrittura del file).</p>
+  <p><b>fs</b>: modulo interno di Node per lavorare con i file.</p>
+  <p><b>indexOf</b>: posizione di un elemento in un array (−1 se non c'è).</p>
+  <p><b>module.exports</b>: ciò che un modulo rende disponibile a chi lo importa.</p>
+  <p><b>Object.assign(a, b)</b>: copia le proprietà di <code>b</code> dentro <code>a</code>.</p>
+  <p><b>slice(0, n)</b>: nuovo array con i primi n elementi (l'originale non cambia).</p>
+  <p><b>sort con funzione di confronto</b>: <code>b - a</code> = decrescente, <code>a - b</code> = crescente.</p>
+  <p><b>Sincrono</b>: il programma aspetta la fine dell'operazione prima di andare avanti.</p>
+  <p><b>try/catch</b>: prova a eseguire un codice e, se c'è un errore, esegue il blocco catch invece di fermarsi.</p>
+</div></body></html>

@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="it"><head><meta charset="UTF-8"><title>Studio - server.js</title><style>
+  @page { size: A4; margin: 15mm 14mm 16mm; @bottom-right { content: counter(page) " / " counter(pages); font: 8pt -apple-system, sans-serif; color: #8a90a2; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, "Helvetica Neue", "Segoe UI", Roboto, sans-serif; color: #23262f; font-size: 10.2pt; line-height: 1.5; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  h1 { font-size: 26pt; margin: 0; letter-spacing: -0.5px; font-family: "SF Mono", Menlo, monospace; }
+  h2 { font-size: 15pt; margin: 8mm 0 4mm; padding-bottom: 2mm; border-bottom: 2.5px solid #f9ca24; break-after: avoid; }
+  h2.nuova { break-before: page; margin-top: 0; }
+  h2 .num { display: inline-block; background: #1e2233; color: #f9ca24; border-radius: 1.5mm; padding: 0 2.2mm; margin-right: 2mm; font-size: 12pt; }
+  h3 { font-size: 11.5pt; margin: 0 0 2.5mm; break-after: avoid; display: flex; align-items: baseline; gap: 3mm; }
+  h3 .righe { margin-left: auto; font-size: 8.5pt; font-weight: 600; color: #5d6475; background: #f2f3f7; border: 1px solid #e3e5ec; border-radius: 1.2mm; padding: 0 1.8mm; white-space: nowrap; }
+  p { margin: 0 0 2.2mm; }
+  ul, ol { margin: 0 0 2.2mm; padding-left: 5.5mm; } li { margin-bottom: 1.2mm; }
+  code { font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 8.7pt; background: #f2f3f7; border: 1px solid #e3e5ec; border-radius: 1mm; padding: 0 1mm; }
+  .codice { background: #1e2233; color: #e8eaf6; border-radius: 2.5mm; padding: 2.8mm 3.5mm 2.8mm 1.5mm; margin: 0 0 3mm; font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 7.8pt; line-height: 1.55; }
+  .codice .r { display: flex; break-inside: avoid; }
+  .codice .ln { flex: none; width: 9mm; text-align: right; padding-right: 3mm; color: #6b7194; user-select: none; }
+  .codice .tx { flex: 1; white-space: pre-wrap; word-break: break-all; }
+  .codice .salto .ln { color: #f9ca24; }
+  .t-k { color: #f9ca24; } .t-s { color: #9be29b; } .t-n { color: #ffab70; } .t-c { color: #7f86a8; font-style: italic; } .t-a { color: #8ecbff; }
+  .copertina { background: #1e2233; color: #fff; border-radius: 4mm; padding: 11mm 11mm 9mm; margin-bottom: 6mm; }
+  .copertina h1 span { color: #f9ca24; }
+  .copertina .sotto { color: #f9ca24; font-size: 12.5pt; font-weight: 600; margin-top: 2mm; }
+  .copertina .descr { color: #c8cbe0; margin-top: 3mm; font-size: 10.5pt; max-width: 150mm; }
+  .copertina .chi { margin-top: 6mm; font-size: 9pt; color: #9aa0bd; }
+  .box { background: #f6f7fb; border: 1px solid #e3e5ec; border-radius: 3mm; padding: 4mm 5mm; margin-bottom: 5mm; break-inside: avoid; }
+  .box.giallo { background: #fff8db; border-color: #f3dd85; }
+  .box > b:first-child { display: block; margin-bottom: 1.5mm; }
+  .blocco { margin-bottom: 7mm; }
+  .unito { break-inside: avoid; }
+  .spiega { padding: 0 1mm; }
+  .ricorda { break-inside: avoid; margin: 2mm 1mm 0; padding: 2.5mm 4mm; border-left: 4px solid #f9ca24; background: #fffbea; border-radius: 0 2mm 2mm 0; font-size: 9.6pt; }
+  .ricorda b { display: block; font-size: 8.4pt; text-transform: uppercase; letter-spacing: 0.5px; color: #9a7500; margin-bottom: 0.8mm; }
+  table { width: 100%; border-collapse: collapse; font-size: 9pt; margin: 1mm 0 4mm; }
+  th, td { text-align: left; padding: 1.6mm 2.4mm; border-bottom: 1px solid #e3e5ec; vertical-align: top; }
+  th { background: #f6f7fb; font-size: 8.2pt; text-transform: uppercase; color: #5d6475; letter-spacing: 0.3px; }
+  tr { break-inside: avoid; }
+  .domanda { break-inside: avoid; margin-bottom: 3.2mm; padding: 3mm 4mm; border: 1px solid #e3e5ec; border-left: 4px solid #f9ca24; border-radius: 2mm; }
+  .domanda b.q { display: block; margin-bottom: 1mm; }
+  .glossario { columns: 2; column-gap: 8mm; font-size: 9.4pt; }
+  .glossario p { break-inside: avoid; margin-bottom: 2mm; }
+  .chip { display: inline-block; min-width: 9mm; text-align: center; font-family: "SF Mono", Menlo, monospace; font-size: 8.6pt; padding: 0.6mm 1.8mm; margin: 0 0.8mm 0.8mm 0; border-radius: 1.2mm; background: #e9ebf3; border: 1px solid #d5d8e5; }
+  .chip.nuovo { background: #f9ca24; border-color: #d9a900; font-weight: 700; }
+  .chip.fuori { background: #fde2e0; border-color: #f0b4ae; text-decoration: line-through; color: #a33; }
+  svg text { font-family: -apple-system, "Helvetica Neue", sans-serif; }
+  .due { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; }
+</style></head><body>
+<div class="copertina">
+  <h1>server<span>.js</span></h1>
+  <div class="sotto">Il "cervello" del gioco: gira su Node.js</div>
+  <div class="descr">Avvia il server HTTP con Express, ci aggancia il server WebSocket e contiene tutte le regole delle tre modalità. È l'unico arbitro: decide dove compare il quadrato, chi prende il punto, quante vite restano e quando finisce la partita.</div>
+  <div class="chi">Acchiappa il quadrato · Gentile · Guttadauro · Pavoni — 5A Informatica — TPSIT 2026/27 · Guida di studio</div>
+</div>
+<div class="box giallo"><b>Come usare questa guida</b>
+  Il codice è quello vero del progetto. I <b>numeri a sinistra</b> sono i numeri di riga che vedete in VS Code; le righe che contengono
+  solo commenti sono state tolte, per questo ogni tanto un numero "salta". Il simbolo <b style="color:#b38600">⋮</b> indica che una parte del file è stata saltata.
+  Per ogni pezzo c'è la spiegazione e, nei riquadri gialli, la frase da sapere dire all'interrogazione.</div>
+
+<h2><span class="num">0</span>Il file in breve</h2>
+<div class="box"><b>Cosa fa server.js, in cinque punti</b>
+<ol>
+  <li><b>Server HTTP (Express)</b> sulla porta 3000: invia la pagina <code>index.html</code>, la musica in streaming e due "API" in JSON.</li>
+  <li><b>Server WebSocket (ws)</b> agganciato allo stesso server HTTP: tiene una connessione sempre aperta con ogni browser e scambia messaggi JSON in tempo reale.</li>
+  <li><b>Sfida multiplayer</b>: un solo quadrato uguale per tutti, spostato da un <code>setInterval</code> ogni 1,2 s. Il primo click valido prende il punto; vince chi arriva a 10.</li>
+  <li><b>Partite singole</b> (Difficoltà e Infinita): ogni client ha la sua partita salvata in <code>ws.partita</code>, con il suo timer <code>setTimeout</code>; se il tempo scade si perde una vita.</li>
+  <li><b>Record</b>: a fine partita usa il nostro modulo <code>record.js</code> per salvare i 5 migliori punteggi e li manda a tutti.</li>
+</ol></div>
+
+<h3>Mappa del file</h3>
+<table><tr><th>§</th><th>Sezione</th><th>Righe</th><th>Cosa contiene</th></tr>
+  <tr><td>1</td><td>Importazione dei moduli</td><td>21–36</td><td><code>require</code> di express, ws, fs, path, os e del nostro record.js</td></tr><tr><td>2</td><td>Costanti di configurazione</td><td>39–82</td><td>porta, regole della sfida, tabella delle difficoltà, parametri della modalità infinita</td></tr><tr><td>3</td><td>Stato della sfida</td><td>85–97</td><td>variabili che cambiano: contatore degli id, quadrato della sfida, pausa</td></tr><tr><td>4</td><td>Express (HTTP)</td><td>100–165</td><td>middleware, rotte <code>/musica</code>, <code>/api/...</code>, 404 e <code>app.listen</code></td></tr><tr><td>5</td><td>WebSocket ed eventi</td><td>168–280</td><td>eventi <code>connection</code>, <code>message</code>, <code>close</code>, <code>error</code></td></tr><tr><td>6</td><td>Ciclo della sfida</td><td>283–296</td><td>il <code>setInterval</code> che sposta il quadrato</td></tr><tr><td>7</td><td>Funzioni di invio e sfida</td><td>299–396</td><td>invio a uno / a tutti / alla sfida, classifica, click, vittoria</td></tr><tr><td>8</td><td>Partite singole</td><td>399–583</td><td>creazione partita, formula di Tetris, timer, vite, game over</td></tr><tr><td>9</td><td>Altre funzioni</td><td>586–604</td><td>indirizzi IP del computer</td></tr></table>
+<p>Le sezioni sono segnate nel file con i commenti <code>// * 1.</code>, <code>// * 2.</code>… (in VS Code con l'estensione Better Comments appaiono colorate).</p>
+
+<h2 class="nuova"><span class="num">1</span>Importazione dei moduli</h2>
+<section class="blocco">
+    <div class="unito">
+    <h3>require(): caricare i moduli<span class="righe">righe 26–36</span></h3>
+    <div class="codice"><div class="r"><span class="ln">26</span><span class="tx"><span class="t-k">const</span> express = require(<span class="t-s">'express'</span>);</span></div><div class="r"><span class="ln">28</span><span class="tx"><span class="t-k">const</span> { Server } = require(<span class="t-s">'ws'</span>);</span></div><div class="r"><span class="ln">30</span><span class="tx"><span class="t-k">const</span> fs = require(<span class="t-s">'fs'</span>);</span></div><div class="r"><span class="ln">32</span><span class="tx"><span class="t-k">const</span> path = require(<span class="t-s">'path'</span>);</span></div><div class="r"><span class="ln">34</span><span class="tx"><span class="t-k">const</span> os = require(<span class="t-s">'os'</span>);</span></div><div class="r"><span class="ln">36</span><span class="tx"><span class="t-k">const</span> record = require(<span class="t-s">'./record'</span>);</span></div></div></div>
+    <div class="spiega">
+  <p><code>require()</code> carica un <b>modulo</b> (un pezzo di codice già pronto) e restituisce quello che il modulo esporta. Ci sono tre tipi di moduli:</p>
+  <table><tr><th>Tipo</th><th>Moduli</th><th>Da dove arrivano</th></tr>
+  <tr><td><b>Esterni</b></td><td><code>express</code>, <code>ws</code></td><td>installati con <code>npm install</code> nella cartella <code>node_modules</code>; sono scritti nelle <code>dependencies</code> del <code>package.json</code></td></tr><tr><td><b>Interni</b> (core)</td><td><code>fs</code>, <code>path</code>, <code>os</code></td><td>fanno già parte di Node.js, non serve installarli</td></tr><tr><td><b>Nostri</b></td><td><code>./record</code></td><td>il file <code>record.js</code> del progetto; il <code>./</code> dice a Node "cercalo nella cartella di questo file", non in node_modules</td></tr></table>
+  <p><code>const { Server } = require('ws')</code> è una <b>destrutturazione</b>: il modulo <code>ws</code> esporta un oggetto con tante proprietà e noi ne prendiamo solo una, la classe <code>Server</code>.
+  È come scrivere <code>const Server = require('ws').Server</code>.</p>
+  <p>Usiamo <code>const</code> perché queste variabili non verranno mai riassegnate.</p></div>
+    <div class="ricorda"><b>Da ricordare</b>Moduli esterni (npm, node_modules), interni (già in Node) e nostri (con ./). La destrutturazione { } prende solo una parte di ciò che il modulo esporta.</div>
+  </section>
+
+<h2><span class="num">2</span>Costanti di configurazione</h2>
+<section class="blocco">
+    <div class="unito">
+    <h3>La porta e le variabili d'ambiente<span class="righe">riga 45</span></h3>
+    <div class="codice"><div class="r"><span class="ln">45</span><span class="tx"><span class="t-k">const</span> PORTA = process.env.PORT || <span class="t-n">3000</span>;</span></div></div></div>
+    <div class="spiega">
+  <p><code>process.env</code> è un oggetto con le <b>variabili d'ambiente</b> del sistema operativo. Se qualcuno avvia il server con <code>PORT=8080 npm start</code>, la porta sarà 8080.
+  Se <code>PORT</code> non esiste vale <code>undefined</code>, e l'operatore <code>||</code> sceglie il valore di destra: <b>3000</b>.</p>
+  <p>I nomi in MAIUSCOLO sono una convenzione: indicano costanti di configurazione, cioè le "regole" del gioco scritte in un punto solo.</p></div>
+    
+  </section>
+<section class="blocco">
+    <div class="unito">
+    <h3>Regole della sfida<span class="righe">righe 49–57</span></h3>
+    <div class="codice"><div class="r"><span class="ln">49</span><span class="tx"><span class="t-k">const</span> PUNTI_PER_VINCERE = <span class="t-n">10</span>;</span></div><div class="r"><span class="ln">51</span><span class="tx"><span class="t-k">const</span> INTERVALLO_MS = <span class="t-n">1200</span>;</span></div><div class="r"><span class="ln">53</span><span class="tx"><span class="t-k">const</span> DIMENSIONE_SFIDA = <span class="t-n">64</span>;</span></div><div class="r"><span class="ln">55</span><span class="tx"><span class="t-k">const</span> PAUSA_VITTORIA_MS = <span class="t-n">5000</span>;</span></div><div class="r"><span class="ln">57</span><span class="tx"><span class="t-k">const</span> COLORI = [<span class="t-s">'#e74c3c'</span>, <span class="t-s">'#3498db'</span>, <span class="t-s">'#2ecc71'</span>, <span class="t-s">'#f39c12'</span>, <span class="t-s">'#9b59b6'</span>, <span class="t-s">'#1abc9c'</span>, <span class="t-s">'#e84393'</span>, <span class="t-s">'#34495e'</span>];</span></div></div></div>
+    <div class="spiega">
+  <table><tr><th>Costante</th><th>Valore</th><th>Significato</th></tr>
+  <tr><td><code>PUNTI_PER_VINCERE</code></td><td>10</td><td>punti per vincere la sfida</td></tr><tr><td><code>INTERVALLO_MS</code></td><td>1200</td><td>ogni 1,2 s il quadrato della sfida si sposta</td></tr><tr><td><code>DIMENSIONE_SFIDA</code></td><td>64</td><td>lato del quadrato della sfida in pixel</td></tr><tr><td><code>PAUSA_VITTORIA_MS</code></td><td>5000</td><td>pausa di 5 s dopo una vittoria</td></tr><tr><td><code>COLORI</code></td><td>array di 8 colori</td><td>ogni giocatore riceve un colore in base al suo id</td></tr></table></div>
+    
+  </section>
+<section class="blocco">
+    <div class="unito">
+    <h3>La tabella delle difficoltà (oggetto di oggetti)<span class="righe">righe 61–68</span></h3>
+    <div class="codice"><div class="r"><span class="ln">61</span><span class="tx"><span class="t-k">const</span> DIFFICOLTA = {</span></div><div class="r"><span class="ln">63</span><span class="tx">    facile: { nome: <span class="t-s">'Facile'</span>, vite: <span class="t-n">3</span>, tempo: <span class="t-n">1400</span>, dimensione: <span class="t-n">80</span> },</span></div><div class="r"><span class="ln">65</span><span class="tx">    difficile: { nome: <span class="t-s">'Difficile'</span>, vite: <span class="t-n">2</span>, tempo: <span class="t-n">900</span>, dimensione: <span class="t-n">56</span> },</span></div><div class="r"><span class="ln">67</span><span class="tx">    impossibile: { nome: <span class="t-s">'Impossibile'</span>, vite: <span class="t-n">1</span>, tempo: <span class="t-n">550</span>, dimensione: <span class="t-n">38</span> },</span></div><div class="r"><span class="ln">68</span><span class="tx">};</span></div></div></div>
+    <div class="spiega">
+  <p><code>DIFFICOLTA</code> è un <b>oggetto</b> che contiene altri tre oggetti. Si legge così: <code>DIFFICOLTA.facile.vite</code> vale 3, oppure con le parentesi quadre
+  <code>DIFFICOLTA['facile'].vite</code> (forma utile quando il nome arriva da una variabile, come <code>DIFFICOLTA[difficolta]</code>).</p>
+  <table><tr><th>Difficoltà</th><th>Vite</th><th>Tempo per cliccare</th><th>Lato del quadrato</th></tr>
+  <tr><td>Facile</td><td>3</td><td>1400 ms (1,4 s)</td><td>80 px</td></tr><tr><td>Difficile</td><td>2</td><td>900 ms (0,9 s)</td><td>56 px</td></tr><tr><td>Impossibile</td><td>1</td><td>550 ms (0,55 s)</td><td>38 px</td></tr></table>
+  <p>Lo stesso oggetto viene mandato al browser nel messaggio <code>benvenuto</code>: così i pulsanti del menu mostrano sempre i valori veri. Se cambiamo un numero qui, cambia anche la pagina.</p></div>
+    <div class="ricorda"><b>Da ricordare</b>Una sola "fonte" dei dati: le regole stanno nel server e il client le riceve, non le ripete.</div>
+  </section>
+<section class="blocco">
+    <div class="unito">
+    <h3>Modalità infinita e pausa tra i quadrati<span class="righe">righe 72–82</span></h3>
+    <div class="codice"><div class="r"><span class="ln">72</span><span class="tx"><span class="t-k">const</span> VITE_INFINITA = <span class="t-n">3</span>;</span></div><div class="r"><span class="ln">74</span><span class="tx"><span class="t-k">const</span> QUADRATI_PER_LIVELLO = <span class="t-n">10</span>;</span></div><div class="r"><span class="ln">76</span><span class="tx"><span class="t-k">const</span> PUNTI_BASE = <span class="t-n">40</span>;</span></div><div class="r"><span class="ln">78</span><span class="tx"><span class="t-k">const</span> COLORI_LIVELLO = [<span class="t-s">'#f9ca24'</span>, <span class="t-s">'#2ecc71'</span>, <span class="t-s">'#3498db'</span>, <span class="t-s">'#9b59b6'</span>, <span class="t-s">'#e84393'</span>, <span class="t-s">'#e67e22'</span>, <span class="t-s">'#1abc9c'</span>, <span class="t-s">'#e74c3c'</span>, <span class="t-s">'#00cec9'</span>, <span class="t-s">'#fdcb6e'</span>];</span></div><div class="r"><span class="ln">79</span><span class="tx"> </span></div><div class="r"><span class="ln">82</span><span class="tx"><span class="t-k">const</span> PAUSA_QUADRATO_MS = <span class="t-n">350</span>;</span></div></div></div>
+    <div class="spiega">
+  <p><code>VITE_INFINITA = 3</code>, si sale di livello ogni <code>QUADRATI_PER_LIVELLO = 10</code> quadrati (come le 10 righe di Tetris), <code>PUNTI_BASE = 40</code>
+  (in Tetris una riga singola vale 40 × livello). <code>COLORI_LIVELLO</code> ha 10 colori, uno per livello. <code>PAUSA_QUADRATO_MS = 350</code> è la pausa tra un quadrato preso e il successivo.</p></div>
+    
+  </section>
+
+<h2><span class="num">3</span>Stato della sfida</h2>
+<section class="blocco">
+    <div class="unito">
+    <h3>Le variabili che cambiano (let)<span class="righe">righe 90–97</span></h3>
+    <div class="codice"><div class="r"><span class="ln">90</span><span class="tx"><span class="t-k">let</span> contatoreId = <span class="t-n">0</span>;</span></div><div class="r"><span class="ln">92</span><span class="tx"><span class="t-k">let</span> quadrato = { numero: <span class="t-n">0</span>, x: <span class="t-n">0</span>, y: <span class="t-n">0</span>, preso: <span class="t-k">true</span> };</span></div><div class="r"><span class="ln">94</span><span class="tx"><span class="t-k">let</span> inPausa = <span class="t-k">false</span>;</span></div><div class="r"><span class="ln">95</span><span class="tx"> </span></div><div class="r"><span class="ln">97</span><span class="tx">record.carica();</span></div></div></div>
+    <div class="spiega">
+  <ul>
+    <li><code>contatoreId</code>: cresce di 1 a ogni nuova connessione, così ogni client ha un id diverso (1, 2, 3…).</li>
+    <li><code>quadrato</code>: il quadrato della sfida, condiviso da tutti. <code>numero</code> è progressivo, <code>x</code> e <code>y</code> sono percentuali (0–100), <code>preso</code> dice se qualcuno l'ha già cliccato.
+    Parte con <code>preso: true</code> così nessun click vale prima che esca il primo quadrato.</li>
+    <li><code>inPausa</code>: diventa <code>true</code> dopo una vittoria, per 5 secondi.</li>
+  </ul>
+  <p><code>record.carica()</code> chiama una funzione del nostro modulo, che legge dal file <code>record.json</code> i record delle partite precedenti. Si fa <b>una volta sola</b>, all'avvio.</p>
+  <p>Queste variabili stanno nel server e non nel browser: è il motivo per cui il server è l'<b>arbitro</b>. Il codice del browser si può modificare (dagli strumenti per sviluppatori), quello del server no.</p></div>
+    <div class="ricorda"><b>Da ricordare</b>let = variabile che cambia, const = valore fisso. Lo stato del gioco sta nel server, così nessuno può barare.</div>
+  </section>
+
+<h2 class="nuova"><span class="num">4</span>Express: il server HTTP</h2>
+<p>Ogni richiesta HTTP che arriva attraversa i middleware <b>nell'ordine in cui sono scritti</b>, finché uno non risponde:</p>
+<svg viewBox="0 0 700 110" width="100%" style="margin-bottom:4mm">
+  <defs><marker id="fr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#5d6475"/></marker></defs>
+  <g transform="translate(0,20)"><rect width="100" height="56" rx="9" fill="#f6f7fb" stroke="#c9ccd8"/>
+    <text x="50" y="25" text-anchor="middle" font-size="12" font-weight="700" fill="#23262f">Richiesta</text>
+    <text x="50" y="43" text-anchor="middle" font-size="10" fill="#5d6475">GET /...</text></g>
+    <line x1="101" y1="48" x2="116" y2="48" stroke="#5d6475" stroke-width="1.6" marker-end="url(#fr)"/><g transform="translate(117,20)"><rect width="100" height="56" rx="9" fill="#1e2233" stroke="#c9ccd8"/>
+    <text x="50" y="25" text-anchor="middle" font-size="12" font-weight="700" fill="#f9ca24">Logger</text>
+    <text x="50" y="43" text-anchor="middle" font-size="10" fill="#c8cbe0">stampa e next()</text></g>
+    <line x1="218" y1="48" x2="233" y2="48" stroke="#5d6475" stroke-width="1.6" marker-end="url(#fr)"/><g transform="translate(234,20)"><rect width="100" height="56" rx="9" fill="#1e2233" stroke="#c9ccd8"/>
+    <text x="50" y="25" text-anchor="middle" font-size="12" font-weight="700" fill="#f9ca24">express.static</text>
+    <text x="50" y="43" text-anchor="middle" font-size="10" fill="#c8cbe0">file di public/</text></g>
+    <line x1="335" y1="48" x2="350" y2="48" stroke="#5d6475" stroke-width="1.6" marker-end="url(#fr)"/><g transform="translate(351,20)"><rect width="100" height="56" rx="9" fill="#1e2233" stroke="#c9ccd8"/>
+    <text x="50" y="25" text-anchor="middle" font-size="12" font-weight="700" fill="#f9ca24">GET /musica</text>
+    <text x="50" y="43" text-anchor="middle" font-size="10" fill="#c8cbe0">streaming audio</text></g>
+    <line x1="452" y1="48" x2="467" y2="48" stroke="#5d6475" stroke-width="1.6" marker-end="url(#fr)"/><g transform="translate(468,20)"><rect width="100" height="56" rx="9" fill="#1e2233" stroke="#c9ccd8"/>
+    <text x="50" y="25" text-anchor="middle" font-size="12" font-weight="700" fill="#f9ca24">GET /api/...</text>
+    <text x="50" y="43" text-anchor="middle" font-size="10" fill="#c8cbe0">risposta JSON</text></g>
+    <line x1="569" y1="48" x2="584" y2="48" stroke="#5d6475" stroke-width="1.6" marker-end="url(#fr)"/><g transform="translate(585,20)"><rect width="100" height="56" rx="9" fill="#fde2e0" stroke="#c9ccd8"/>
+    <text x="50" y="25" text-anchor="middle" font-size="12" font-weight="700" fill="#a33">404</text>
+    <text x="50" y="43" text-anchor="middle" font-size="10" fill="#a33">non trovata</text></g>
+    
+  <text x="350" y="100" text-anchor="middle" font-size="11" fill="#5d6475">se un passaggio risponde, la richiesta si ferma lì; se nessuno risponde si arriva al 404</text>
+</svg>
+<section class="blocco">
+    <div class="unito">
+    <h3>L'applicazione e il middleware "logger"<span class="righe">righe 105–113</span></h3>
+    <div class="codice"><div class="r"><span class="ln">105</span><span class="tx"><span class="t-k">const</span> app = express();</span></div><div class="r"><span class="ln">106</span><span class="tx"> </span></div><div class="r"><span class="ln">108</span><span class="tx">app.use((req, res, next) =&gt; {</span></div><div class="r"><span class="ln">110</span><span class="tx">    console.log(<span class="t-s">`[HTTP] ${req.method} ${req.url}`</span>);</span></div><div class="r"><span class="ln">112</span><span class="tx">    next();</span></div><div class="r"><span class="ln">113</span><span class="tx">});</span></div></div></div>
+    <div class="spiega">
+  <p><code>express()</code> crea l'applicazione. <code>app.use(funzione)</code> registra un <b>middleware</b>: una funzione con tre parametri</p>
+  <ul>
+    <li><code>req</code> (request): la richiesta, con <code>req.method</code> (GET, POST…) e <code>req.url</code> (l'indirizzo chiesto);</li>
+    <li><code>res</code> (response): la risposta da mandare;</li>
+    <li><code>next</code>: funzione che passa la richiesta al middleware successivo.</li>
+  </ul>
+  <p>Questo middleware non risponde: stampa una riga nel terminale (es. <code>[HTTP] GET /musica</code>) e chiama <code>next()</code>. <b>Senza <code>next()</code> la richiesta resterebbe bloccata</b> e il browser aspetterebbe per sempre.</p>
+  <p>Nel <code>console.log</code> c'è un <b>template literal</b>: testo tra backtick con <code>${...}</code> per inserire il valore di una variabile.</p></div>
+    <div class="ricorda"><b>Da ricordare</b>Middleware = funzione (req, res, next) eseguita per ogni richiesta, in ordine. next() passa al successivo.</div>
+  </section>
+<section class="blocco">
+    <div class="unito">
+    <h3>File statici<span class="righe">riga 117</span></h3>
+    <div class="codice"><div class="r"><span class="ln">117</span><span class="tx">app.use(express.static(path.join(__dirname, <span class="t-s">'public'</span>)));</span></div></div></div>
+    <div class="spiega">
+  <p><code>express.static</code> è un middleware già pronto: se la richiesta corrisponde a un file della cartella <code>public</code>, lo invia. Quando il browser chiede <code>/</code>
+  riceve <code>public/index.html</code>.</p>
+  <p><code>__dirname</code> è la cartella in cui si trova <code>server.js</code>; <code>path.join</code> unisce i pezzi del percorso con il separatore giusto (<code>/</code> su Mac e Linux, <code>\</code> su Windows).
+  Così il server funziona anche se viene avviato da un'altra cartella.</p></div>
+    
+  </section>
+<section class="blocco">
+    <div class="unito">
+    <h3>Rotta GET /musica: streaming<span class="righe">righe 120–136</span></h3>
+    <div class="codice"><div class="r"><span class="ln">120</span><span class="tx">app.get(<span class="t-s">'/musica'</span>, (req, res) =&gt; {</span></div><div class="r"><span class="ln">122</span><span class="tx">    <span class="t-k">const</span> fileMusica = path.join(__dirname, <span class="t-s">'musica'</span>, <span class="t-s">'sottofondo.wav'</span>);</span></div><div class="r"><span class="ln">124</span><span class="tx">    <span class="t-k">if</span> (fs.existsSync(fileMusica)) {</span></div><div class="r"><span class="ln">126</span><span class="tx">        <span class="t-k">const</span> info = fs.statSync(fileMusica);</span></div><div class="r"><span class="ln">128</span><span class="tx">        res.writeHead(<span class="t-n">200</span>, { <span class="t-s">'Content-Type'</span>: <span class="t-s">'audio/wav'</span>, <span class="t-s">'Content-Length'</span>: info.size });</span></div><div class="r"><span class="ln">130</span><span class="tx">        fs.createReadStream(fileMusica).pipe(res);</span></div><div class="r"><span class="ln">132</span><span class="tx">    } <span class="t-k">else</span> {</span></div><div class="r"><span class="ln">134</span><span class="tx">        res.status(<span class="t-n">404</span>).send(<span class="t-s">'Musica non trovata'</span>);</span></div><div class="r"><span class="ln">135</span><span class="tx">    }</span></div><div class="r"><span class="ln">136</span><span class="tx">});</span></div></div></div>
+    <div class="spiega">
+  <p><code>app.get('/musica', ...)</code> crea una <b>rotta</b>: risponde solo alle richieste GET all'indirizzo <code>/musica</code>. La chiede il tag <code>&lt;audio src="/musica"&gt;</code> della pagina.</p>
+  <ol>
+    <li><code>fs.existsSync</code> controlla che il file esista;</li>
+    <li><code>fs.statSync</code> legge le informazioni del file, tra cui <code>size</code> (dimensione in byte);</li>
+    <li><code>res.writeHead(200, {...})</code> scrive il codice di stato <b>200 = OK</b> e le intestazioni: il tipo (<code>audio/wav</code>) e la lunghezza;</li>
+    <li><code>fs.createReadStream(file).pipe(res)</code> apre uno <b>stream</b>: il file viene letto a pezzi (chunk) e ogni pezzo viene inviato subito, senza caricare tutto il file in memoria.</li>
+  </ol>
+  <p>Se il file non c'è: <code>res.status(404).send(...)</code>, codice <b>404 = non trovato</b>.</p></div>
+    <div class="ricorda"><b>Da ricordare</b>Lo stream legge e invia il file a pezzi: pipe() collega lo stream di lettura alla risposta.</div>
+  </section>
+<section class="blocco">
+    <div class="unito">
+    <h3>Rotte delle API in JSON<span class="righe">righe 139–148</span></h3>
+    <div class="codice"><div class="r"><span class="ln">139</span><span class="tx">app.get(<span class="t-s">'/api/classifica'</span>, (req, res) =&gt; {</span></div><div class="r"><span class="ln">141</span><span class="tx">    res.json({ connessi: ws_server.clients.size, puntiPerVincere: PUNTI_PER_VINCERE, giocatori: listaClassifica() });</span></div><div class="r"><span class="ln">142</span><span class="tx">});</span></div><div class="r"><span class="ln">143</span><span class="tx"> </span></div><div class="r"><span class="ln">145</span><span class="tx">app.get(<span class="t-s">'/api/record'</span>, (req, res) =&gt; {</span></div><div class="r"><span class="ln">147</span><span class="tx">    res.json(record.elenco());</span></div><div class="r"><span class="ln">148</span><span class="tx">});</span></div></div></div>
+    <div class="spiega">
+  <p>Due rotte che rispondono con dati in <b>JSON</b>: <code>res.json(oggetto)</code> trasforma l'oggetto in testo JSON e imposta da sola l'intestazione <code>Content-Type: application/json</code>.</p>
+  <ul>
+    <li><code>/api/classifica</code>: numero di connessi (<code>ws_server.clients.size</code>), punti per vincere e classifica della sfida;</li>
+    <li><code>/api/record</code>: tutti i record salvati, presi da <code>record.elenco()</code>.</li>
+  </ul>
+  <p>Il gioco non le usa (usa il WebSocket): servono per controllare lo stato del server aprendo l'indirizzo nel browser, ad esempio <code>http://localhost:3000/api/record</code>.</p>
+  <p>Nota: qui si usa <code>ws_server</code>, che è dichiarato più sotto (riga 173). Funziona perché la funzione della rotta viene eseguita <b>dopo</b>, quando arriva una richiesta, e a quel punto <code>ws_server</code> esiste già.</p></div>
+    
+  </section>
+<section class="blocco">
+    <div class="unito">
+    <h3>Il 404 finale e l'avvio con listen()<span class="righe">righe 151–165</span></h3>
+    <div class="codice"><div class="r"><span class="ln">151</span><span class="tx">app.use((req, res) =&gt; {</span></div><div class="r"><span class="ln">153</span><span class="tx">    res.status(<span class="t-n">404</span>).send(<span class="t-s">'Pagina non trovata'</span>);</span></div><div class="r"><span class="ln">154</span><span class="tx">});</span></div><div class="r"><span class="ln">155</span><span class="tx"> </span></div><div class="r"><span class="ln">157</span><span class="tx"><span class="t-k">const</span> server = app.listen(PORTA, () =&gt; {</span></div><div class="r"><span class="ln">159</span><span class="tx">    console.log(<span class="t-s">`Server avviato! Apri nel browser: http://localhost:${PORTA}`</span>);</span></div><div class="r"><span class="ln">161</span><span class="tx">    indirizziRete().forEach((ip) =&gt; {</span></div><div class="r"><span class="ln">163</span><span class="tx">        console.log(<span class="t-s">`Dagli altri PC della rete:   http://${ip}:${PORTA}`</span>);</span></div><div class="r"><span class="ln">164</span><span class="tx">    });</span></div><div class="r"><span class="ln">165</span><span class="tx">});</span></div></div></div>
+    <div class="spiega">
+  <p>L'ultimo <code>app.use</code> non ha un percorso, quindi riceve tutte le richieste arrivate fin qui: se siamo arrivati in fondo nessuno ha risposto, quindi la pagina non esiste → <b>404</b>.
+  Per questo deve stare <b>per ultimo</b>.</p>
+  <p><code>app.listen(PORTA, callback)</code> avvia il server HTTP. La <b>callback</b> viene eseguita quando il server è pronto e stampa gli indirizzi da aprire.
+  <code>listen()</code> restituisce l'oggetto <b>server HTTP</b>, che salviamo in <code>server</code>: ci serve per agganciare il WebSocket.</p>
+  <p><code>indirizziRete()</code> è definita in fondo al file (§ 9). Si può chiamare prima perché le dichiarazioni <code>function</code> vengono "sollevate" all'inizio (<b>hoisting</b>).</p></div>
+    <div class="ricorda"><b>Da ricordare</b>Il middleware 404 va per ultimo. listen() avvia il server e restituisce il server HTTP a cui si aggancia il WebSocket.</div>
+  </section>
+
+<h2 class="nuova"><span class="num">5</span>Server WebSocket ed eventi</h2>
+<section class="blocco">
+    <div class="unito">
+    <h3>Agganciare il WebSocket al server HTTP<span class="righe">riga 173</span></h3>
+    <div class="codice"><div class="r"><span class="ln">173</span><span class="tx"><span class="t-k">const</span> ws_server = <span class="t-k">new</span> Server({ server });</span></div></div></div>
+    <div class="spiega">
+  <p><code>new Server({ server })</code> crea il server WebSocket usando il server HTTP di Express (<code>{ server }</code> è la forma breve di <code>{ server: server }</code>).
+  Risultato: HTTP e WebSocket usano la <b>stessa porta 3000</b>.</p>
+  <p>Come funziona: il browser manda una normale richiesta HTTP con l'intestazione <code>Upgrade: websocket</code> (<b>handshake</b>). Il server risponde
+  <code>101 Switching Protocols</code> e da quel momento la connessione TCP resta aperta e diventa <b>bidirezionale</b> (full-duplex): anche il server può mandare dati quando vuole.</p></div>
+    <div class="ricorda"><b>Da ricordare</b>HTTP: il client chiede e il server risponde, poi finisce. WebSocket: connessione sempre aperta, entrambi possono inviare in qualsiasi momento.</div>
+  </section>
+<section class="blocco">
+    <div class="unito">
+    <h3>Evento connection: arriva un nuovo giocatore<span class="righe">righe 176–196</span></h3>
+    <div class="codice"><div class="r"><span class="ln">176</span><span class="tx">ws_server.on(<span class="t-s">'connection'</span>, (ws) =&gt; {</span></div><div class="r"><span class="ln">178</span><span class="tx">    contatoreId++;</span></div><div class="r"><span class="ln">180</span><span class="tx">    ws.id = contatoreId;</span></div><div class="r"><span class="ln">182</span><span class="tx">    ws.colore = COLORI[(ws.id - <span class="t-n">1</span>) % COLORI.length];</span></div><div class="r"><span class="ln">184</span><span class="tx">    ws.nome = <span class="t-k">null</span>;</span></div><div class="r"><span class="ln">186</span><span class="tx">    ws.modalita = <span class="t-k">null</span>;</span></div><div class="r"><span class="ln">187</span><span class="tx">    ws.punti = <span class="t-n">0</span>;</span></div><div class="r"><span class="ln">189</span><span class="tx">    ws.partita = <span class="t-k">null</span>;</span></div><div class="r"><span class="ln">190</span><span class="tx">    console.log(<span class="t-s">`[WS] nuovo client connesso, id: ${ws.id}`</span>);</span></div><div class="r"><span class="ln">191</span><span class="tx"> </span></div><div class="r"><span class="ln">193</span><span class="tx">    inviaA(ws, { tipo: <span class="t-s">'benvenuto'</span>, id: ws.id, colore: ws.colore, puntiPerVincere: PUNTI_PER_VINCERE, difficolta: DIFFICOLTA });</span></div><div class="r"><span class="ln">194</span><span class="tx">    inviaA(ws, { tipo: <span class="t-s">'record'</span>, record: record.elenco() });</span></div><div class="r"><span class="ln">196</span><span class="tx">    inviaClassifica();</span></div></div></div>
+    <div class="spiega">
+  <p><code>ws_server.on('connection', (ws) => {...})</code> registra una funzione che scatta a ogni nuova connessione. Il parametro <code>ws</code> è l'oggetto che rappresenta <b>quel</b> client:
+  ogni browser ha il suo <code>ws</code>.</p>
+  <p>In JavaScript si possono aggiungere proprietà a un oggetto in qualsiasi momento: le usiamo per ricordare i dati del giocatore direttamente dentro <code>ws</code>.</p>
+  <table><tr><th>Proprietà</th><th>Valore iniziale</th><th>A cosa serve</th></tr>
+  <tr><td><code>ws.id</code></td><td>contatoreId</td><td>identifica il giocatore</td></tr><tr><td><code>ws.colore</code></td><td><code>COLORI[(id − 1) % 8]</code></td><td>colore del giocatore; l'operatore <code>%</code> (resto) fa ricominciare l'array: il 9° giocatore riprende il 1° colore</td></tr><tr><td><code>ws.nome</code></td><td><code>null</code></td><td>nome scelto (null = non ancora scelto)</td></tr><tr><td><code>ws.modalita</code></td><td><code>null</code></td><td><code>null</code> = nel menu, poi <code>'sfida'</code>, <code>'difficolta'</code> o <code>'infinita'</code></td></tr><tr><td><code>ws.punti</code></td><td>0</td><td>punti nella sfida</td></tr><tr><td><code>ws.partita</code></td><td><code>null</code></td><td>la partita singola in corso (§ 8)</td></tr></table>
+  <p>Poi mandiamo <b>solo a lui</b> il <code>benvenuto</code> (id, colore, punti per vincere, tabella delle difficoltà) e i <code>record</code>; a <b>tutti</b> la classifica, così vedono che i connessi sono aumentati.</p></div>
+    
+  </section>
+<section class="blocco">
+    <div class="unito">
+    <h3>Evento message: lettura sicura del messaggio e CASO 1 (nome)<span class="righe">righe 199–218</span></h3>
+    <div class="codice"><div class="r"><span class="ln">199</span><span class="tx">ws.on(<span class="t-s">'message'</span>, (dati) =&gt; {</span></div><div class="r"><span class="ln">201</span><span class="tx">    <span class="t-k">let</span> msg;</span></div><div class="r"><span class="ln">203</span><span class="tx">    <span class="t-k">try</span> {</span></div><div class="r"><span class="ln">205</span><span class="tx">        msg = JSON.parse(dati);</span></div><div class="r"><span class="ln">206</span><span class="tx">    } <span class="t-k">catch</span> (errore) {</span></div><div class="r"><span class="ln">207</span><span class="tx">        console.log(<span class="t-s">`[WS] messaggio non valido da ${ws.id}`</span>);</span></div><div class="r"><span class="ln">208</span><span class="tx">        <span class="t-k">return</span>;</span></div><div class="r"><span class="ln">209</span><span class="tx">    }</span></div><div class="r"><span class="ln">210</span><span class="tx"> </span></div><div class="r"><span class="ln">212</span><span class="tx">    <span class="t-k">if</span> (msg.tipo === <span class="t-s">'nome'</span>) {</span></div><div class="r"><span class="ln">214</span><span class="tx">        <span class="t-k">const</span> nomePulito = String(msg.nome).trim().substring(<span class="t-n">0</span>, <span class="t-n">15</span>);</span></div><div class="r"><span class="ln">216</span><span class="tx">        ws.nome = nomePulito || <span class="t-s">`Giocatore ${ws.id}`</span>;</span></div><div class="r"><span class="ln">217</span><span class="tx">        console.log(<span class="t-s">`[WS] il client ${ws.id} si chiama "${ws.nome}"`</span>);</span></div><div class="r"><span class="ln">218</span><span class="tx">    }</span></div></div></div>
+    <div class="spiega">
+  <p><code>ws.on('message', (dati) => {...})</code> scatta quando <b>questo</b> client invia qualcosa. I dati arrivano come testo; <code>JSON.parse</code> li trasforma in oggetto.</p>
+  <p><b>try/catch</b>: se il testo non è JSON valido, <code>JSON.parse</code> lancerebbe un errore che, non gestito, <b>farebbe crollare tutto il server</b> (per tutti i giocatori).
+  Con <code>catch</code> stampiamo un avviso e con <code>return</code> ignoriamo il messaggio.</p>
+  <p>Ogni messaggio ha un campo <code>tipo</code> che dice cosa fare. <b>Caso "nome"</b>: puliamo il nome ricevuto</p>
+  <ul>
+    <li><code>String()</code> lo converte in testo (nel caso arrivi un numero o altro);</li>
+    <li><code>trim()</code> toglie gli spazi all'inizio e alla fine;</li>
+    <li><code>substring(0, 15)</code> tiene al massimo 15 caratteri (anche se qualcuno aggira il <code>maxlength</code> della pagina).</li>
+  </ul>
+  <p>Se il nome è vuoto (<code>''</code> è "falso"), <code>||</code> sceglie <code>Giocatore 3</code> (con l'id).</p></div>
+    <div class="ricorda"><b>Da ricordare</b>Mai fidarsi dei dati che arrivano dal client: si controllano e si puliscono sul server.</div>
+  </section>
+<section class="blocco">
+    <div class="unito">
+    <h3>CASO 2: scelta della modalità<span class="righe">righe 221–245</span></h3>
+    <div class="codice"><div class="r"><span class="ln">221</span><span class="tx"><span class="t-k">if</span> (msg.tipo === <span class="t-s">'modalita'</span>) {</span></div><div class="r"><span class="ln">223</span><span class="tx">    <span class="t-k">if</span> (!ws.nome) <span class="t-k">return</span>;</span></div><div class="r"><span class="ln">225</span><span class="tx">    fermaPartita(ws);</span></div><div class="r"><span class="ln">227</span><span class="tx">    <span class="t-k">if</span> (msg.modalita === <span class="t-s">'sfida'</span>) {</span></div><div class="r"><span class="ln">228</span><span class="tx">        ws.modalita = <span class="t-s">'sfida'</span>;</span></div><div class="r"><span class="ln">229</span><span class="tx">        ws.punti = <span class="t-n">0</span>;</span></div><div class="r"><span class="ln">232</span><span class="tx">    } <span class="t-k">else</span> <span class="t-k">if</span> (msg.modalita === <span class="t-s">'difficolta'</span> &amp;&amp; Object.keys(DIFFICOLTA).includes(msg.difficolta)) {</span></div><div class="r"><span class="ln">233</span><span class="tx">        ws.modalita = <span class="t-s">'difficolta'</span>;</span></div><div class="r"><span class="ln">235</span><span class="tx">        iniziaPartitaSingola(ws, <span class="t-s">'difficolta'</span>, msg.difficolta);</span></div><div class="r"><span class="ln">237</span><span class="tx">    } <span class="t-k">else</span> <span class="t-k">if</span> (msg.modalita === <span class="t-s">'infinita'</span>) {</span></div><div class="r"><span class="ln">238</span><span class="tx">        ws.modalita = <span class="t-s">'infinita'</span>;</span></div><div class="r"><span class="ln">240</span><span class="tx">        iniziaPartitaSingola(ws, <span class="t-s">'infinita'</span>, <span class="t-k">null</span>);</span></div><div class="r"><span class="ln">241</span><span class="tx">    }</span></div><div class="r"><span class="ln">242</span><span class="tx">    console.log(<span class="t-s">`[WS] ${ws.nome} gioca in modalità ${ws.modalita}${msg.difficolta ? ' (' + msg.difficolta + ')' : ''}`</span>);</span></div><div class="r"><span class="ln">244</span><span class="tx">    inviaClassifica();</span></div><div class="r"><span class="ln">245</span><span class="tx">}</span></div></div></div>
+    <div class="spiega">
+  <ol>
+    <li><code>if (!ws.nome) return;</code> senza nome non si gioca.</li>
+    <li><code>fermaPartita(ws)</code>: se stava già giocando da solo, fermiamo la vecchia partita e il suo timer.</li>
+    <li>In base a <code>msg.modalita</code>:
+      <ul>
+        <li><b>sfida</b>: <code>ws.modalita = 'sfida'</code> e punti a zero. Da ora riceve il quadrato condiviso.</li>
+        <li><b>difficolta</b>: solo se <code>msg.difficolta</code> è una delle chiavi previste. <code>Object.keys(DIFFICOLTA)</code> restituisce l'array
+        <code>['facile', 'difficile', 'impossibile']</code> e <code>includes</code> controlla che il valore ricevuto ci sia. Così un valore inventato (es. <code>'toString'</code>) viene scartato.</li>
+        <li><b>infinita</b>: parte la partita singola senza difficoltà (<code>null</code>).</li>
+      </ul></li>
+    <li><code>inviaClassifica()</code>: la classifica della sfida cambia (qualcuno è entrato o uscito), la mandiamo a tutti.</li>
+  </ol>
+  <p>Nel <code>console.log</code> c'è un <b>operatore ternario</b> <code>condizione ? A : B</code>: se c'è una difficoltà la aggiunge tra parentesi, altrimenti aggiunge una stringa vuota.</p></div>
+    
+  </section>
+<section class="blocco">
+    <div class="unito">
+    <h3>CASO 3 (click) e CASO 4 (esci)<span class="righe">righe 248–263</span></h3>
+    <div class="codice"><div class="r"><span class="ln">248</span><span class="tx">    <span class="t-k">if</span> (msg.tipo === <span class="t-s">'click'</span>) {</span></div><div class="r"><span class="ln">250</span><span class="tx">        <span class="t-k">if</span> (ws.modalita === <span class="t-s">'sfida'</span>) clickSfida(ws, msg.numero);</span></div><div class="r"><span class="ln">252</span><span class="tx">        <span class="t-k">else</span> clickSingolo(ws, msg.numero);</span></div><div class="r"><span class="ln">253</span><span class="tx">    }</span></div><div class="r"><span class="ln">254</span><span class="tx"> </span></div><div class="r"><span class="ln">256</span><span class="tx">    <span class="t-k">if</span> (msg.tipo === <span class="t-s">'esci'</span>) {</span></div><div class="r"><span class="ln">258</span><span class="tx">        fermaPartita(ws);</span></div><div class="r"><span class="ln">259</span><span class="tx">        ws.modalita = <span class="t-k">null</span>;</span></div><div class="r"><span class="ln">261</span><span class="tx">        inviaClassifica();</span></div><div class="r"><span class="ln">262</span><span class="tx">    }</span></div><div class="r"><span class="ln">263</span><span class="tx">});</span></div></div></div>
+    <div class="spiega">
+  <p><b>click</b>: il messaggio contiene solo il <code>numero</code> del quadrato cliccato. Il server lo smista alla funzione giusta: <code>clickSfida</code> se il giocatore è nella sfida, altrimenti <code>clickSingolo</code>.
+  Sono quelle funzioni a decidere se il click vale.</p>
+  <p><b>esci</b>: il giocatore ha premuto Menu. Fermiamo la partita singola, rimettiamo <code>ws.modalita = null</code> e aggiorniamo la classifica (se era nella sfida, sparisce dalla lista).</p></div>
+    
+  </section>
+<section class="blocco">
+    <div class="unito">
+    <h3>Eventi close ed error<span class="righe">righe 266–279</span></h3>
+    <div class="codice"><div class="r"><span class="ln">266</span><span class="tx">ws.on(<span class="t-s">'close'</span>, () =&gt; {</span></div><div class="r"><span class="ln">268</span><span class="tx">    fermaPartita(ws);</span></div><div class="r"><span class="ln">270</span><span class="tx">    console.log(<span class="t-s">`[WS] client disconnesso, id: ${ws.id}`</span>);</span></div><div class="r"><span class="ln">272</span><span class="tx">    inviaClassifica();</span></div><div class="r"><span class="ln">273</span><span class="tx">});</span></div><div class="r"><span class="ln">274</span><span class="tx"> </span></div><div class="r"><span class="ln">276</span><span class="tx">ws.on(<span class="t-s">'error'</span>, (errore) =&gt; {</span></div><div class="r"><span class="ln">278</span><span class="tx">    console.log(<span class="t-s">`[WS] errore sul client ${ws.id}: ${errore.message}`</span>);</span></div><div class="r"><span class="ln">279</span><span class="tx">});</span></div></div></div>
+    <div class="spiega">
+  <p><b>close</b> scatta quando il client si disconnette (pagina chiusa, ricaricata, rete persa). Due cose importanti:</p>
+  <ul>
+    <li><code>fermaPartita(ws)</code>: annulla il timer della sua partita singola. Senza questa riga il <code>setTimeout</code> continuerebbe a scattare per un client che non c'è più.</li>
+    <li><code>inviaClassifica()</code>: chi resta vede i connessi diminuire. Il modulo <code>ws</code> ha già tolto il client da <code>ws_server.clients</code>, quindi non compare più.</li>
+  </ul>
+  <p><b>error</b>: se non gestissimo l'evento di errore, Node lo considererebbe un errore non gestito e potrebbe fermare il server. Gestendolo, stampiamo solo il messaggio.</p></div>
+    <div class="ricorda"><b>Da ricordare</b>Quattro eventi: connection (sul server), message, close, error (su ogni client).</div>
+  </section>
+
+<h2 class="nuova"><span class="num">6</span>Il ciclo della sfida</h2>
+<section class="blocco">
+    <div class="unito">
+    <h3>setInterval: il server "spinge" il quadrato<span class="righe">righe 288–296</span></h3>
+    <div class="codice"><div class="r"><span class="ln">288</span><span class="tx">setInterval(() =&gt; {</span></div><div class="r"><span class="ln">290</span><span class="tx">    <span class="t-k">if</span> (inPausa) <span class="t-k">return</span>;</span></div><div class="r"><span class="ln">292</span><span class="tx">    <span class="t-k">if</span> (giocatoriSfida().length === <span class="t-n">0</span>) <span class="t-k">return</span>;</span></div><div class="r"><span class="ln">294</span><span class="tx">    nuovaPosizione();</span></div><div class="r"><span class="ln">296</span><span class="tx">}, INTERVALLO_MS);</span></div></div></div>
+    <div class="spiega">
+  <p><code>setInterval(funzione, 1200)</code> esegue la funzione ogni 1200 ms, per sempre (finché il server è acceso). Ogni volta:</p>
+  <ul>
+    <li>se siamo in pausa dopo una vittoria → <code>return</code>, non fa niente;</li>
+    <li>se nessuno sta giocando la sfida (<code>giocatoriSfida().length === 0</code>) → <code>return</code>, è inutile spostare il quadrato;</li>
+    <li>altrimenti chiama <code>nuovaPosizione()</code>, che sceglie un posto casuale e lo invia ai giocatori della sfida.</li>
+  </ul>
+  <p>Questo è il vantaggio del WebSocket: è il <b>server</b> che decide quando mandare i dati (push), senza che il browser debba chiedere.</p></div>
+    <div class="ricorda"><b>Da ricordare</b>setInterval = ripete ogni N ms. setTimeout = esegue una volta sola dopo N ms.</div>
+  </section>
+
+<h2><span class="num">7</span>Funzioni di invio e della sfida</h2>
+<section class="blocco">
+    <div class="unito">
+    <h3>Inviare a uno e inviare a tutti (broadcast)<span class="righe">righe 304–318</span></h3>
+    <div class="codice"><div class="r"><span class="ln">304</span><span class="tx"><span class="t-k">function</span> inviaA(ws, messaggio) {</span></div><div class="r"><span class="ln">306</span><span class="tx">    <span class="t-k">if</span> (ws.readyState === ws.OPEN) ws.send(JSON.stringify(messaggio));</span></div><div class="r"><span class="ln">307</span><span class="tx">}</span></div><div class="r"><span class="ln">308</span><span class="tx"> </span></div><div class="r"><span class="ln">310</span><span class="tx"><span class="t-k">function</span> inviaATutti(messaggio) {</span></div><div class="r"><span class="ln">312</span><span class="tx">    <span class="t-k">const</span> testo = JSON.stringify(messaggio);</span></div><div class="r"><span class="ln">314</span><span class="tx">    ws_server.clients.forEach((client) =&gt; {</span></div><div class="r"><span class="ln">316</span><span class="tx">        <span class="t-k">if</span> (client.readyState === client.OPEN) client.send(testo);</span></div><div class="r"><span class="ln">317</span><span class="tx">    });</span></div><div class="r"><span class="ln">318</span><span class="tx">}</span></div></div></div>
+    <div class="spiega">
+  <p><code>inviaA(ws, messaggio)</code>: invia a <b>un solo</b> client. Prima controlla <code>ws.readyState === ws.OPEN</code>: si invia solo se la connessione è aperta
+  (potrebbe essere in chiusura). <code>JSON.stringify</code> trasforma l'oggetto in testo, perché sul WebSocket viaggia testo.</p>
+  <p><code>inviaATutti(messaggio)</code>: <b>broadcast</b>. <code>ws_server.clients</code> contiene tutti i client connessi; con <code>forEach</code> li scorriamo e inviamo a ognuno.
+  Il testo JSON viene creato <b>una sola volta</b> prima del ciclo: è più efficiente che rifarlo per ogni client.</p></div>
+    
+  </section>
+<section class="blocco">
+    <div class="unito">
+    <h3>Inviare solo a chi gioca la sfida<span class="righe">righe 321–330</span></h3>
+    <div class="codice"><div class="r"><span class="ln">321</span><span class="tx"><span class="t-k">function</span> giocatoriSfida() {</span></div><div class="r"><span class="ln">323</span><span class="tx">    <span class="t-k">return</span> Array.from(ws_server.clients).filter((client) =&gt; client.modalita === <span class="t-s">'sfida'</span>);</span></div><div class="r"><span class="ln">324</span><span class="tx">}</span></div><div class="r"><span class="ln">325</span><span class="tx"> </span></div><div class="r"><span class="ln">327</span><span class="tx"><span class="t-k">function</span> inviaASfida(messaggio) {</span></div><div class="r"><span class="ln">329</span><span class="tx">    giocatoriSfida().forEach((client) =&gt; inviaA(client, messaggio));</span></div><div class="r"><span class="ln">330</span><span class="tx">}</span></div></div></div>
+    <div class="spiega">
+  <p><code>ws_server.clients</code> è un <b>Set</b> (un insieme senza doppioni), che non ha il metodo <code>filter</code>. <code>Array.from</code> lo trasforma in array, poi
+  <code>filter</code> tiene solo i client con <code>modalita === 'sfida'</code>.</p>
+  <p><code>inviaASfida</code> usa questo array: così chi è nel menu o sta giocando da solo <b>non riceve</b> il quadrato della sfida.</p></div>
+    <div class="ricorda"><b>Da ricordare</b>Tre modi di inviare: a uno (inviaA), a tutti (inviaATutti), a un gruppo (inviaASfida, con filter).</div>
+  </section>
+<section class="blocco">
+    <div class="unito">
+    <h3>La classifica della sfida<span class="righe">righe 333–345</span></h3>
+    <div class="codice"><div class="r"><span class="ln">333</span><span class="tx"><span class="t-k">function</span> listaClassifica() {</span></div><div class="r"><span class="ln">335</span><span class="tx">    <span class="t-k">const</span> lista = giocatoriSfida().map((client) =&gt; ({ id: client.id, nome: client.nome, colore: client.colore, punti: client.punti }));</span></div><div class="r"><span class="ln">337</span><span class="tx">    lista.sort((a, b) =&gt; b.punti - a.punti);</span></div><div class="r"><span class="ln">338</span><span class="tx">    <span class="t-k">return</span> lista;</span></div><div class="r"><span class="ln">339</span><span class="tx">}</span></div><div class="r"><span class="ln">340</span><span class="tx"> </span></div><div class="r"><span class="ln">342</span><span class="tx"><span class="t-k">function</span> inviaClassifica() {</span></div><div class="r"><span class="ln">344</span><span class="tx">    inviaATutti({ tipo: <span class="t-s">'classifica'</span>, connessi: ws_server.clients.size, giocatori: listaClassifica() });</span></div><div class="r"><span class="ln">345</span><span class="tx">}</span></div></div></div>
+    <div class="spiega">
+  <p><code>map</code> trasforma ogni client in un oggetto semplice con solo i dati utili (id, nome, colore, punti): non possiamo mandare l'intero oggetto <code>ws</code>, che contiene la connessione.</p>
+  <p><code>sort((a, b) => b.punti - a.punti)</code> ordina con una <b>funzione di confronto</b>: se il risultato è positivo <code>b</code> va prima di <code>a</code>. Quindi chi ha più punti va in cima (ordine <b>decrescente</b>).</p>
+  <p><code>inviaClassifica</code> manda a tutti la lista e il numero di connessi (<code>size</code> = quanti elementi ha il Set).</p></div>
+    
+  </section>
+<section class="blocco">
+    <div class="unito">
+    <h3>Nuova posizione del quadrato<span class="righe">righe 348–359</span></h3>
+    <div class="codice"><div class="r"><span class="ln">348</span><span class="tx"><span class="t-k">function</span> nuovaPosizione() {</span></div><div class="r"><span class="ln">350</span><span class="tx">    quadrato.numero++;</span></div><div class="r"><span class="ln">352</span><span class="tx">    quadrato.x = Math.floor(Math.random() * <span class="t-n">101</span>);</span></div><div class="r"><span class="ln">354</span><span class="tx">    quadrato.y = Math.floor(Math.random() * <span class="t-n">101</span>);</span></div><div class="r"><span class="ln">356</span><span class="tx">    quadrato.preso = <span class="t-k">false</span>;</span></div><div class="r"><span class="ln">358</span><span class="tx">    inviaASfida({ tipo: <span class="t-s">'quadrato'</span>, numero: quadrato.numero, x: quadrato.x, y: quadrato.y, dimensione: DIMENSIONE_SFIDA, colore: <span class="t-k">null</span> });</span></div><div class="r"><span class="ln">359</span><span class="tx">}</span></div></div></div>
+    <div class="spiega">
+  <p><code>Math.random()</code> dà un numero decimale tra 0 (compreso) e 1 (escluso). Moltiplicato per 101 va da 0 a 100,99…; <code>Math.floor</code> arrotonda per difetto → un intero da <b>0 a 100</b>.</p>
+  <p>Il server manda una <b>percentuale</b> e non dei pixel perché ogni giocatore ha uno schermo diverso: sarà il browser a trasformarla in pixel in base alla grandezza del suo campo.</p>
+  <p><code>quadrato.numero++</code> dà un numero nuovo a ogni quadrato: se arriva un click in ritardo riferito al quadrato vecchio, il numero non corrisponde e il click viene scartato.</p>
+  <p><code>colore: null</code> significa "usa il giallo standard".</p></div>
+    
+  </section>
+<section class="blocco">
+    <div class="unito">
+    <h3>Il click nella sfida: chi arriva primo<span class="righe">righe 362–383</span></h3>
+    <div class="codice"><div class="r"><span class="ln">362</span><span class="tx"><span class="t-k">function</span> clickSfida(ws, numero) {</span></div><div class="r"><span class="ln">364</span><span class="tx">    <span class="t-k">if</span> (inPausa || quadrato.preso || numero !== quadrato.numero) <span class="t-k">return</span>;</span></div><div class="r"><span class="ln">367</span><span class="tx">    quadrato.preso = <span class="t-k">true</span>;</span></div><div class="r"><span class="ln">368</span><span class="tx">    ws.punti++;</span></div><div class="r"><span class="ln">369</span><span class="tx">    console.log(<span class="t-s">`[SFIDA] ${ws.nome} prende il quadrato n.${quadrato.numero} (${ws.punti} punti)`</span>);</span></div><div class="r"><span class="ln">371</span><span class="tx">    inviaASfida({ tipo: <span class="t-s">'preso'</span>, numero: quadrato.numero, id: ws.id, nome: ws.nome, colore: ws.colore });</span></div><div class="r"><span class="ln">373</span><span class="tx">    inviaClassifica();</span></div><div class="r"><span class="ln">375</span><span class="tx">    <span class="t-k">if</span> (ws.punti &gt;= PUNTI_PER_VINCERE) {</span></div><div class="r"><span class="ln">376</span><span class="tx">        inPausa = <span class="t-k">true</span>;</span></div><div class="r"><span class="ln">377</span><span class="tx">        console.log(<span class="t-s">`[SFIDA] *** ${ws.nome} ha vinto la sfida! ***`</span>);</span></div><div class="r"><span class="ln">379</span><span class="tx">        inviaASfida({ tipo: <span class="t-s">'vittoria'</span>, id: ws.id, nome: ws.nome, colore: ws.colore, secondi: PAUSA_VITTORIA_MS / <span class="t-n">1000</span> });</span></div><div class="r"><span class="ln">381</span><span class="tx">        setTimeout(nuovaSfida, PAUSA_VITTORIA_MS);</span></div><div class="r"><span class="ln">382</span><span class="tx">    }</span></div><div class="r"><span class="ln">383</span><span class="tx">}</span></div></div></div>
+    <div class="spiega">
+  <p>La prima riga è una <b>guardia</b>: il click non vale se siamo in pausa, se il quadrato è già stato preso o se il numero è di un quadrato vecchio. In quei casi <code>return</code>.</p>
+  <p>Se il click vale: <code>quadrato.preso = true</code> e +1 punto. <b>Perché vince davvero il più veloce?</b> Node.js esegue il codice su un solo thread con l'<b>event loop</b>:
+  i messaggi vengono gestiti uno alla volta, in ordine di arrivo. Il primo click mette <code>preso = true</code>; quando il server gestisce il secondo click, trova già <code>preso</code> e lo scarta.</p>
+  <p>Poi avvisa tutti i giocatori della sfida (<code>preso</code>, con nome e colore di chi l'ha preso) e manda la classifica. Se il giocatore arriva a 10 punti:</p>
+  <ul>
+    <li><code>inPausa = true</code> (il <code>setInterval</code> smette di muovere il quadrato);</li>
+    <li>messaggio <code>vittoria</code> con i secondi di pausa (5000 / 1000 = 5);</li>
+    <li><code>setTimeout(nuovaSfida, 5000)</code>: dopo 5 secondi riparte. Attenzione: si passa <code>nuovaSfida</code> <b>senza parentesi</b>, cioè la funzione stessa, che verrà chiamata più tardi. Con <code>nuovaSfida()</code> verrebbe eseguita subito.</li>
+  </ul></div>
+    <div class="ricorda"><b>Da ricordare</b>Il primo click mette quadrato.preso = true: grazie all'event loop i click successivi lo trovano già preso e vengono ignorati.</div>
+  </section>
+<section class="blocco">
+    <div class="unito">
+    <h3>Nuova sfida<span class="righe">righe 386–396</span></h3>
+    <div class="codice"><div class="r"><span class="ln">386</span><span class="tx"><span class="t-k">function</span> nuovaSfida() {</span></div><div class="r"><span class="ln">388</span><span class="tx">    giocatoriSfida().forEach((client) =&gt; { client.punti = <span class="t-n">0</span>; });</span></div><div class="r"><span class="ln">390</span><span class="tx">    inPausa = <span class="t-k">false</span>;</span></div><div class="r"><span class="ln">391</span><span class="tx">    console.log(<span class="t-s">'[SFIDA] nuova sfida!'</span>);</span></div><div class="r"><span class="ln">393</span><span class="tx">    inviaASfida({ tipo: <span class="t-s">'nuova_partita'</span> });</span></div><div class="r"><span class="ln">395</span><span class="tx">    inviaClassifica();</span></div><div class="r"><span class="ln">396</span><span class="tx">}</span></div></div></div>
+    <div class="spiega">
+  <p>Azzera i punti di tutti i giocatori della sfida, toglie la pausa, manda <code>nuova_partita</code> (il browser chiude la schermata di vittoria) e la classifica azzerata.
+  Dal prossimo giro del <code>setInterval</code> il quadrato ricomincia a muoversi.</p></div>
+    
+  </section>
+
+<h2 class="nuova"><span class="num">8</span>Partite singole: Difficoltà e Infinita</h2>
+<p>Qui ogni giocatore ha <b>la sua partita</b>, indipendente dagli altri. Il ciclo di gioco non usa <code>setInterval</code> ma una catena di <code>setTimeout</code>:</p>
+<svg viewBox="0 0 700 215" width="100%" style="margin-bottom:4mm">
+  <defs><marker id="fp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#5d6475"/></marker></defs>
+  <rect x="10" y="80" width="140" height="52" rx="9" fill="#f6f7fb" stroke="#c9ccd8"/><text x="80" y="102" text-anchor="middle" font-size="12" font-weight="700">iniziaPartitaSingola</text><text x="80" y="119" text-anchor="middle" font-size="10" fill="#5d6475">crea ws.partita</text>
+  <line x1="151" y1="106" x2="248" y2="106" stroke="#5d6475" stroke-width="1.6" marker-end="url(#fp)"/><text x="200" y="98" text-anchor="middle" font-size="10" fill="#5d6475">800 ms</text>
+  <rect x="250" y="80" width="150" height="52" rx="9" fill="#1e2233"/><text x="325" y="102" text-anchor="middle" font-size="12" font-weight="700" fill="#f9ca24">prossimoQuadrato</text><text x="325" y="119" text-anchor="middle" font-size="10" fill="#c8cbe0">invia + setTimeout(durata)</text>
+  <rect x="500" y="10" width="190" height="52" rx="9" fill="#e6f7ec" stroke="#9fd8b3"/><text x="595" y="32" text-anchor="middle" font-size="12" font-weight="700" fill="#1e7a44">clickSingolo</text><text x="595" y="49" text-anchor="middle" font-size="10" fill="#1e7a44">clearTimeout, + punti</text>
+  <rect x="500" y="150" width="190" height="52" rx="9" fill="#fde2e0" stroke="#f0b4ae"/><text x="595" y="172" text-anchor="middle" font-size="12" font-weight="700" fill="#a33">quadratoScaduto</text><text x="595" y="189" text-anchor="middle" font-size="10" fill="#a33">− 1 vita</text>
+  <line x1="401" y1="96" x2="498" y2="42" stroke="#1e7a44" stroke-width="1.6" marker-end="url(#fp)"/><text x="455" y="84" font-size="10" fill="#1e7a44">click in tempo</text>
+  <line x1="401" y1="118" x2="498" y2="170" stroke="#a33" stroke-width="1.6" marker-end="url(#fp)"/><text x="455" y="136" font-size="10" fill="#a33">timer scaduto</text>
+  <path d="M500 26 C 440 0, 360 20, 335 78" fill="none" stroke="#5d6475" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#fp)"/><text x="300" y="30" font-size="10" fill="#5d6475">350 ms</text>
+  <path d="M500 188 C 440 212, 360 196, 335 134" fill="none" stroke="#5d6475" stroke-width="1.4" stroke-dasharray="4 3" marker-end="url(#fp)"/><text x="340" y="210" font-size="10" fill="#5d6475">700 ms (se restano vite)</text>
+  <text x="595" y="212" text-anchor="middle" font-size="10" font-weight="700" fill="#a33">0 vite → finePartita</text>
+</svg>
+<section class="blocco">
+    <div class="unito">
+    <h3>Creare la partita: ws.partita<span class="righe">righe 404–435</span></h3>
+    <div class="codice"><div class="r"><span class="ln">404</span><span class="tx"><span class="t-k">function</span> iniziaPartitaSingola(ws, modalita, difficolta) {</span></div><div class="r"><span class="ln">406</span><span class="tx">    <span class="t-k">const</span> conf = modalita === <span class="t-s">'difficolta'</span> ? DIFFICOLTA[difficolta] : <span class="t-k">null</span>;</span></div><div class="r"><span class="ln">408</span><span class="tx">    <span class="t-k">const</span> vite = conf ? conf.vite : VITE_INFINITA;</span></div><div class="r"><span class="ln">410</span><span class="tx">    ws.partita = {</span></div><div class="r"><span class="ln">412</span><span class="tx">        modalita: modalita,</span></div><div class="r"><span class="ln">414</span><span class="tx">        difficolta: difficolta,</span></div><div class="r"><span class="ln">415</span><span class="tx">        vite: vite,</span></div><div class="r"><span class="ln">417</span><span class="tx">        viteMax: vite,</span></div><div class="r"><span class="ln">418</span><span class="tx">        punti: <span class="t-n">0</span>,</span></div><div class="r"><span class="ln">420</span><span class="tx">        presi: <span class="t-n">0</span>,</span></div><div class="r"><span class="ln">422</span><span class="tx">        livello: <span class="t-n">1</span>,</span></div><div class="r"><span class="ln">424</span><span class="tx">        numero: <span class="t-n">0</span>,</span></div><div class="r"><span class="ln">426</span><span class="tx">        preso: <span class="t-k">true</span>,</span></div><div class="r"><span class="ln">428</span><span class="tx">        timer: <span class="t-k">null</span>,</span></div><div class="r"><span class="ln">430</span><span class="tx">        finita: <span class="t-k">false</span>,</span></div><div class="r"><span class="ln">431</span><span class="tx">    };</span></div><div class="r"><span class="ln">432</span><span class="tx">    inviaStato(ws);</span></div><div class="r"><span class="ln">434</span><span class="tx">    ws.partita.timer = setTimeout(() =&gt; prossimoQuadrato(ws), <span class="t-n">800</span>);</span></div><div class="r"><span class="ln">435</span><span class="tx">}</span></div></div></div>
+    <div class="spiega">
+  <p>L'<b>operatore ternario</b> <code>condizione ? A : B</code> sceglie un valore: <code>conf</code> è la configurazione della difficoltà (solo in modalità difficoltà, altrimenti <code>null</code>);
+  <code>vite</code> sono quelle della difficoltà oppure le 3 della modalità infinita.</p>
+  <p>Lo stato della partita viene salvato <b>dentro l'oggetto ws del client</b>: per questo ogni giocatore ha la sua partita separata.</p>
+  <table><tr><th>Campo</th><th>Significato</th></tr>
+  <tr><td><code>modalita</code>, <code>difficolta</code></td><td>tipo di partita (<code>difficolta</code> è <code>null</code> nell'infinita)</td></tr><tr><td><code>vite</code>, <code>viteMax</code></td><td>vite rimaste e vite iniziali (per disegnare anche i cuori vuoti)</td></tr><tr><td><code>punti</code>, <code>presi</code>, <code>livello</code></td><td>punteggio, quadrati presi, livello attuale</td></tr><tr><td><code>numero</code></td><td>numero del quadrato attuale (per scartare i click vecchi)</td></tr><tr><td><code>preso</code></td><td><code>true</code> quando il quadrato è "chiuso" (preso o scaduto)</td></tr><tr><td><code>timer</code></td><td>il <code>setTimeout</code> attivo, salvato per poterlo annullare con <code>clearTimeout</code></td></tr><tr><td><code>finita</code></td><td>diventa <code>true</code> al game over</td></tr></table>
+  <p>Poi invia lo stato iniziale e fa partire il primo quadrato dopo 800 ms. <code>() => prossimoQuadrato(ws)</code> è una funzione freccia: serve perché dobbiamo passare anche il parametro <code>ws</code>.</p></div>
+    <div class="ricorda"><b>Da ricordare</b>Ogni client ha la sua partita in ws.partita, con il suo timer: le partite singole non si disturbano tra loro.</div>
+  </section>
+<section class="blocco">
+    <div class="unito">
+    <h3>La formula della modalità infinita<span class="righe">righe 438–447</span></h3>
+    <div class="codice"><div class="r"><span class="ln">438</span><span class="tx"><span class="t-k">function</span> parametriInfinita(livello) {</span></div><div class="r"><span class="ln">440</span><span class="tx">    <span class="t-k">const</span> tempo = Math.max(<span class="t-n">380</span>, Math.round(<span class="t-n">1500</span> * Math.pow(<span class="t-n">0.88</span>, livello - <span class="t-n">1</span>)));</span></div><div class="r"><span class="ln">442</span><span class="tx">    <span class="t-k">const</span> dimensione = Math.max(<span class="t-n">34</span>, <span class="t-n">76</span> - (livello - <span class="t-n">1</span>) * <span class="t-n">4</span>);</span></div><div class="r"><span class="ln">444</span><span class="tx">    <span class="t-k">const</span> colore = COLORI_LIVELLO[(livello - <span class="t-n">1</span>) % COLORI_LIVELLO.length];</span></div><div class="r"><span class="ln">446</span><span class="tx">    <span class="t-k">return</span> { tempo, dimensione, colore };</span></div><div class="r"><span class="ln">447</span><span class="tx">}</span></div></div></div>
+    <div class="spiega">
+  <ul>
+    <li><b>Tempo</b>: <code>1500 × 0,88<sup>livello − 1</sup></code> ms. <code>Math.pow(0.88, n)</code> = 0,88 elevato alla n: a ogni livello il tempo si riduce del 12%. <code>Math.round</code> arrotonda, <code>Math.max(380, ...)</code> impedisce di scendere sotto 380 ms.</li>
+    <li><b>Dimensione</b>: <code>76 − 4 × (livello − 1)</code> px, mai sotto 34 px.</li>
+    <li><b>Colore</b>: <code>COLORI_LIVELLO[(livello − 1) % 10]</code>; dal livello 11 i colori ricominciano.</li>
+  </ul>
+  <p><code>return { tempo, dimensione, colore }</code> è la forma breve di <code>{ tempo: tempo, dimensione: dimensione, colore: colore }</code>. Valori calcolati con la stessa formula:</p>
+  <table><tr><th>Livello</th><th>Tempo per cliccare</th><th>Lato</th><th>Punti a quadrato</th><th>Quadrati del livello</th></tr>
+  <tr><td><b>1</b></td><td>1500 ms</td><td>76 px</td><td>40</td><td>1° – 10°</td></tr><tr><td><b>2</b></td><td>1320 ms</td><td>72 px</td><td>80</td><td>11° – 20°</td></tr><tr><td><b>3</b></td><td>1162 ms</td><td>68 px</td><td>120</td><td>21° – 30°</td></tr><tr><td><b>4</b></td><td>1022 ms</td><td>64 px</td><td>160</td><td>31° – 40°</td></tr><tr><td><b>5</b></td><td>900 ms</td><td>60 px</td><td>200</td><td>41° – 50°</td></tr><tr><td><b>6</b></td><td>792 ms</td><td>56 px</td><td>240</td><td>51° – 60°</td></tr><tr><td><b>7</b></td><td>697 ms</td><td>52 px</td><td>280</td><td>61° – 70°</td></tr><tr><td><b>8</b></td><td>613 ms</td><td>48 px</td><td>320</td><td>71° – 80°</td></tr><tr><td><b>9</b></td><td>539 ms</td><td>44 px</td><td>360</td><td>81° – 90°</td></tr><tr><td><b>10</b></td><td>475 ms</td><td>40 px</td><td>400</td><td>91° – 100°</td></tr><tr><td><b>11</b></td><td>418 ms</td><td>36 px</td><td>440</td><td>101° – 110°</td></tr><tr><td><b>12</b></td><td>380 ms</td><td>34 px</td><td>480</td><td>111° – 120°</td></tr><tr><td><b>13</b></td><td>380 ms</td><td>34 px</td><td>520</td><td>121° – 130°</td></tr></table></div>
+    
+  </section>
+<section class="blocco">
+    <div class="unito">
+    <h3>prossimoQuadrato: mandare il quadrato e far partire il tempo<span class="righe">righe 450–478</span></h3>
+    <div class="codice"><div class="r"><span class="ln">450</span><span class="tx"><span class="t-k">function</span> prossimoQuadrato(ws) {</span></div><div class="r"><span class="ln">452</span><span class="tx">    <span class="t-k">const</span> p = ws.partita;</span></div><div class="r"><span class="ln">454</span><span class="tx">    <span class="t-k">if</span> (!p || p.finita) <span class="t-k">return</span>;</span></div><div class="r"><span class="ln">456</span><span class="tx">    <span class="t-k">const</span> param = p.modalita === <span class="t-s">'difficolta'</span> ? DIFFICOLTA[p.difficolta] : parametriInfinita(p.livello);</span></div><div class="r"><span class="ln">458</span><span class="tx">    p.numero++;</span></div><div class="r"><span class="ln">460</span><span class="tx">    p.preso = <span class="t-k">false</span>;</span></div><div class="r"><span class="ln">462</span><span class="tx">    inviaA(ws, {</span></div><div class="r"><span class="ln">463</span><span class="tx">        tipo: <span class="t-s">'quadrato'</span>,</span></div><div class="r"><span class="ln">464</span><span class="tx">        numero: p.numero,</span></div><div class="r"><span class="ln">466</span><span class="tx">        x: Math.floor(Math.random() * <span class="t-n">101</span>),</span></div><div class="r"><span class="ln">468</span><span class="tx">        y: Math.floor(Math.random() * <span class="t-n">101</span>),</span></div><div class="r"><span class="ln">470</span><span class="tx">        dimensione: param.dimensione,</span></div><div class="r"><span class="ln">472</span><span class="tx">        colore: param.colore || <span class="t-k">null</span>,</span></div><div class="r"><span class="ln">474</span><span class="tx">        durata: param.tempo,</span></div><div class="r"><span class="ln">475</span><span class="tx">    });</span></div><div class="r"><span class="ln">477</span><span class="tx">    p.timer = setTimeout(() =&gt; quadratoScaduto(ws), param.tempo);</span></div><div class="r"><span class="ln">478</span><span class="tx">}</span></div></div></div>
+    <div class="spiega">
+  <ol>
+    <li>Se la partita non c'è più (<code>!p</code>) o è finita → <code>return</code>. È un controllo di sicurezza: il timer potrebbe scattare dopo che il giocatore è uscito.</li>
+    <li><code>param</code>: i parametri vengono dalla tabella <code>DIFFICOLTA</code> oppure da <code>parametriInfinita(livello)</code>. Entrambi hanno <code>tempo</code> e <code>dimensione</code>.</li>
+    <li>Nuovo numero, quadrato "aperto" (<code>preso = false</code>).</li>
+    <li>Invia <b>solo a questo client</b> il quadrato con posizione casuale, dimensione, colore e <code>durata</code> (il browser la usa per la barra del tempo).
+    Nelle difficoltà <code>param.colore</code> non esiste (<code>undefined</code>), quindi <code>|| null</code> manda <code>null</code> = giallo.</li>
+    <li><code>p.timer = setTimeout(() => quadratoScaduto(ws), param.tempo)</code>: se nessuno annulla questo timer prima, il quadrato scade.</li>
+  </ol></div>
+    <div class="ricorda"><b>Da ricordare</b>Il server manda il quadrato e avvia un setTimeout lungo quanto il tempo concesso. Se arriva il click prima, il timer viene annullato.</div>
+  </section>
+<section class="blocco">
+    <div class="unito">
+    <h3>quadratoScaduto: si perde una vita<span class="righe">righe 481–497</span></h3>
+    <div class="codice"><div class="r"><span class="ln">481</span><span class="tx"><span class="t-k">function</span> quadratoScaduto(ws) {</span></div><div class="r"><span class="ln">482</span><span class="tx">    <span class="t-k">const</span> p = ws.partita;</span></div><div class="r"><span class="ln">484</span><span class="tx">    <span class="t-k">if</span> (!p || p.preso || p.finita) <span class="t-k">return</span>;</span></div><div class="r"><span class="ln">486</span><span class="tx">    p.preso = <span class="t-k">true</span>;</span></div><div class="r"><span class="ln">487</span><span class="tx">    p.vite--;</span></div><div class="r"><span class="ln">488</span><span class="tx">    inviaA(ws, { tipo: <span class="t-s">'mancato'</span>, numero: p.numero, vite: p.vite });</span></div><div class="r"><span class="ln">489</span><span class="tx">    inviaStato(ws);</span></div><div class="r"><span class="ln">491</span><span class="tx">    <span class="t-k">if</span> (p.vite &lt;= <span class="t-n">0</span>) {</span></div><div class="r"><span class="ln">492</span><span class="tx">        finePartita(ws);</span></div><div class="r"><span class="ln">493</span><span class="tx">        <span class="t-k">return</span>;</span></div><div class="r"><span class="ln">494</span><span class="tx">    }</span></div><div class="r"><span class="ln">496</span><span class="tx">    p.timer = setTimeout(() =&gt; prossimoQuadrato(ws), PAUSA_QUADRATO_MS * <span class="t-n">2</span>);</span></div><div class="r"><span class="ln">497</span><span class="tx">}</span></div></div></div>
+    <div class="spiega">
+  <p>Guardia: se il quadrato è già stato preso o la partita è finita non fa niente. Altrimenti chiude il quadrato (<code>preso = true</code>, così un click arrivato in ritardo non vale più),
+  toglie una vita con <code>p.vite--</code> e invia <code>mancato</code> e lo stato aggiornato.</p>
+  <p>Se le vite arrivano a 0 → <code>finePartita</code>. Altrimenti il prossimo quadrato arriva dopo <code>350 × 2 = 700 ms</code>, una pausa un po' più lunga per riprendersi.</p></div>
+    
+  </section>
+<section class="blocco">
+    <div class="unito">
+    <h3>clickSingolo: il click in tempo e la formula di Tetris<span class="righe">righe 500–529</span></h3>
+    <div class="codice"><div class="r"><span class="ln">500</span><span class="tx"><span class="t-k">function</span> clickSingolo(ws, numero) {</span></div><div class="r"><span class="ln">501</span><span class="tx">    <span class="t-k">const</span> p = ws.partita;</span></div><div class="r"><span class="ln">503</span><span class="tx">    <span class="t-k">if</span> (!p || p.finita || p.preso || numero !== p.numero) <span class="t-k">return</span>;</span></div><div class="r"><span class="ln">504</span><span class="tx">    p.preso = <span class="t-k">true</span>;</span></div><div class="r"><span class="ln">506</span><span class="tx">    clearTimeout(p.timer);</span></div><div class="r"><span class="ln">507</span><span class="tx">    p.presi++;</span></div><div class="r"><span class="ln">509</span><span class="tx">    <span class="t-k">let</span> guadagno = <span class="t-n">1</span>;</span></div><div class="r"><span class="ln">511</span><span class="tx">    <span class="t-k">const</span> livelloPrima = p.livello;</span></div><div class="r"><span class="ln">513</span><span class="tx">    <span class="t-k">if</span> (p.modalita === <span class="t-s">'infinita'</span>) {</span></div><div class="r"><span class="ln">515</span><span class="tx">        guadagno = PUNTI_BASE * p.livello;</span></div><div class="r"><span class="ln">517</span><span class="tx">        p.livello = Math.floor(p.presi / QUADRATI_PER_LIVELLO) + <span class="t-n">1</span>;</span></div><div class="r"><span class="ln">518</span><span class="tx">    }</span></div><div class="r"><span class="ln">519</span><span class="tx">    p.punti += guadagno;</span></div><div class="r"><span class="ln">520</span><span class="tx">    inviaA(ws, { tipo: <span class="t-s">'preso'</span>, numero: p.numero, id: ws.id, nome: ws.nome, colore: ws.colore, guadagno: guadagno });</span></div><div class="r"><span class="ln">522</span><span class="tx">    <span class="t-k">if</span> (p.livello &gt; livelloPrima) {</span></div><div class="r"><span class="ln">523</span><span class="tx">        inviaA(ws, { tipo: <span class="t-s">'livello'</span>, livello: p.livello, colore: parametriInfinita(p.livello).colore });</span></div><div class="r"><span class="ln">524</span><span class="tx">        console.log(<span class="t-s">`[INFINITA] ${ws.nome} sale al livello ${p.livello}`</span>);</span></div><div class="r"><span class="ln">525</span><span class="tx">    }</span></div><div class="r"><span class="ln">526</span><span class="tx">    inviaStato(ws);</span></div><div class="r"><span class="ln">528</span><span class="tx">    p.timer = setTimeout(() =&gt; prossimoQuadrato(ws), PAUSA_QUADRATO_MS);</span></div><div class="r"><span class="ln">529</span><span class="tx">}</span></div></div></div>
+    <div class="spiega">
+  <p>Guardia con quattro condizioni unite da <code>||</code> (basta che una sia vera per uscire): niente partita, partita finita, quadrato già chiuso, numero sbagliato.</p>
+  <p>Se il click vale: chiude il quadrato e <b><code>clearTimeout(p.timer)</code></b> annulla il timer, così <code>quadratoScaduto</code> non scatterà e non si perde la vita.</p>
+  <p><b>Punti</b>: in modalità difficoltà ogni quadrato vale 1. In modalità infinita:</p>
+  <ul>
+    <li><code>guadagno = 40 × livello</code>, calcolato con il livello <b>prima</b> di aggiornarlo;</li>
+    <li><code>livello = Math.floor(presi / 10) + 1</code>: con 0–9 quadrati presi livello 1, con 10–19 livello 2, e così via.</li>
+  </ul>
+  <p>Esempio: 25 quadrati presi = 10 × 40 + 10 × 80 + 5 × 120 = <b>1800 punti</b>, livello 3.</p>
+  <p>Confrontando <code>livelloPrima</code> con il nuovo livello capisce se si è saliti: in quel caso manda il messaggio <code>livello</code> con il colore nuovo. Infine stato aggiornato e prossimo quadrato dopo 350 ms.</p></div>
+    <div class="ricorda"><b>Da ricordare</b>clearTimeout annulla il timer che avrebbe tolto la vita. Livello = floor(presi / 10) + 1, punti = 40 × livello.</div>
+  </section>
+<section class="blocco">
+    <div class="unito">
+    <h3>finePartita: game over e record<span class="righe">righe 532–552</span></h3>
+    <div class="codice"><div class="r"><span class="ln">532</span><span class="tx"><span class="t-k">function</span> finePartita(ws) {</span></div><div class="r"><span class="ln">533</span><span class="tx">    <span class="t-k">const</span> p = ws.partita;</span></div><div class="r"><span class="ln">534</span><span class="tx">    p.finita = <span class="t-k">true</span>;</span></div><div class="r"><span class="ln">535</span><span class="tx">    clearTimeout(p.timer);</span></div><div class="r"><span class="ln">537</span><span class="tx">    <span class="t-k">const</span> classifica = p.modalita === <span class="t-s">'infinita'</span> ? <span class="t-s">'infinita'</span> : p.difficolta;</span></div><div class="r"><span class="ln">539</span><span class="tx">    <span class="t-k">const</span> posizione = record.aggiungi(classifica, {</span></div><div class="r"><span class="ln">540</span><span class="tx">        nome: ws.nome,</span></div><div class="r"><span class="ln">541</span><span class="tx">        punti: p.punti,</span></div><div class="r"><span class="ln">542</span><span class="tx">        livello: p.livello,</span></div><div class="r"><span class="ln">543</span><span class="tx">        presi: p.presi,</span></div><div class="r"><span class="ln">545</span><span class="tx">        data: <span class="t-k">new</span> Date().toLocaleDateString(<span class="t-s">'it-IT'</span>),</span></div><div class="r"><span class="ln">546</span><span class="tx">    });</span></div><div class="r"><span class="ln">547</span><span class="tx">    console.log(<span class="t-s">`[GAME OVER] ${ws.nome} (${classifica}): ${p.punti} punti, livello ${p.livello}`</span>);</span></div><div class="r"><span class="ln">549</span><span class="tx">    inviaA(ws, { tipo: <span class="t-s">'game_over'</span>, modalita: p.modalita, difficolta: p.difficolta, punti: p.punti, presi: p.presi, livello: p.livello, posizione: posizione });</span></div><div class="r"><span class="ln">551</span><span class="tx">    <span class="t-k">if</span> (posizione &gt;= <span class="t-n">0</span>) inviaATutti({ tipo: <span class="t-s">'record'</span>, record: record.elenco() });</span></div><div class="r"><span class="ln">552</span><span class="tx">}</span></div></div></div>
+    <div class="spiega">
+  <p>Segna la partita come finita e annulla il timer. Poi sceglie in quale classifica dei record va il risultato: <code>'infinita'</code> oppure il nome della difficoltà (<code>'facile'</code>…).</p>
+  <p><code>record.aggiungi(classifica, risultato)</code> è una funzione del nostro modulo: restituisce la <b>posizione</b> raggiunta (0 = primo posto) oppure <b>−1</b> se non è un record.
+  <code>new Date().toLocaleDateString('it-IT')</code> scrive la data di oggi nel formato italiano (es. 25/11/2026).</p>
+  <p>Al giocatore arriva <code>game_over</code> con il riepilogo e la posizione. Se è un nuovo record (<code>posizione >= 0</code>), la lista aggiornata va a <b>tutti</b> con <code>inviaATutti</code>: anche gli altri vedono il record comparire in tempo reale.</p></div>
+    
+  </section>
+<section class="blocco">
+    <div class="unito">
+    <h3>fermaPartita e inviaStato<span class="righe">righe 555–583</span></h3>
+    <div class="codice"><div class="r"><span class="ln">555</span><span class="tx"><span class="t-k">function</span> fermaPartita(ws) {</span></div><div class="r"><span class="ln">557</span><span class="tx">    <span class="t-k">if</span> (!ws.partita) <span class="t-k">return</span>;</span></div><div class="r"><span class="ln">559</span><span class="tx">    clearTimeout(ws.partita.timer);</span></div><div class="r"><span class="ln">560</span><span class="tx">    ws.partita = <span class="t-k">null</span>;</span></div><div class="r"><span class="ln">561</span><span class="tx">}</span></div><div class="r"><span class="ln">562</span><span class="tx"> </span></div><div class="r"><span class="ln">564</span><span class="tx"><span class="t-k">function</span> inviaStato(ws) {</span></div><div class="r"><span class="ln">565</span><span class="tx">    <span class="t-k">const</span> p = ws.partita;</span></div><div class="r"><span class="ln">567</span><span class="tx">    inviaA(ws, {</span></div><div class="r"><span class="ln">568</span><span class="tx">        tipo: <span class="t-s">'stato_partita'</span>,</span></div><div class="r"><span class="ln">569</span><span class="tx">        modalita: p.modalita,</span></div><div class="r"><span class="ln">570</span><span class="tx">        difficolta: p.difficolta,</span></div><div class="r"><span class="ln">571</span><span class="tx">        vite: p.vite,</span></div><div class="r"><span class="ln">572</span><span class="tx">        viteMax: p.viteMax,</span></div><div class="r"><span class="ln">573</span><span class="tx">        punti: p.punti,</span></div><div class="r"><span class="ln">574</span><span class="tx">        presi: p.presi,</span></div><div class="r"><span class="ln">575</span><span class="tx">        livello: p.livello,</span></div><div class="r"><span class="ln">577</span><span class="tx">        mancanti: QUADRATI_PER_LIVELLO - (p.presi % QUADRATI_PER_LIVELLO),</span></div><div class="r"><span class="ln">579</span><span class="tx">        perLivello: QUADRATI_PER_LIVELLO,</span></div><div class="r"><span class="ln">581</span><span class="tx">        colore: p.modalita === <span class="t-s">'infinita'</span> ? parametriInfinita(p.livello).colore : <span class="t-k">null</span>,</span></div><div class="r"><span class="ln">582</span><span class="tx">    });</span></div><div class="r"><span class="ln">583</span><span class="tx">}</span></div></div></div>
+    <div class="spiega">
+  <p><b>fermaPartita</b>: se c'è una partita, annulla il timer e la cancella (<code>ws.partita = null</code>). Viene chiamata quando si cambia modalità, si torna al menu o ci si disconnette.</p>
+  <p><b>inviaStato</b>: manda al client tutti i dati da mostrare nel pannello laterale. Il campo <code>mancanti</code> usa il resto della divisione:
+  <code>10 − (presi % 10)</code>. Esempio: 23 presi → 23 % 10 = 3 → mancano 7 quadrati al livello successivo.</p></div>
+    
+  </section>
+
+<h2><span class="num">9</span>Altre funzioni</h2>
+<section class="blocco">
+    <div class="unito">
+    <h3>indirizziRete: l'IP per giocare da altri PC<span class="righe">righe 591–604</span></h3>
+    <div class="codice"><div class="r"><span class="ln">591</span><span class="tx"><span class="t-k">function</span> indirizziRete() {</span></div><div class="r"><span class="ln">592</span><span class="tx">    <span class="t-k">const</span> indirizzi = [];</span></div><div class="r"><span class="ln">594</span><span class="tx">    <span class="t-k">const</span> interfacce = os.networkInterfaces();</span></div><div class="r"><span class="ln">596</span><span class="tx">    <span class="t-k">for</span> (<span class="t-k">const</span> nome <span class="t-k">in</span> interfacce) {</span></div><div class="r"><span class="ln">598</span><span class="tx">        <span class="t-k">for</span> (<span class="t-k">const</span> info <span class="t-k">of</span> interfacce[nome]) {</span></div><div class="r"><span class="ln">600</span><span class="tx">            <span class="t-k">if</span> (info.family === <span class="t-s">'IPv4'</span> &amp;&amp; !info.internal) indirizzi.push(info.address);</span></div><div class="r"><span class="ln">601</span><span class="tx">        }</span></div><div class="r"><span class="ln">602</span><span class="tx">    }</span></div><div class="r"><span class="ln">603</span><span class="tx">    <span class="t-k">return</span> indirizzi;</span></div><div class="r"><span class="ln">604</span><span class="tx">}</span></div></div></div>
+    <div class="spiega">
+  <p><code>os.networkInterfaces()</code> restituisce un oggetto con tutte le schede di rete del computer (Wi-Fi, Ethernet…), ognuna con un array di indirizzi.</p>
+  <ul>
+    <li><code>for...in</code> scorre le <b>chiavi</b> di un oggetto (i nomi delle schede, es. <code>en0</code>);</li>
+    <li><code>for...of</code> scorre gli <b>elementi</b> di un array (gli indirizzi di quella scheda).</li>
+  </ul>
+  <p>Teniamo solo gli indirizzi IPv4 non interni (<code>!info.internal</code> esclude <code>127.0.0.1</code>, che funziona solo sul computer stesso). Gli altri PC della stessa rete aprono <code>http://IP:3000</code>.</p></div>
+    <div class="ricorda"><b>Da ricordare</b>for...in → chiavi di un oggetto. for...of → valori di un array.</div>
+  </section>
+
+<h2 class="nuova"><span class="num">★</span>Riassunto: la vita di un giocatore sul server</h2>
+<table><tr><th>Momento</th><th>Cosa succede nel server</th><th>Messaggi inviati</th></tr>
+  <tr><td>Apre la pagina</td><td>Express invia <code>index.html</code>; lo script apre il WebSocket → evento <code>connection</code>, il client riceve id e colore</td><td><code>benvenuto</code>, <code>record</code> (a lui) · <code>classifica</code> (a tutti)</td></tr><tr><td>Scrive il nome</td><td>caso <code>nome</code>: nome pulito e salvato in <code>ws.nome</code></td><td>—</td></tr><tr><td>Sceglie la Sfida</td><td><code>ws.modalita = 'sfida'</code>; riceve i quadrati del <code>setInterval</code></td><td><code>classifica</code> (a tutti), poi <code>quadrato</code> ogni 1,2 s</td></tr><tr><td>Sceglie Difficoltà o Infinita</td><td><code>iniziaPartitaSingola</code> crea <code>ws.partita</code> e il primo timer</td><td><code>stato_partita</code>, <code>quadrato</code></td></tr><tr><td>Clicca in tempo</td><td><code>clickSingolo</code>: <code>clearTimeout</code>, punti, forse nuovo livello</td><td><code>preso</code>, (<code>livello</code>), <code>stato_partita</code></td></tr><tr><td>Non clicca in tempo</td><td><code>quadratoScaduto</code>: − 1 vita</td><td><code>mancato</code>, <code>stato_partita</code></td></tr><tr><td>Vite finite</td><td><code>finePartita</code>: <code>record.aggiungi</code></td><td><code>game_over</code> · se record: <code>record</code> a tutti</td></tr><tr><td>Chiude la pagina</td><td>evento <code>close</code>: <code>fermaPartita</code></td><td><code>classifica</code> (a chi resta)</td></tr></table>
+
+<h2><span class="num">?</span>Domande probabili su server.js</h2>
+<div class="domanda"><b class="q">1. Che differenza c'è tra HTTP e WebSocket?</b>In HTTP il client chiede, il server risponde e la comunicazione finisce. Il WebSocket è una connessione <b>persistente e bidirezionale</b>: dopo l'handshake resta aperta e anche il server può mandare dati quando vuole (es. il quadrato della sfida ogni 1,2 s o il messaggio "mancato").</div><div class="domanda"><b class="q">2. Come fanno Express e ws a usare la stessa porta?</b><code>app.listen</code> restituisce il server HTTP e <code>new Server({ server })</code> ci aggancia il WebSocket. Il browser apre il WebSocket con una richiesta HTTP <code>Upgrade: websocket</code>; il server risponde <code>101 Switching Protocols</code>.</div><div class="domanda"><b class="q">3. Cos'è un middleware? Perché il 404 è per ultimo?</b>Una funzione <code>(req, res, next)</code> eseguita per ogni richiesta, nell'ordine in cui è registrata: o risponde o chiama <code>next()</code>. Il 404 è per ultimo perché deve rispondere solo se nessuno prima ha risposto.</div><div class="domanda"><b class="q">4. Cosa fa fs.createReadStream(...).pipe(res)?</b>Legge il file audio a pezzi e invia ogni pezzo subito nella risposta, senza caricare tutto il file in memoria.</div><div class="domanda"><b class="q">5. Perché il JSON.parse è dentro un try/catch?</b>Se arriva un testo non valido <code>JSON.parse</code> lancia un errore; senza <code>catch</code> il server si fermerebbe per tutti. Così il messaggio viene solo ignorato.</div><div class="domanda"><b class="q">6. Dove salvate i dati di ogni giocatore?</b>Dentro l'oggetto <code>ws</code> della sua connessione: <code>ws.id</code>, <code>ws.nome</code>, <code>ws.colore</code>, <code>ws.modalita</code>, <code>ws.punti</code>, <code>ws.partita</code>.</div><div class="domanda"><b class="q">7. Come mandate un messaggio solo a chi gioca la sfida?</b><code>giocatoriSfida()</code> trasforma il Set <code>ws_server.clients</code> in array con <code>Array.from</code> e lo filtra con <code>filter</code> su <code>modalita === 'sfida'</code>; <code>inviaASfida</code> invia a ognuno.</div><div class="domanda"><b class="q">8. Se due giocatori cliccano quasi insieme, chi prende il punto?</b>Quello il cui messaggio arriva prima. Node gestisce gli eventi uno alla volta (event loop): il primo mette <code>quadrato.preso = true</code>, il secondo lo trova già preso.</div><div class="domanda"><b class="q">9. Perché il quadrato ha un numero?</b>Per scartare i click in ritardo: se il numero del click non è quello del quadrato attuale, il click è riferito a un quadrato vecchio e non vale.</div><div class="domanda"><b class="q">10. Differenza tra setInterval e setTimeout nel vostro codice?</b><code>setInterval</code> (sfida) ripete ogni 1,2 s per sempre. <code>setTimeout</code> (partite singole) scatta una volta: lo usiamo come "conto alla rovescia" del quadrato e lo annulliamo con <code>clearTimeout</code> se il click arriva in tempo.</div><div class="domanda"><b class="q">11. Come si perde una vita?</b>In <code>prossimoQuadrato</code> parte un <code>setTimeout</code> di <code>durata</code> ms. Se scade prima del click, <code>quadratoScaduto</code> toglie una vita e invia <code>mancato</code>.</div><div class="domanda"><b class="q">12. Perché in close chiamate fermaPartita?</b>Per annullare il timer della partita singola: altrimenti continuerebbe a scattare per un client che non esiste più.</div><div class="domanda"><b class="q">13. Come funziona la modalità infinita?</b>Ogni 10 quadrati presi si sale di livello (<code>floor(presi / 10) + 1</code>); ogni quadrato vale 40 × livello; il tempo si moltiplica per 0,88 a ogni livello (minimo 380 ms), il lato cala di 4 px (minimo 34) e cambia il colore.</div><div class="domanda"><b class="q">14. Perché controllate la difficoltà con Object.keys(...).includes?</b>Il valore arriva dal client e potrebbe essere qualsiasi cosa: accettiamo solo <code>facile</code>, <code>difficile</code> o <code>impossibile</code>.</div><div class="domanda"><b class="q">15. Perché decide tutto il server?</b>Il codice del browser si può modificare; se decidesse il client si potrebbe barare. Il server è l'unico arbitro e il client mostra solo ciò che riceve.</div>
+
+<h2><span class="num">A–Z</span>Glossario</h2>
+<div class="glossario">
+  <p><b>Broadcast</b>: invio dello stesso messaggio a tutti i client connessi.</p>
+  <p><b>Callback</b>: funzione passata a un'altra funzione, che la chiamerà più tardi (es. in <code>app.listen</code>, <code>setTimeout</code>).</p>
+  <p><b>Destrutturazione</b>: <code>const { Server } = ...</code> prende una proprietà da un oggetto.</p>
+  <p><b>Event loop</b>: il meccanismo con cui Node esegue un evento alla volta su un solo thread.</p>
+  <p><b>Handshake</b>: la richiesta HTTP iniziale con cui si apre il WebSocket (risposta 101).</p>
+  <p><b>Hoisting</b>: le dichiarazioni <code>function</code> si possono usare prima della riga in cui sono scritte.</p>
+  <p><b>JSON</b>: formato di testo per rappresentare oggetti. <code>stringify</code>: oggetto → testo; <code>parse</code>: testo → oggetto.</p>
+  <p><b>Middleware</b>: funzione <code>(req, res, next)</code> eseguita da Express per ogni richiesta.</p>
+  <p><b>Modulo</b>: file di codice riutilizzabile, caricato con <code>require</code>.</p>
+  <p><b>Rotta</b>: risposta a un metodo + indirizzo precisi, es. <code>app.get('/musica', ...)</code>.</p>
+  <p><b>Set</b>: insieme di valori senza doppioni; <code>size</code> = quanti sono.</p>
+  <p><b>Stream</b>: flusso di dati letto e inviato a pezzi.</p>
+  <p><b>Ternario</b>: <code>condizione ? A : B</code>, sceglie tra due valori.</p>
+  <p><b>Variabile d'ambiente</b>: valore impostato dal sistema operativo, letto con <code>process.env</code>.</p>
+</div></body></html>
